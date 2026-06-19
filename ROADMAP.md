@@ -20,6 +20,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 | **Full typography system** | 10 independently configurable text roles across 3 groups — Página (Nombre empresa, Pie de página, Numeración), Artículos (Nombre, Precio, Descripción), Índice (Título, Subtítulo, Entradas, Numeración). Each role has its own font family + size control. Font family and size stored in settings and re-applied on rehydration. Precio split from Encabezados as its own independent role. |
 | **Full color system** | 11 independently configurable color roles across 3 collapsible groups — Página (Nombre empresa, Numeración, Separadores, Pie de página), Artículos (Nombre, Precio, Descripción), Índice (Título, Entradas, Números/acentos). Replaces the old 4-key system; previously hardcoded colors (header text, price, footer) are now user-controlled. CSS vars updated throughout. Store migrated to v5. |
 | **Description box auto-grow** | Both the catalog card (`cell-desc`) and the sidebar edit field (`rs-desc-textarea`) expand to fit content via `scrollHeight`. 500-char limit enforced on both. Sidebar shows a `{n}/500` counter turning amber at 400+ and red at the limit. PDF export swaps the textarea for a div with `overflow:visible` so html2canvas renders the full text. |
+| **Full IndexedDB persistence** | All data survives page reloads. Products (metadata + image blobs) stored under `cm:products` / `cm:img:{id}`. Page background image blob under `cm:bg`. All settings (colors, fonts, sizes, store name, contact, opacity, layouts) under `cm:settings` via Zustand subscribe auto-save. `localStorage` no longer used. Two footer buttons: **Vaciar Catálogo** (red fill — clears products only) and **Restablecer Todo** (red outline — wipes everything and resets to defaults). |
 | **Google Fonts** | 39 curated Google Fonts across sans-serif, display serif, bold display, script, and monospace categories. Fonts load on demand via dynamic `<link>` injection when selected. Previously selected Google Fonts are re-loaded on page reload via `loadStoredGoogleFonts` in the rehydration callback. |
 | **Typography UI — collapsible roles + grouped sections** | Each typography role is a collapsible card showing font name · size when collapsed. Roles grouped into labeled sub-sections (Página / Artículos / Índice) within the Tipografía accordion. |
 | **Left sidebar overflow scroll fix** | Sidebar content area is a dedicated scroll container (`flex: 1; overflow-y: auto; min-height: 0`) with `flex-shrink: 0` on all children to prevent flex compression. Export button is a sticky footer outside the scroll area, always visible. |
@@ -30,7 +31,6 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 | Feature | Notes |
 |---|---|
-| **Persistence on images, settings, names, descriptions, etc** | Products (images, names, prices, descriptions) are lost on page reload. Needs IndexedDB or similar since object URLs can't be serialized. |
 
 ---
 
