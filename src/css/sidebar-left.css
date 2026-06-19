@@ -1,9 +1,9 @@
 .sb-header { padding-bottom: 14px; border-bottom: 1px solid var(--sb-border); margin-bottom: 4px; }
 .sb-header h1 { font-size: 15px; font-weight: 700; color: var(--sb-accent); display: flex; align-items: center; gap: 7px; }
-.sb-header p { font-size: 10px; color: var(--sb-text-muted); margin-top: 3px; }
-.sb-section { background: var(--sb-bg-card); border: 1px solid var(--sb-border); border-radius: 12px; padding: 12px; }
-.sb-section-title { font-size: 9px; font-weight: 700; color: var(--sb-text-muted); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; }
-.sb-label { display: block; font-size: 11px; color: var(--sb-text-muted); margin-bottom: 4px; }
+.sb-header p { font-size: 11px; color: var(--sb-text-muted); margin-top: 3px; }
+.sb-section { background: var(--sb-bg-card); border: 1px solid var(--sb-border); border-radius: 10px; padding: 12px; }
+.sb-section-title { font-size: 11px; font-weight: 700; color: var(--sb-text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.sb-label { display: block; font-size: 12px; color: var(--sb-text-muted); margin-bottom: 4px; }
 
 .sb-input {
     width: 100%; padding: 6px 10px; background: var(--sb-input-bg);
@@ -47,11 +47,11 @@
 .sb-btn-export:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 .color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.color-group label { display: block; font-size: 9px; color: var(--sb-text-muted); margin-bottom: 3px; }
+.color-group label { display: block; font-size: 11px; color: var(--sb-text-muted); margin-bottom: 3px; }
 .color-row { display: flex; align-items: center; gap: 5px; }
-.color-row input[type="color"] { width: 24px; height: 24px; border: 2px solid var(--sb-input-border); border-radius: 5px; cursor: pointer; background: transparent; padding: 1px; }
+.color-row input[type="color"] { width: 28px; height: 28px; border: 2px solid var(--sb-input-border); border-radius: 5px; cursor: pointer; background: transparent; padding: 1px; }
 .color-row input[type="color"]:hover { border-color: #64748b; }
-.hex-label { font-size: 9px; font-family: 'Courier New', monospace; color: var(--sb-text-muted); }
+.hex-label { font-size: 10px; font-family: 'Courier New', monospace; color: var(--sb-text-muted); }
 
 .toggle-row { display: flex; align-items: center; justify-content: space-between; }
 .toggle-label { font-size: 12px; color: var(--sb-text); }

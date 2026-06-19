@@ -31,6 +31,7 @@ body.presentation-mode .idx-entry:hover { padding-left: 4px; background: transpa
         overflow: hidden; break-after: page; page-break-after: always;
         break-inside: auto; page-break-inside: auto;
         print-color-adjust: exact; -webkit-print-color-adjust: exact;
+        zoom: 1 !important;
     }
     .page-a4:last-child { break-after: auto; page-break-after: auto; }
 

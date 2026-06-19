@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CatalogFlow Pro — Creador de Catálogos PDF</title>
     <meta name="description" content="Generador profesional de catálogos PDF offline.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/base.css">
     <link rel="stylesheet" href="src/css/layout.css">
     <link rel="stylesheet" href="src/css/sidebar-left.css">
@@ -14,6 +17,7 @@
     <link rel="stylesheet" href="src/css/product.css">
     <link rel="stylesheet" href="src/css/sidebar-right.css">
     <link rel="stylesheet" href="src/css/print.css">
+    <link rel="stylesheet" href="src/css/mobile.css">
 </head>
 <body>
     <div class="app-layout">
@@ -103,7 +107,10 @@
                     <h2>Vista Previa (A4)</h2>
                     <p>3 productos por página · Grilla asimétrica alternada</p>
                 </div>
-                <span class="badge badge-green" id="badge-pages">0 Páginas</span>
+                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <button class="sidebar-right-toggle" id="btn-toggle-right" onclick="toggleRightSidebar()">📋 Productos</button>
+                    <span class="badge badge-green" id="badge-pages">0 Páginas</span>
+                </div>
             </div>
             <div id="drop-zone" class="drop-zone">
                 <span class="dz-icon">📁</span>
@@ -129,6 +136,24 @@
         </aside>
 
     </div>
+    <!-- ══ Bottom nav — mobile only ══ -->
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Navegación principal">
+        <div class="mobile-nav-inner">
+            <button class="mnav-tab" data-tab="preview" onclick="switchTab('preview')" aria-label="Vista Previa">
+                <span class="mnav-icon">👁</span>
+                <span class="mnav-label">Vista Previa</span>
+            </button>
+            <button class="mnav-tab" data-tab="settings" onclick="switchTab('settings')" aria-label="Ajustes">
+                <span class="mnav-icon">⚙️</span>
+                <span class="mnav-label">Ajustes</span>
+            </button>
+            <button class="mnav-tab" data-tab="products" onclick="switchTab('products')" aria-label="Productos">
+                <span class="mnav-icon">📋</span>
+                <span class="mnav-label">Productos</span>
+            </button>
+        </div>
+    </nav>
+
     <script src="src/js/constants.js"></script>
     <script src="src/js/state.js"></script>
     <script src="src/js/render-catalog.js"></script>
