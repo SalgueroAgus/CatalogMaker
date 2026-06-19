@@ -1,16 +1,24 @@
-function blobUrlToBase64(url) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/jpeg', 0.92));
-        };
-        img.onerror = () => resolve(url);
-        img.src = url;
-    });
+async function blobUrlToBase64(blobUrl) {
+    try {
+        const resp = await fetch(blobUrl);
+        const blob = await resp.blob();
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch {
+        return blobUrl;
+    }
+}
+
+// Inject a <style> that disables every animation/transition in a given container.
+// Done via stylesheet so it applies even to elements added after injection.
+function freezeAnimations(container) {
+    const style = document.createElement('style');
+    style.textContent = '* { animation: none !important; transition: none !important; opacity: 1 !important; }';
+    container.prepend(style);
 }
 
 async function exportToPDF() {
@@ -18,11 +26,10 @@ async function exportToPDF() {
 
     const btn = document.getElementById('btn-export');
     const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Preparando…';
     btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Preparando…';
 
-    // Blob URLs are session-only and inaccessible to the print renderer.
-    // Convert them to base64 directly in the live DOM before printing.
+    // Convert all blob URLs to base64 via FileReader (reliable, no canvas-taint risk)
     await Promise.all(state.products.map(async (p) => {
         if (!p.image || p.image.startsWith('data:')) return;
         const b64 = await blobUrlToBase64(p.image);
@@ -33,8 +40,97 @@ async function exportToPDF() {
         if (rsImg) rsImg.src = b64;
     }));
 
-    window.print();
+    // On mobile the workspace tab may be hidden — temporarily force it visible
+    // so .page-a4 elements have proper computed layout when cloned.
+    const workspace = document.getElementById('workspace');
+    const workspacePrevDisplay = workspace ? workspace.style.display : '';
+    if (workspace) workspace.style.display = 'flex';
 
-    btn.innerHTML = originalHTML;
-    btn.disabled = false;
+    try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const A4W = 793.7, A4H = 1122.5;
+        const pages = Array.from(document.querySelectorAll('.page-a4'));
+
+        for (let i = 0; i < pages.length; i++) {
+            btn.innerHTML = `<span class="spinner"></span> Pág. ${i + 1} / ${pages.length}…`;
+
+            // Sync live input/textarea values → attributes before cloning
+            pages[i].querySelectorAll('input').forEach(inp => inp.setAttribute('value', inp.value));
+            pages[i].querySelectorAll('textarea').forEach(ta => { ta.textContent = ta.value; });
+
+            // Off-screen container — position:absolute so it doesn't affect the layout
+            const wrap = document.createElement('div');
+            wrap.style.cssText = [
+                'position:absolute', 'top:0', 'left:-9999px',
+                `width:${A4W}px`, `height:${A4H}px`,
+                'overflow:visible', 'z-index:0',
+                'pointer-events:none'
+            ].join(';');
+
+            // Inject animation-freeze stylesheet BEFORE the clone is added,
+            // so the browser never starts the fadeIn from opacity:0
+            freezeAnimations(wrap);
+
+            const clone = pages[i].cloneNode(true);
+            clone.style.cssText = [
+                `width:${A4W}px`, `height:${A4H}px`,
+                'position:relative', 'top:0', 'left:0',
+                'margin:0', 'box-shadow:none', 'border-radius:0',
+                'zoom:1', 'transform:none',
+                'animation:none', 'transition:none', 'opacity:1'
+            ].join(';');
+
+            // Patch image sources in the clone
+            clone.querySelectorAll('img[id^="ws-img-"]').forEach(img => {
+                const pid = img.id.replace('ws-img-', '');
+                const product = state.products.find(p => p.id === pid);
+                if (product && product.image) img.src = product.image;
+            });
+
+            // Remove overlays (position:absolute over images, would tint them)
+            clone.querySelectorAll('.cell-img-overlay').forEach(el => el.remove());
+
+            wrap.appendChild(clone);
+            document.body.appendChild(wrap);
+
+            // Let the browser flush layout and decode images
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            await Promise.all(
+                Array.from(clone.querySelectorAll('img')).map(img =>
+                    img.decode ? img.decode().catch(() => {}) : Promise.resolve()
+                )
+            );
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: state.colors.bg || '#fafafa',
+                width: A4W,
+                height: A4H,
+                x: 0,
+                y: 0,
+                scrollX: 0,
+                scrollY: 0,
+            });
+
+            document.body.removeChild(wrap);
+
+            if (i > 0) pdf.addPage();
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+        }
+
+        const filename = (state.storeName || 'catalogo').toLowerCase().replace(/\s+/g, '-') + '.pdf';
+        pdf.save(filename);
+    } catch (err) {
+        console.error('PDF export error:', err);
+        alert('Error al generar el PDF. Intente de nuevo.');
+    } finally {
+        // Restore workspace visibility (mobile tabs)
+        if (workspace) workspace.style.display = workspacePrevDisplay;
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
 }
