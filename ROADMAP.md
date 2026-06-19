@@ -17,6 +17,10 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 | **Auto-save to localStorage** | Zustand `persist` middleware saves settings (store name, contact, colors, fonts, opacity, items per page, page layouts) under `catalogmaker-settings`. CSS vars re-applied on rehydration. Note: products and bg image (object URL) are not persisted. |
 | **Gradient color picker (all pickers)** | Replaced all `<input type="color">` with `react-best-gradient-color-picker` via a `GradientPickerPopover` atom. Per-product bg supports full solid + gradient (linear/radial, multi-stop, angle). Page bg also supports gradients. Brand accent/text colors are solid-only. All color values normalized to `rgba()`. Portal-based popover bypasses overflow/transform clipping. Mobile: 36px touch target, `visualViewport` positioning, 70px bottom clearance for nav bar. |
 | **Artículos tab card redesign** | 64px thumbnail, SVG 6-dot grip handle with hover pill + "Arrastrar para reordenar" tooltip, removed ↑↓ buttons (drag-only), gradient swatch replaces flat color picker. |
+| **Full typography system** | 10 independently configurable text roles across 3 groups — Página (Nombre empresa, Pie de página, Numeración), Artículos (Nombre, Precio, Descripción), Índice (Título, Subtítulo, Entradas, Numeración). Each role has its own font family + size control. Font family and size stored in settings and re-applied on rehydration. Precio split from Encabezados as its own independent role. |
+| **Google Fonts** | 39 curated Google Fonts across sans-serif, display serif, bold display, script, and monospace categories. Fonts load on demand via dynamic `<link>` injection when selected. Previously selected Google Fonts are re-loaded on page reload via `loadStoredGoogleFonts` in the rehydration callback. |
+| **Typography UI — collapsible roles + grouped sections** | Each typography role is a collapsible card showing font name · size when collapsed. Roles grouped into labeled sub-sections (Página / Artículos / Índice) within the Tipografía accordion. |
+| **Left sidebar overflow scroll fix** | Sidebar content area is a dedicated scroll container (`flex: 1; overflow-y: auto; min-height: 0`) with `flex-shrink: 0` on all children to prevent flex compression. Export button is a sticky footer outside the scroll area, always visible. |
 
 ---
 
@@ -24,10 +28,8 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 | Feature | Notes |
 |---|---|
-| ~~**Images per page + grid shape**~~ | ✅ Done — see above. |
-| ~~**Individual image background: gradient**~~ | ✅ Done — full gradient picker per product (solid, linear, radial, multi-stop, opacity per stop). Shape variants dropped in favour of the full picker. |
-| **Typography size controls** | Add size inputs for each text role: *EMPRESA*, *Encabezado*, *Textos pequeños*, and *Párrafos*. Right now only font family is configurable. |
 | **Description box auto-grow** | The description field shows a scrollbar inside the catalog view. It should expand to fit its content so the full text is visible without scrolling. |
+| **Persistence on images, settings, names, descriptions, etc** | Products (images, names, prices, descriptions) are lost on page reload. Needs IndexedDB or similar since object URLs can't be serialized. |
 
 ---
 
@@ -35,7 +37,6 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 | Feature | Why it matters |
 |---|---|
-| ~~**Auto-save to localStorage**~~ | ✅ Done (settings). Products still need persistence — see note in Done table. |
 | **Catalog JSON export/import** | Save the session as a `.json` file and reload it later. Pairs with auto-save as a manual backup. |
 | **CSV import** | Drop a CSV → name, price, description auto-fill. Big time saver for users managing inventory in Excel/Sheets. |
 | **Product duplication** | "Copy" button on a product card. Common workflow: duplicate then change image/price. |
@@ -60,16 +61,15 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 | **Section divider pages** | Title page between product groups (e.g., "LÍNEA COCINA"). Lets users build multi-section catalogs. |
 | **WhatsApp / image share** | Capture a single page as PNG and share via `navigator.share` or a WhatsApp link. Fits the Argentine small-business market. |
 | **SKU / code field** | Optional 4th field per product. Many vendors need this for ordering. |
-| **Google Fonts selector** | Fetch top 50 Google Fonts. The app already loads Inter from Google Fonts, so the infrastructure is there. |
 
 ---
 
 ## Suggested order of attack
 
-1. **Client requests** — Description auto-grow, typography sizes (grid options + gradients done)
-2. **Auto-save + JSON export/import** — Prevents data loss, builds trust
-5. **CSV import** — Biggest workflow accelerator
-6. **Product duplication + image fit toggle** — High-frequency editing improvements
-7. **Preset palettes + editable footer tag** — Polish
-8. **Layout options + section dividers** — Unlocks more catalog types
-9. **WhatsApp share** — Distribution/growth
+1. **Client requests** — Description auto-grow, product persistence
+2. **JSON export/import** — Prevents data loss, builds trust
+3. **CSV import** — Biggest workflow accelerator
+4. **Product duplication + image fit toggle** — High-frequency editing improvements
+5. **Preset palettes + editable footer tag** — Polish
+6. **Layout options + section dividers** — Unlocks more catalog types
+7. **WhatsApp share** — Distribution/growth

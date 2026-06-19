@@ -110,4 +110,86 @@
 
 .sb-stack { display: flex; flex-direction: column; gap: 8px; }
 .sb-stack-sm { display: flex; flex-direction: column; gap: 5px; }
-.sb-spacer { flex: 1; min-height: 8px; }
+
+.sb-scroll-area {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 18px 14px 10px;
+}
+.sb-scroll-area > * { flex-shrink: 0; }
+.sb-scroll-area::-webkit-scrollbar { width: 4px; }
+.sb-scroll-area::-webkit-scrollbar-track { background: transparent; }
+.sb-scroll-area::-webkit-scrollbar-thumb { background: var(--sb-input-border); border-radius: 3px; }
+
+.sb-export-footer {
+  flex-shrink: 0; padding: 8px 14px 18px;
+  border-top: 1px solid var(--sb-border);
+  background: linear-gradient(to bottom, #0f172a, #131c2e);
+}
+
+/* ── Typography groups ─────────────────────────────── */
+.typo-group { display: flex; flex-direction: column; gap: 3px; }
+
+.typo-group-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 9px; font-weight: 700; color: var(--sb-text-muted);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  padding: 6px 2px 3px;
+}
+.typo-group-label::before,
+.typo-group-label::after { content: ''; flex: 1; height: 1px; background: var(--sb-border); }
+
+/* ── Individual role card ──────────────────────────── */
+.typo-role { border: 1px solid var(--sb-border); border-radius: 7px; overflow: hidden; }
+
+.typo-role-header {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  padding: 7px 9px; background: none; border: none; cursor: pointer;
+  transition: background var(--tr-fast); text-align: left;
+}
+.typo-role-header:hover { background: rgba(255,255,255,0.03); }
+
+.typo-chevron {
+  font-size: 8px; color: var(--sb-text-muted); flex-shrink: 0;
+  transition: transform var(--tr-normal); display: inline-block;
+}
+.typo-chevron.open { transform: rotate(90deg); }
+
+.typo-role-name {
+  flex: 1; font-size: 10px; font-weight: 600; color: var(--sb-text); min-width: 0;
+}
+
+.typo-role-summary {
+  font-size: 9px; color: var(--sb-text-muted); flex-shrink: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 96px;
+}
+
+.typo-role-body {
+  padding: 0 9px 9px; display: flex; flex-direction: column; gap: 6px;
+  border-top: 1px solid var(--sb-border);
+}
+
+/* ── Size stepper ──────────────────────────────────── */
+.typo-size-row { display: flex; align-items: center; justify-content: space-between; padding-top: 2px; }
+.typo-size-label { font-size: 10px; color: var(--sb-text-muted); }
+.typo-stepper { display: flex; align-items: center; gap: 3px; }
+
+.typo-step-btn {
+  width: 22px; height: 22px; border-radius: 5px; padding: 0;
+  background: var(--sb-input-bg); border: 1px solid var(--sb-input-border);
+  color: var(--sb-text); font-size: 15px; line-height: 1; flex-shrink: 0;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all var(--tr-fast);
+}
+.typo-step-btn:hover { border-color: var(--sb-accent); color: var(--sb-accent); }
+
+.typo-size-input {
+  width: 36px; text-align: center; padding: 3px 0; outline: none;
+  background: var(--sb-input-bg); border: 1px solid var(--sb-input-border);
+  border-radius: 5px; color: var(--sb-text); font-size: 11px;
+  -moz-appearance: textfield;
+}
+.typo-size-input::-webkit-outer-spin-button,
+.typo-size-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.typo-size-input:focus { border-color: var(--sb-accent); }
+.typo-size-unit { font-size: 10px; color: var(--sb-text-muted); }

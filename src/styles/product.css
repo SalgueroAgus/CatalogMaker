@@ -36,7 +36,7 @@
 .cell-name {
   flex: 1; min-width: 0; background: transparent; border: none;
   border-bottom: 1px solid transparent; outline: none;
-  font-family: var(--font-heading); font-size: 10px; font-weight: 700;
+  font-family: var(--font-heading); font-size: var(--font-size-heading); font-weight: 700;
   color: var(--page-primary); text-transform: uppercase; padding: 1px 0;
   transition: border-color var(--tr-fast);
 }
@@ -46,7 +46,7 @@
 .cell-price {
   flex-shrink: 0; background: transparent; border: none;
   border-bottom: 1px solid transparent; outline: none;
-  font-family: var(--font-heading); font-size: 12px; font-weight: 700;
+  font-family: var(--font-price); font-size: var(--font-size-price); font-weight: 700;
   color: #1e293b; text-align: right; width: 75px; padding: 1px 0;
   transition: border-color var(--tr-fast);
 }
@@ -55,7 +55,7 @@
 
 .cell-desc {
   width: 100%; background: transparent; border: none; resize: none;
-  font-family: var(--font-body); font-size: 8px; color: var(--page-text);
+  font-family: var(--font-body); font-size: var(--font-size-body); color: var(--page-text);
   line-height: 1.4; outline: none; opacity: 0.6; padding: 3px 0 0;
   border-bottom: 1px solid transparent; transition: border-color var(--tr-fast);
 }

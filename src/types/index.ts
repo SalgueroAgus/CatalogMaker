@@ -15,9 +15,29 @@ export interface Colors {
 }
 
 export interface Fonts {
+  company: string;
   heading: string;
+  price: string;
   body: string;
   small: string;
+  pageNum: string;
+  idxTitle: string;
+  idxSubtitle: string;
+  idxEntry: string;
+  idxNum: string;
+}
+
+export interface FontSizes {
+  company: number;
+  heading: number;
+  price: number;
+  body: number;
+  small: number;
+  pageNum: number;
+  idxTitle: number;
+  idxSubtitle: number;
+  idxEntry: number;
+  idxNum: number;
 }
 
 export type GridShape =
