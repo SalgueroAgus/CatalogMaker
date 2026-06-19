@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppLayout } from './components/templates/AppLayout';
 import { LeftSidebar } from './components/organisms/LeftSidebar';
 import { Workspace } from './components/organisms/Workspace';
@@ -6,6 +6,9 @@ import { RightSidebar } from './components/organisms/RightSidebar';
 import { MobileNav } from './components/organisms/MobileNav';
 import { usePDF } from './hooks/usePDF';
 import { usePageScale } from './hooks/usePageScale';
+import { useProductStore } from './store/useProductStore';
+import { useSettingsStore } from './store/useSettingsStore';
+import { dbLoadProducts, dbLoadBgImage, dbLoadSettings } from './db';
 
 type Tab = 'preview' | 'settings' | 'products';
 
@@ -16,8 +19,19 @@ export default function App() {
   const [sidebarRightOpen, setSidebarRightOpen] = useState(false);
 
   const { exportToPDF, isExporting, progress } = usePDF(pagesRef);
+  const hydrateProducts  = useProductStore((s) => s.hydrateProducts);
+  const hydrateSettings  = useSettingsStore((s) => s.hydrateSettings);
 
   usePageScale();
+
+  useEffect(() => {
+    dbLoadProducts().then(hydrateProducts).catch(console.error);
+    Promise.all([dbLoadSettings(), dbLoadBgImage()])
+      .then(([settings, bgImageUrl]) => {
+        if (settings) hydrateSettings(settings, bgImageUrl);
+      })
+      .catch(console.error);
+  }, []);
 
   function switchTab(tab: Tab) {
     document.body.classList.remove('tab-preview', 'tab-settings', 'tab-products');

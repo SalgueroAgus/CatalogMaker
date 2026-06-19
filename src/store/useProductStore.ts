@@ -1,6 +1,21 @@
 import { create } from 'zustand';
 import type { Product } from '../types';
 import { PLACEHOLDER_IMG } from '../utils/image';
+import {
+  dbSaveProducts,
+  dbSaveImage,
+  dbDeleteImage,
+  dbClearProducts,
+  type ProductMeta,
+} from '../db';
+
+const toMeta = (p: Product): ProductMeta => ({
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  description: p.description,
+  bgColor: p.bgColor,
+});
 
 interface ProductState {
   products: Product[];
@@ -12,10 +27,13 @@ interface ProductState {
   updateField: (id: string, field: keyof Omit<Product, 'id'>, value: string) => void;
   replaceImage: (id: string, file: File) => void;
   resetCatalog: () => void;
+  hydrateProducts: (products: Product[]) => void;
 }
 
 export const useProductStore = create<ProductState>((set) => ({
   products: [],
+
+  hydrateProducts: (products) => set({ products }),
 
   addProducts: (files) => {
     const images = files.filter((f) => f.type.startsWith('image/'));
@@ -28,26 +46,36 @@ export const useProductStore = create<ProductState>((set) => ({
       image: URL.createObjectURL(file),
       bgColor: 'rgba(255,255,255,1)',
     }));
-    set((s) => ({ products: [...s.products, ...newProducts] }));
+    newProducts.forEach((p, i) => dbSaveImage(p.id, images[i]));
+    set((s) => {
+      const updated = [...s.products, ...newProducts];
+      dbSaveProducts(updated.map(toMeta));
+      return { products: updated };
+    });
   },
 
   addBlankProduct: () =>
-    set((s) => ({
-      products: [
-        ...s.products,
-        {
-          id: String(Date.now()),
-          name: 'NUEVO ARTÍCULO',
-          price: '$0.00',
-          description: 'Descripción del producto.',
-          image: PLACEHOLDER_IMG,
-          bgColor: 'rgba(255,255,255,1)',
-        },
-      ],
-    })),
+    set((s) => {
+      const blank: Product = {
+        id: String(Date.now()),
+        name: 'NUEVO ARTÍCULO',
+        price: '$0.00',
+        description: 'Descripción del producto.',
+        image: PLACEHOLDER_IMG,
+        bgColor: 'rgba(255,255,255,1)',
+      };
+      const updated = [...s.products, blank];
+      dbSaveProducts(updated.map(toMeta));
+      return { products: updated };
+    }),
 
   deleteProduct: (id) =>
-    set((s) => ({ products: s.products.filter((p) => p.id !== id) })),
+    set((s) => {
+      const updated = s.products.filter((p) => p.id !== id);
+      dbDeleteImage(id);
+      dbSaveProducts(updated.map(toMeta));
+      return { products: updated };
+    }),
 
   moveProduct: (id, direction) =>
     set((s) => {
@@ -57,6 +85,7 @@ export const useProductStore = create<ProductState>((set) => ({
         [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]];
       else if (direction === 'down' && idx < arr.length - 1)
         [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+      dbSaveProducts(arr.map(toMeta));
       return { products: arr };
     }),
 
@@ -68,20 +97,31 @@ export const useProductStore = create<ProductState>((set) => ({
       let toIdx = arr.findIndex((p) => p.id === toId);
       if (!above) toIdx++;
       arr.splice(toIdx, 0, moved);
+      dbSaveProducts(arr.map(toMeta));
       return { products: arr };
     }),
 
   updateField: (id, field, value) =>
-    set((s) => ({
-      products: s.products.map((p) => (p.id === id ? { ...p, [field]: value } : p)),
-    })),
+    set((s) => {
+      const updated = s.products.map((p) => (p.id === id ? { ...p, [field]: value } : p));
+      dbSaveProducts(updated.map(toMeta));
+      return { products: updated };
+    }),
 
   replaceImage: (id, file) => {
-    const url = URL.createObjectURL(file);
-    set((s) => ({
-      products: s.products.map((p) => (p.id === id ? { ...p, image: url } : p)),
-    }));
+    dbSaveImage(id, file);
+    set((s) => {
+      const old = s.products.find((p) => p.id === id);
+      if (old?.image && old.image !== PLACEHOLDER_IMG) URL.revokeObjectURL(old.image);
+      const url = URL.createObjectURL(file);
+      return {
+        products: s.products.map((p) => (p.id === id ? { ...p, image: url } : p)),
+      };
+    });
   },
 
-  resetCatalog: () => set({ products: [] }),
+  resetCatalog: () => {
+    dbClearProducts();
+    set({ products: [] });
+  },
 }));
