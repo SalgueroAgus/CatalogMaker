@@ -9,9 +9,19 @@ export interface Product {
 
 export interface Colors {
   bg: string;
-  primary: string;
-  secondary: string;
-  text: string;
+  // Página
+  company: string;
+  pageNum: string;
+  divider: string;
+  footer: string;
+  // Artículos
+  name: string;
+  price: string;
+  desc: string;
+  // Índice
+  idxTitle: string;
+  idxText: string;
+  idxAccent: string;
 }
 
 export interface Fonts {

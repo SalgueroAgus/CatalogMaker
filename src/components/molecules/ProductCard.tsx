@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useProductStore } from '../../store/useProductStore';
 import { PLACEHOLDER_IMG } from '../../utils/image';
 import type { Product } from '../../types';
@@ -6,9 +7,18 @@ interface Props {
   product: Product;
 }
 
+const MAX_DESC = 500;
+
 export function ProductCard({ product }: Props) {
   const updateField = useProductStore((s) => s.updateField);
   const replaceImage = useProductStore((s) => s.replaceImage);
+  const descRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!descRef.current) return;
+    descRef.current.style.height = 'auto';
+    descRef.current.style.height = `${descRef.current.scrollHeight}px`;
+  }, [product.description]);
 
   return (
     <div
@@ -56,10 +66,11 @@ export function ProductCard({ product }: Props) {
           />
         </div>
         <textarea
+          ref={descRef}
           className="cell-desc"
-          rows={2}
+          rows={1}
           value={product.description}
-          onChange={(e) => updateField(product.id, 'description', e.target.value)}
+          onChange={(e) => updateField(product.id, 'description', e.target.value.slice(0, MAX_DESC))}
           placeholder="Descripción..."
         />
       </div>

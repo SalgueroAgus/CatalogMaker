@@ -1,23 +1,23 @@
 .idx-header { text-align: center; padding: 22mm 0 14mm; flex-shrink: 0; }
 .idx-title {
   font-family: var(--font-idx-title); font-size: var(--font-size-idx-title); font-weight: 700;
-  color: var(--page-primary); text-transform: uppercase; letter-spacing: 4px;
+  color: var(--color-idx-title); text-transform: uppercase; letter-spacing: 4px;
 }
-.idx-divider { width: 50px; height: 2px; background: var(--page-secondary); margin: 14px auto; }
+.idx-divider { width: 50px; height: 2px; background: var(--color-divider); margin: 14px auto; }
 .idx-subtitle {
   font-family: var(--font-idx-subtitle); font-size: var(--font-size-idx-subtitle); font-weight: 600;
-  color: var(--page-text); letter-spacing: 6px; text-transform: uppercase; opacity: 0.5;
+  color: var(--color-idx-text); letter-spacing: 6px; text-transform: uppercase; opacity: 0.5;
 }
 .idx-list { width: 100%; max-width: 145mm; margin: 0 auto; flex: 1; overflow: hidden; }
 .idx-entry {
   display: flex; align-items: baseline; padding: 5px 4px;
   cursor: pointer; transition: all var(--tr-fast);
-  font-family: var(--font-idx-entry); font-size: var(--font-size-idx-entry); color: var(--page-text);
+  font-family: var(--font-idx-entry); font-size: var(--font-size-idx-entry); color: var(--color-idx-text);
   border-radius: 4px; text-decoration: none;
 }
-.idx-entry:hover { color: var(--page-primary); background: rgba(0,0,0,0.025); padding-left: 8px; }
-.idx-num { width: 26px; font-weight: 700; font-family: var(--font-idx-num); font-size: var(--font-size-idx-num); flex-shrink: 0; color: var(--page-primary); }
+.idx-entry:hover { color: var(--color-idx-accent); background: rgba(0,0,0,0.025); padding-left: 8px; }
+.idx-num { width: 26px; font-weight: 700; font-family: var(--font-idx-num); font-size: var(--font-size-idx-num); flex-shrink: 0; color: var(--color-idx-accent); }
 .idx-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .idx-leader { flex: 1; border-bottom: 1px dotted rgba(0,0,0,0.15); margin: 0 8px; min-width: 20px; align-self: flex-end; margin-bottom: 3px; }
-.idx-page { font-weight: 700; font-family: var(--font-idx-num); font-size: var(--font-size-idx-num); flex-shrink: 0; color: var(--page-primary); }
+.idx-page { font-weight: 700; font-family: var(--font-idx-num); font-size: var(--font-size-idx-num); flex-shrink: 0; color: var(--color-idx-accent); }
 .idx-gap { height: 6px; }

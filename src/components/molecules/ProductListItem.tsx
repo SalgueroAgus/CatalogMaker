@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProductStore } from '../../store/useProductStore';
 import { PLACEHOLDER_IMG } from '../../utils/image';
 import { scrollToProduct } from '../../utils/scroll';
@@ -31,6 +31,8 @@ function GripIcon() {
   );
 }
 
+const MAX_DESC = 500;
+
 export function ProductListItem({
   product, index, total: _total, isVisible,
   isDragging, dragOverPosition,
@@ -38,6 +40,13 @@ export function ProductListItem({
 }: Props) {
   const [descOpen, setDescOpen] = useState(false);
   const updateField = useProductStore((s) => s.updateField);
+  const descRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!descRef.current || !descOpen) return;
+    descRef.current.style.height = 'auto';
+    descRef.current.style.height = `${descRef.current.scrollHeight}px`;
+  }, [product.description, descOpen]);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const replaceImage = useProductStore((s) => s.replaceImage);
 
@@ -140,14 +149,18 @@ export function ProductListItem({
       <button className="rs-desc-toggle" onClick={() => setDescOpen((o) => !o)}>
         <span className={`rs-desc-arrow ${descOpen ? 'open' : ''}`}>▸</span> Descripción
       </button>
-      <div className="rs-desc-body" style={{ maxHeight: descOpen ? '500px' : '0' }}>
+      <div className="rs-desc-body" style={{ maxHeight: descOpen ? '600px' : '0' }}>
         <textarea
+          ref={descRef}
           className="rs-desc-textarea"
-          rows={3}
+          rows={2}
           value={product.description}
-          onChange={(e) => updateField(product.id, 'description', e.target.value)}
+          onChange={(e) => updateField(product.id, 'description', e.target.value.slice(0, MAX_DESC))}
           placeholder="Descripción..."
         />
+        <span className={`rs-desc-counter ${product.description.length >= MAX_DESC ? 'rs-desc-counter-limit' : product.description.length >= 400 ? 'rs-desc-counter-warn' : ''}`}>
+          {product.description.length} / {MAX_DESC}
+        </span>
       </div>
     </div>
   );

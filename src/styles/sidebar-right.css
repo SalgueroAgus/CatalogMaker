@@ -190,8 +190,15 @@
   color: var(--sb-text); font-size: 10px; outline: none;
   resize: none; margin-top: 3px; line-height: 1.5;
   transition: border-color var(--tr-fast);
+  overflow: hidden; min-height: 44px;
 }
 .rs-desc-textarea:focus { border-color: var(--sb-accent); }
+.rs-desc-counter {
+  display: block; text-align: right; font-size: 9px;
+  color: var(--sb-text-muted); margin-top: 2px; padding-right: 2px;
+}
+.rs-desc-counter-warn { color: #f59e0b; }
+.rs-desc-counter-limit { color: #ef4444; }
 
 .rs-empty {
   display: flex; flex-direction: column; align-items: center;

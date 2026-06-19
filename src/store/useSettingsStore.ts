@@ -6,6 +6,20 @@ import { loadStoredGoogleFonts } from '../constants/fonts';
 const setCSSVar = (name: string, value: string) =>
   document.documentElement.style.setProperty(name, value);
 
+const COLOR_VAR_MAP: Record<keyof Colors, string> = {
+  bg:        '--page-bg',
+  company:   '--color-company',
+  pageNum:   '--color-page-num',
+  divider:   '--color-divider',
+  footer:    '--color-footer',
+  name:      '--color-name',
+  price:     '--color-price',
+  desc:      '--color-desc',
+  idxTitle:  '--color-idx-title',
+  idxText:   '--color-idx-text',
+  idxAccent: '--color-idx-accent',
+};
+
 const FONT_VAR_MAP: Record<keyof Fonts, string> = {
   company:     '--font-company',
   heading:     '--font-heading',
@@ -33,7 +47,9 @@ const SIZE_VAR_MAP: Record<keyof FontSizes, string> = {
 };
 
 function applyColors(colors: Colors) {
-  Object.entries(colors).forEach(([k, v]) => setCSSVar(`--page-${k}`, v));
+  (Object.entries(colors) as [keyof Colors, string][]).forEach(([k, v]) => {
+    setCSSVar(COLOR_VAR_MAP[k], v);
+  });
 }
 
 function applyFonts(fonts: Fonts) {
@@ -105,17 +121,26 @@ const DEFAULT_FONT_SIZES: FontSizes = {
   idxNum:       10,
 };
 
+const DEFAULT_COLORS: Colors = {
+  bg:        'rgba(250,250,250,1)',
+  company:   'rgba(100,116,139,1)',
+  pageNum:   'rgba(148,163,184,1)',
+  divider:   'rgba(217,195,176,1)',
+  footer:    'rgba(100,116,139,1)',
+  name:      'rgba(79,94,79,1)',
+  price:     'rgba(30,41,59,1)',
+  desc:      'rgba(55,65,81,1)',
+  idxTitle:  'rgba(79,94,79,1)',
+  idxText:   'rgba(55,65,81,1)',
+  idxAccent: 'rgba(79,94,79,1)',
+};
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       storeName: 'CATÁLOGO HOGAR & DECO',
       footerContact: 'Contacto: ventas@tutienda.com | WhatsApp: +54 9 11 2345-6789',
-      colors: {
-        bg: 'rgba(250,250,250,1)',
-        primary: 'rgba(79,94,79,1)',
-        secondary: 'rgba(217,195,176,1)',
-        text: 'rgba(55,65,81,1)',
-      },
+      colors: DEFAULT_COLORS,
       fonts: DEFAULT_FONTS,
       fontSizes: DEFAULT_FONT_SIZES,
       bgImage: null,
@@ -127,7 +152,7 @@ export const useSettingsStore = create<SettingsState>()(
       updateContact: (v) => set({ footerContact: v }),
 
       updateColor: (type, value) => {
-        setCSSVar(`--page-${type}`, value);
+        setCSSVar(COLOR_VAR_MAP[type], value);
         set((s) => ({ colors: { ...s.colors, [type]: value } }));
       },
 
@@ -154,7 +179,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'catalogmaker-settings',
-      version: 4,
+      version: 5,
       migrate: (state: any, version) => {
         if (version === 0 && state?.colors) {
           state = {
@@ -210,6 +235,28 @@ export const useSettingsStore = create<SettingsState>()(
               idxSubtitle: fs.idxSubtitle ?? 11,
               idxEntry:    fs.idxEntry    ?? 11,
               idxNum:      fs.idxNum      ?? 10,
+            },
+          };
+        }
+        if (version <= 4) {
+          const old = state.colors ?? {};
+          const primary   = old.primary   ?? DEFAULT_COLORS.name;
+          const secondary = old.secondary ?? DEFAULT_COLORS.divider;
+          const text      = old.text      ?? DEFAULT_COLORS.desc;
+          state = {
+            ...state,
+            colors: {
+              bg:        old.bg ?? DEFAULT_COLORS.bg,
+              company:   DEFAULT_COLORS.company,
+              pageNum:   DEFAULT_COLORS.pageNum,
+              divider:   secondary,
+              footer:    DEFAULT_COLORS.footer,
+              name:      primary,
+              price:     DEFAULT_COLORS.price,
+              desc:      text,
+              idxTitle:  primary,
+              idxText:   text,
+              idxAccent: primary,
             },
           };
         }

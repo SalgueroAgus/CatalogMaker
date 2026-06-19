@@ -22,6 +22,9 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
   const [openSections, setOpenSections] = useState<Set<SectionKey>>(
     new Set(['catalogo'])
   );
+  const [openColorGroups, setOpenColorGroups] = useState<Set<string>>(
+    new Set(['pagina', 'articulos', 'indice'])
+  );
   const [fondoMode, setFondoMode] = useState<'color' | 'imagen'>('color');
 
   const addProducts = useProductStore((s) => s.addProducts);
@@ -40,6 +43,15 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
 
   function toggleSection(key: SectionKey) {
     setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function toggleColorGroup(key: string) {
+    setOpenColorGroups((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -221,10 +233,50 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
               )}
 
               <div className="sb-subsection-label" style={{ marginTop: 10 }}>Colores</div>
-              <div className="color-grid">
-                <ColorGroup label="Acento primario" colorKey="primary"  />
-                <ColorGroup label="Acento secundario" colorKey="secondary"  />
-                <ColorGroup label="Texto" colorKey="text"  />
+
+              <div className="typo-group">
+                <div className="typo-role">
+                  <button className="typo-role-header" onClick={() => toggleColorGroup('pagina')}>
+                    <span className={`typo-chevron ${openColorGroups.has('pagina') ? 'open' : ''}`}>▸</span>
+                    <span className="typo-role-name">Página</span>
+                  </button>
+                  {openColorGroups.has('pagina') && (
+                    <div className="typo-role-body">
+                      <ColorGroup label="Nombre empresa" colorKey="company" solidOnly />
+                      <ColorGroup label="Numeración" colorKey="pageNum" solidOnly />
+                      <ColorGroup label="Separadores" colorKey="divider" solidOnly />
+                      <ColorGroup label="Pie de página" colorKey="footer" solidOnly />
+                    </div>
+                  )}
+                </div>
+
+                <div className="typo-role">
+                  <button className="typo-role-header" onClick={() => toggleColorGroup('articulos')}>
+                    <span className={`typo-chevron ${openColorGroups.has('articulos') ? 'open' : ''}`}>▸</span>
+                    <span className="typo-role-name">Artículos</span>
+                  </button>
+                  {openColorGroups.has('articulos') && (
+                    <div className="typo-role-body">
+                      <ColorGroup label="Nombre" colorKey="name" solidOnly />
+                      <ColorGroup label="Precio" colorKey="price" solidOnly />
+                      <ColorGroup label="Descripción" colorKey="desc" solidOnly />
+                    </div>
+                  )}
+                </div>
+
+                <div className="typo-role">
+                  <button className="typo-role-header" onClick={() => toggleColorGroup('indice')}>
+                    <span className={`typo-chevron ${openColorGroups.has('indice') ? 'open' : ''}`}>▸</span>
+                    <span className="typo-role-name">Índice</span>
+                  </button>
+                  {openColorGroups.has('indice') && (
+                    <div className="typo-role-body">
+                      <ColorGroup label="Título" colorKey="idxTitle" solidOnly />
+                      <ColorGroup label="Entradas" colorKey="idxText" solidOnly />
+                      <ColorGroup label="Números / acentos" colorKey="idxAccent" solidOnly />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
