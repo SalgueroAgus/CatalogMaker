@@ -29,6 +29,7 @@ async function exportToPDF() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Preparando…';
 
+
     // Convert all blob URLs to base64 via FileReader (reliable, no canvas-taint risk)
     await Promise.all(state.products.map(async (p) => {
         if (!p.image || p.image.startsWith('data:')) return;
@@ -91,6 +92,23 @@ async function exportToPDF() {
             // Remove overlays (position:absolute over images, would tint them)
             clone.querySelectorAll('.cell-img-overlay').forEach(el => el.remove());
 
+            // Replace <input> and <textarea> with <div> — html2canvas clips input text
+            // at the element's overflow boundary, chopping letters in half vertically.
+            clone.querySelectorAll('input.cell-name, input.cell-price').forEach(input => {
+                const div = document.createElement('div');
+                div.className = input.className;
+                div.textContent = input.getAttribute('value') || '';
+                div.style.cssText = 'border:none;outline:none;background:transparent;white-space:nowrap;overflow:hidden;';
+                input.parentNode.replaceChild(div, input);
+            });
+            clone.querySelectorAll('textarea.cell-desc').forEach(ta => {
+                const div = document.createElement('div');
+                div.className = ta.className;
+                div.textContent = ta.textContent || '';
+                div.style.cssText = 'border:none;outline:none;background:transparent;overflow:hidden;';
+                ta.parentNode.replaceChild(div, ta);
+            });
+
             wrap.appendChild(clone);
             document.body.appendChild(wrap);
 
@@ -123,8 +141,19 @@ async function exportToPDF() {
         }
 
         const filename = (state.storeName || 'catalogo').toLowerCase().replace(/\s+/g, '-') + '.pdf';
-        pdf.save(filename);
+        const blob = pdf.output('blob');
+        const file = new File([blob], filename, { type: 'application/pdf' });
+
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            // iOS Safari + Chrome, Android Chrome: native share sheet (save to Files, AirDrop, etc.)
+            await navigator.share({ files: [file], title: state.storeName || 'Catálogo' });
+        } else {
+            // Desktop and Android fallback
+            pdf.save(filename);
+        }
     } catch (err) {
+        if (err.name === 'AbortError') return; // user cancelled the share sheet — not an error
         console.error('PDF export error:', err);
         alert('Error al generar el PDF. Intente de nuevo.');
     } finally {
