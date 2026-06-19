@@ -11,6 +11,8 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 |---|---|
 | **PDF on mobile** | jsPDF + html2canvas replacing `window.print()`. Works on iOS/Android. |
 | **Vite + React + TS migration** | Full rewrite from vanilla JS to Vite/React/TypeScript/Zustand with atomic design structure. |
+| **Page background image with opacity control** | Left sidebar "Página" section — Color/Imagen toggle, image upload, opacity slider. Applied globally to all pages. PDF export preserves correct opacity. |
+| **Left sidebar accordion + reorganization** | Collapsible sections, order: Catálogo → Marca → Tipografía → Página. Catálogo open by default. Removed Modo Presentación. |
 
 ---
 
@@ -18,7 +20,6 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 | Feature | Notes |
 |---|---|
-| **Page background image with opacity control** | Let users set a background image (instead of just a color) per page, with an opacity slider so it doesn't overpower the products. |
 | **Images per page + grid shape** | Per-page selector for number of products (1, 2, 3, 4…) and grid layout (e.g. 1-col, 2-col, masonry). |
 | **Individual image background: gradient + shape** | Per-product image background should support gradient fills (not just flat color) and different container shapes (square, rounded, circle, etc.). |
 | **Typography size controls** | Add size inputs for each text role: *EMPRESA*, *Encabezado*, *Textos pequeños*, and *Párrafos*. Right now only font family is configurable. |
@@ -61,7 +62,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 ## Suggested order of attack
 
-1. **Client requests** — Description auto-grow, typography sizes, background image, grid options, gradient backgrounds
+1. **Client requests** — Description auto-grow, typography sizes, grid options, gradient backgrounds
 2. **Auto-save + JSON export/import** — Prevents data loss, builds trust
 5. **CSV import** — Biggest workflow accelerator
 6. **Product duplication + image fit toggle** — High-frequency editing improvements
