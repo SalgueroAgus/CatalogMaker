@@ -16,16 +16,16 @@
 
 .page-hdr {
   display: flex; justify-content: space-between; align-items: flex-end;
-  padding-bottom: 8px; border-bottom: 2px solid var(--page-secondary);
+  padding-bottom: 8px; border-bottom: 2px solid var(--color-divider);
   margin-bottom: 10px; flex-shrink: 0;
 }
-.page-hdr .store-name { font-family: var(--font-small); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; color: #64748b; text-transform: uppercase; }
-.page-hdr .page-num { font-family: var(--font-small); font-size: 9px; color: #94a3b8; }
+.page-hdr .store-name { font-family: var(--font-company); font-size: var(--font-size-company); font-weight: 600; letter-spacing: 1.5px; color: var(--color-company); text-transform: uppercase; }
+.page-hdr .page-num { font-family: var(--font-page-num); font-size: var(--font-size-page-num); color: var(--color-page-num); }
 
 .page-ftr {
   display: flex; justify-content: space-between; align-items: center;
-  margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--page-secondary);
+  margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--color-divider);
   opacity: 0.6; flex-shrink: 0;
 }
-.page-ftr .footer-contact { font-family: var(--font-small); font-size: 9px; color: #64748b; }
-.page-ftr .footer-tag { font-family: var(--font-small); font-size: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; }
+.page-ftr .footer-contact { font-family: var(--font-small); font-size: var(--font-size-small); color: var(--color-footer); }
+.page-ftr .footer-tag { font-family: var(--font-small); font-size: var(--font-size-small); color: var(--color-footer); text-transform: uppercase; letter-spacing: 2px; }

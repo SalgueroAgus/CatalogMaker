@@ -1,17 +1,14 @@
 import { forwardRef } from 'react';
 import { ProductCard } from '../molecules/ProductCard';
+import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { DEFAULT_GRID_SHAPE, SHAPE_ITEM_COUNT } from '../../types';
+import { getIndexPageCount } from '../../utils/chunks';
 import type { Product } from '../../types';
 
 interface Props {
   products: Product[];
   pageIndex: number;
-}
-
-function getGridClass(count: number, pageIndex: number): string {
-  if (count === 1) return 'grid-single';
-  if (count === 2) return 'grid-duo';
-  return pageIndex % 2 === 0 ? 'grid-trio' : 'grid-trio-alt';
 }
 
 export const ProductPage = forwardRef<HTMLDivElement, Props>(
@@ -20,9 +17,19 @@ export const ProductPage = forwardRef<HTMLDivElement, Props>(
     const footerContact = useSettingsStore((s) => s.footerContact);
     const bgImage = useSettingsStore((s) => s.bgImage);
     const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
+    const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
+    const pageLayouts = useSettingsStore((s) => s.pageLayouts);
+    const allProducts = useProductStore((s) => s.products);
 
-    const displayPage = pageIndex + 2;
-    const gridClass = getGridClass(products.length, pageIndex);
+    const indexPageCount = getIndexPageCount(allProducts.length);
+    const displayPage = pageIndex + indexPageCount + 1;
+    const actualCount = products.length;
+
+    const stored = pageLayouts[pageIndex];
+    const gridShape =
+      stored && SHAPE_ITEM_COUNT[stored] === actualCount
+        ? stored
+        : DEFAULT_GRID_SHAPE[actualCount] ?? DEFAULT_GRID_SHAPE[itemsPerPage];
 
     return (
       <div
@@ -41,7 +48,7 @@ export const ProductPage = forwardRef<HTMLDivElement, Props>(
           <span className="page-num">Pág. {String(displayPage).padStart(2, '0')}</span>
         </div>
 
-        <div className={`product-grid ${gridClass}`}>
+        <div className={`product-grid grid-${gridShape}`}>
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

@@ -103,7 +103,7 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
           const div = document.createElement('div');
           div.className = ta.className;
           div.textContent = ta.textContent || '';
-          div.style.cssText = 'border:none;outline:none;background:transparent;overflow:hidden;';
+          div.style.cssText = 'border:none;outline:none;background:transparent;overflow:visible;height:auto;';
           ta.parentNode!.replaceChild(div, ta);
         });
 

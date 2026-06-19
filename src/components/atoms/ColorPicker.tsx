@@ -1,17 +1,19 @@
+import { GradientPickerPopover } from './GradientPickerPopover';
+
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  solidOnly?: boolean;
+  idSuffix?: string;
 }
 
-export function ColorPicker({ value, onChange }: Props) {
+export function ColorPicker({ value, onChange, solidOnly, idSuffix }: Props) {
   return (
-    <div className="color-row">
-      <input
-        type="color"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <span className="hex-label">{value}</span>
-    </div>
+    <GradientPickerPopover
+      value={value}
+      onChange={onChange}
+      solidOnly={solidOnly}
+      idSuffix={idSuffix}
+    />
   );
 }
