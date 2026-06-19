@@ -13,6 +13,8 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 | **Vite + React + TS migration** | Full rewrite from vanilla JS to Vite/React/TypeScript/Zustand with atomic design structure. |
 | **Page background image with opacity control** | Left sidebar "Página" section — Color/Imagen toggle, image upload, opacity slider. Applied globally to all pages. PDF export preserves correct opacity. |
 | **Left sidebar accordion + reorganization** | Collapsible sections, order: Catálogo → Marca → Tipografía → Página. Catálogo open by default. Removed Modo Presentación. |
+| **Images per page + grid shape** | Right sidebar "Páginas" tab — pill selector for items per page (1–5) + `GridShapePicker` with layout variants per count. Per-page layout overrides stored in settings. CSS grid definitions in `grid-{1-5}.css`. |
+| **Auto-save to localStorage** | Zustand `persist` middleware saves settings (store name, contact, colors, fonts, opacity, items per page, page layouts) under `catalogmaker-settings`. CSS vars re-applied on rehydration. Note: products and bg image (object URL) are not persisted. |
 
 ---
 
@@ -20,7 +22,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 | Feature | Notes |
 |---|---|
-| **Images per page + grid shape** | Per-page selector for number of products (1, 2, 3, 4…) and grid layout (e.g. 1-col, 2-col, masonry). |
+| ~~**Images per page + grid shape**~~ | ✅ Done — see above. |
 | **Individual image background: gradient + shape** | Per-product image background should support gradient fills (not just flat color) and different container shapes (square, rounded, circle, etc.). |
 | **Typography size controls** | Add size inputs for each text role: *EMPRESA*, *Encabezado*, *Textos pequeños*, and *Párrafos*. Right now only font family is configurable. |
 | **Description box auto-grow** | The description field shows a scrollbar inside the catalog view. It should expand to fit its content so the full text is visible without scrolling. |
@@ -31,7 +33,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 | Feature | Why it matters |
 |---|---|
-| **Auto-save to localStorage** | All work is lost on refresh. One `beforeunload` save + restore on load. |
+| ~~**Auto-save to localStorage**~~ | ✅ Done (settings). Products still need persistence — see note in Done table. |
 | **Catalog JSON export/import** | Save the session as a `.json` file and reload it later. Pairs with auto-save as a manual backup. |
 | **CSV import** | Drop a CSV → name, price, description auto-fill. Big time saver for users managing inventory in Excel/Sheets. |
 | **Product duplication** | "Copy" button on a product card. Common workflow: duplicate then change image/price. |
@@ -62,7 +64,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 ## Suggested order of attack
 
-1. **Client requests** — Description auto-grow, typography sizes, grid options, gradient backgrounds
+1. **Client requests** — Description auto-grow, typography sizes, gradient backgrounds (grid options done)
 2. **Auto-save + JSON export/import** — Prevents data loss, builds trust
 5. **CSV import** — Biggest workflow accelerator
 6. **Product duplication + image fit toggle** — High-frequency editing improvements

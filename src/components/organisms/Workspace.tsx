@@ -3,7 +3,8 @@ import { Badge } from '../atoms/Badge';
 import { IndexPage } from './IndexPage';
 import { ProductPage } from './ProductPage';
 import { useProductStore } from '../../store/useProductStore';
-import { chunkArray } from '../../utils/chunks';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { chunkArray, INDEX_ITEMS_PER_PAGE } from '../../utils/chunks';
 import { scrollToLastPage } from '../../utils/scroll';
 
 interface Props {
@@ -19,16 +20,17 @@ export function Workspace({
 }: Props) {
   const allProducts = useProductStore((s) => s.products);
   const addProducts = useProductStore((s) => s.addProducts);
+  const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
 
   const workspaceRef = useRef<HTMLElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const prevLengthRef = useRef(allProducts.length);
   const visibleRef = useRef(new Set<string>());
 
-  const chunks = chunkArray(allProducts, 3);
-  const totalPages = allProducts.length === 0 ? 0 : chunks.length + 1;
+  const indexChunks = chunkArray(allProducts, INDEX_ITEMS_PER_PAGE);
+  const productChunks = chunkArray(allProducts, itemsPerPage);
+  const totalPages = allProducts.length === 0 ? 0 : indexChunks.length + productChunks.length;
 
-  // Scroll to last page when products are added
   useEffect(() => {
     if (allProducts.length > prevLengthRef.current) {
       scrollToLastPage(workspaceRef.current);
@@ -36,7 +38,6 @@ export function Workspace({
     prevLengthRef.current = allProducts.length;
   }, [allProducts.length]);
 
-  // Scroll spy — highlights visible product cards in the right sidebar
   const setupObserver = useCallback(() => {
     if (observerRef.current) observerRef.current.disconnect();
     if (!workspaceRef.current || allProducts.length === 0) {
@@ -104,7 +105,7 @@ export function Workspace({
       <div className="info-bar">
         <div>
           <h2>Vista Previa (A4)</h2>
-          <p>3 productos por página · Grilla asimétrica alternada</p>
+          <p>{itemsPerPage} foto{itemsPerPage !== 1 ? 's' : ''} por página</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <button
@@ -129,17 +130,26 @@ export function Workspace({
         >
           <span className="dz-icon">📁</span>
           <p className="dz-title">Arrastrá y soltá tus fotos aquí</p>
-          <p className="dz-sub">Se agrupan automáticamente en páginas de 3 productos.</p>
+          <p className="dz-sub">Se agrupan automáticamente en páginas.</p>
         </div>
       )}
 
       {allProducts.length > 0 && (
         <div className="pages-container">
-          <IndexPage ref={setPageRef(0)} />
-          {chunks.map((chunk, i) => (
+          {indexChunks.map((chunk, i) => (
+            <IndexPage
+              key={`index-${i}`}
+              ref={setPageRef(i)}
+              products={chunk}
+              globalStartIndex={i * INDEX_ITEMS_PER_PAGE}
+              pageNum={i + 1}
+              totalIndexPages={indexChunks.length}
+            />
+          ))}
+          {productChunks.map((chunk, i) => (
             <ProductPage
               key={chunk[0].id}
-              ref={setPageRef(i + 1)}
+              ref={setPageRef(indexChunks.length + i)}
               products={chunk}
               pageIndex={i}
             />
