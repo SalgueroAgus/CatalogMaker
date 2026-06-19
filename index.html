@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CatalogFlow Pro — Creador de Catálogos PDF</title>
+    <meta name="description" content="Generador profesional de catálogos PDF offline.">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+
+        <!-- ══════════════════════════════════════════════
+             LEFT SIDEBAR — Settings
+             ══════════════════════════════════════════════ -->
+        <aside class="sidebar-left" id="sidebar-left">
+            <div class="sb-header">
+                <h1>🎴 CatalogFlow Pro</h1>
+                <p>3 productos por página • Offline</p>
+            </div>
+
+            <div class="sb-section">
+                <div class="sb-section-title">Marca</div>
+                <div class="sb-stack-sm">
+                    <div>
+                        <label class="sb-label">Empresa</label>
+                        <input type="text" id="input-store-name" class="sb-input" value="CATÁLOGO HOGAR & DECO" oninput="updateGlobalTexts()" style="text-transform:uppercase">
+                    </div>
+                    <div>
+                        <label class="sb-label">Contacto</label>
+                        <input type="text" id="input-contact" class="sb-input" value="Contacto: ventas@tutienda.com | WhatsApp: +54 9 11 2345-6789" oninput="updateGlobalTexts()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="sb-section">
+                <div class="sb-section-title">Tipografía</div>
+                <div class="sb-stack-sm">
+                    <div><label class="sb-label">Encabezados</label><div class="select-wrap"><select id="font-heading" class="sb-select" onchange="updateFont('heading',this.value)"></select></div></div>
+                    <div><label class="sb-label">Párrafos</label><div class="select-wrap"><select id="font-body" class="sb-select" onchange="updateFont('body',this.value)"></select></div></div>
+                    <div><label class="sb-label">Textos pequeños</label><div class="select-wrap"><select id="font-small" class="sb-select" onchange="updateFont('small',this.value)"></select></div></div>
+                </div>
+            </div>
+
+            <div class="sb-section">
+                <div class="sb-section-title">Colores</div>
+                <div class="color-grid">
+                    <div class="color-group">
+                        <label>Fondo Páginas</label>
+                        <div class="color-row"><input type="color" id="color-bg" value="#fafafa" onchange="updateColor('bg',this.value)"><span class="hex-label" id="hex-bg">#fafafa</span></div>
+                    </div>
+                    <div class="color-group">
+                        <label>Acento Primario</label>
+                        <div class="color-row"><input type="color" id="color-primary" value="#4f5e4f" onchange="updateColor('primary',this.value)"><span class="hex-label" id="hex-primary">#4f5e4f</span></div>
+                    </div>
+                    <div class="color-group">
+                        <label>Acento Secundario</label>
+                        <div class="color-row"><input type="color" id="color-secondary" value="#d9c3b0" onchange="updateColor('secondary',this.value)"><span class="hex-label" id="hex-secondary">#d9c3b0</span></div>
+                    </div>
+                    <div class="color-group">
+                        <label>Texto</label>
+                        <div class="color-row"><input type="color" id="color-text" value="#374151" onchange="updateColor('text',this.value)"><span class="hex-label" id="hex-text">#374151</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sb-section">
+                <div class="sb-section-title">Catálogo</div>
+                <input type="file" id="bulk-file-input" multiple accept="image/*" class="hidden" onchange="handleBulkUpload(event)">
+                <div class="sb-stack-sm">
+                    <button class="sb-btn" onclick="document.getElementById('bulk-file-input').click()">➕ Cargar Fotos</button>
+                    <button class="sb-btn" onclick="addBlankPage()">📄 Agregar Producto</button>
+                    <button class="sb-btn sb-btn-ghost" onclick="resetCatalog()">🗑 Vaciar Catálogo</button>
+                </div>
+            </div>
+
+            <div class="sb-section">
+                <div class="sb-section-title">Vista</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Modo Presentación</span>
+                    <div class="toggle-track" id="toggle-presentation" onclick="togglePresentation()"><div class="toggle-thumb"></div></div>
+                </div>
+            </div>
+
+            <div class="sb-spacer"></div>
+            <button id="btn-export" class="sb-btn-export" onclick="exportToPDF()">📥 Descargar PDF</button>
+        </aside>
+
+        <!-- ══════════════════════════════════════════════
+             WORKSPACE — Preview
+             ══════════════════════════════════════════════ -->
+        <main class="workspace" id="workspace">
+            <div class="info-bar" id="info-bar">
+                <div>
+                    <h2>Vista Previa (A4)</h2>
+                    <p>3 productos por página · Grilla asimétrica alternada</p>
+                </div>
+                <span class="badge badge-green" id="badge-pages">0 Páginas</span>
+            </div>
+            <div id="drop-zone" class="drop-zone">
+                <span class="dz-icon">📁</span>
+                <p class="dz-title">Arrastrá y soltá tus fotos aquí</p>
+                <p class="dz-sub">Se agrupan automáticamente en páginas de 3 productos.</p>
+            </div>
+            <div class="pages-container" id="catalog-container"></div>
+        </main>
+
+        <!-- ══════════════════════════════════════════════
+             RIGHT SIDEBAR — Product List
+             ══════════════════════════════════════════════ -->
+        <aside class="sidebar-right" id="sidebar-right">
+            <div class="rs-header">
+                <h2>📋 Listado</h2>
+                <span class="rs-count" id="rs-count">0 artículos</span>
+            </div>
+            <div class="rs-list" id="rs-list"></div>
+            <div class="rs-empty" id="rs-empty">
+                <span>📋</span>
+                <p>Subí fotos para ver el listado aquí</p>
+            </div>
+        </aside>
+
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
