@@ -138,6 +138,28 @@ async function exportToPDF() {
 
             if (i > 0) pdf.addPage();
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+
+            // Overlay clickable link annotations on top of the rasterised page
+            const pageEl = pages[i];
+            const pageRect = pageEl.getBoundingClientRect();
+            pageEl.querySelectorAll('a[href]').forEach(anchor => {
+                const attrHref = anchor.getAttribute('href');
+                if (!attrHref) return;
+                const rect = anchor.getBoundingClientRect();
+                const x = (rect.left - pageRect.left) / pageRect.width * 210;
+                const y = (rect.top  - pageRect.top)  / pageRect.height * 297;
+                const w = rect.width  / pageRect.width  * 210;
+                const h = rect.height / pageRect.height * 297;
+                if (attrHref.startsWith('#')) {
+                    const targetEl = document.getElementById(attrHref.slice(1));
+                    if (targetEl) {
+                        const targetPageIndex = pages.indexOf(targetEl.closest('.page-a4'));
+                        if (targetPageIndex !== -1) pdf.link(x, y, w, h, { pageNumber: targetPageIndex + 1 });
+                    }
+                } else if (anchor.href && anchor.href !== 'javascript:void(0)') {
+                    pdf.link(x, y, w, h, { url: anchor.href });
+                }
+            });
         }
 
         const filename = (state.storeName || 'catalogo').toLowerCase().replace(/\s+/g, '-') + '.pdf';
