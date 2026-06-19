@@ -26,7 +26,7 @@ export const useProductStore = create<ProductState>((set) => ({
       price: '$0.00',
       description: 'Descripción del producto.',
       image: URL.createObjectURL(file),
-      bgColor: '#ffffff',
+      bgColor: 'rgba(255,255,255,1)',
     }));
     set((s) => ({ products: [...s.products, ...newProducts] }));
   },
@@ -41,7 +41,7 @@ export const useProductStore = create<ProductState>((set) => ({
           price: '$0.00',
           description: 'Descripción del producto.',
           image: PLACEHOLDER_IMG,
-          bgColor: '#ffffff',
+          bgColor: 'rgba(255,255,255,1)',
         },
       ],
     })),

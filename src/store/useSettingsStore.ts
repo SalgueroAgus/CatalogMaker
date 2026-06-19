@@ -13,6 +13,16 @@ function applyFonts(fonts: Fonts) {
   Object.entries(fonts).forEach(([k, v]) => setCSSVar(`--font-${k}`, v));
 }
 
+function hexToRgba(v: string): string {
+  if (!v.startsWith('#')) return v;
+  let hex = v.slice(1);
+  if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},1)`;
+}
+
 interface SettingsState {
   storeName: string;
   footerContact: string;
@@ -37,7 +47,12 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       storeName: 'CATÁLOGO HOGAR & DECO',
       footerContact: 'Contacto: ventas@tutienda.com | WhatsApp: +54 9 11 2345-6789',
-      colors: { bg: '#fafafa', primary: '#4f5e4f', secondary: '#d9c3b0', text: '#374151' },
+      colors: {
+        bg: 'rgba(250,250,250,1)',
+        primary: 'rgba(79,94,79,1)',
+        secondary: 'rgba(217,195,176,1)',
+        text: 'rgba(55,65,81,1)',
+      },
       fonts: {
         heading: 'Arial, Helvetica, sans-serif',
         body: 'Arial, Helvetica, sans-serif',
@@ -76,6 +91,21 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'catalogmaker-settings',
+      version: 1,
+      migrate: (state: any, version) => {
+        if (version === 0 && state?.colors) {
+          return {
+            ...state,
+            colors: {
+              bg: hexToRgba(state.colors.bg ?? '#fafafa'),
+              primary: hexToRgba(state.colors.primary ?? '#4f5e4f'),
+              secondary: hexToRgba(state.colors.secondary ?? '#d9c3b0'),
+              text: hexToRgba(state.colors.text ?? '#374151'),
+            },
+          };
+        }
+        return state;
+      },
       partialize: (s) => ({
         storeName: s.storeName,
         footerContact: s.footerContact,

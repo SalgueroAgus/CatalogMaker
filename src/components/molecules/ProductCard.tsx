@@ -18,7 +18,7 @@ export function ProductCard({ product }: Props) {
     >
       <div
         className="cell-img-area"
-        style={{ backgroundColor: product.bgColor || '#ffffff' }}
+        style={{ background: product.bgColor || 'rgba(255,255,255,1)' }}
       >
         <img
           src={product.image}

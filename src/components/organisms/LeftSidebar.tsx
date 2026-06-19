@@ -201,9 +201,9 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
 
             <div className="sb-subsection-label" style={{ marginTop: 10 }}>Colores</div>
             <div className="color-grid">
-              <ColorGroup label="Acento primario" colorKey="primary" />
-              <ColorGroup label="Acento secundario" colorKey="secondary" />
-              <ColorGroup label="Texto" colorKey="text" />
+              <ColorGroup label="Acento primario" colorKey="primary" solidOnly />
+              <ColorGroup label="Acento secundario" colorKey="secondary" solidOnly />
+              <ColorGroup label="Texto" colorKey="text" solidOnly />
             </div>
           </div>
         )}

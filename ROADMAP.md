@@ -1,7 +1,7 @@
 # CatalogFlow Pro — Roadmap
 
 ## What it is today
-Offline, browser-only catalog builder: upload images → edit name/price/description → customize brand colors/fonts → export via jsPDF + html2canvas. Everything lives in memory — no persistence.
+Offline, browser-only catalog builder: upload images → edit name/price/description → customize brand colors/fonts/gradients → export via jsPDF + html2canvas. Settings auto-saved to localStorage.
 
 ---
 
@@ -15,6 +15,8 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 | **Left sidebar accordion + reorganization** | Collapsible sections, order: Catálogo → Marca → Tipografía → Página. Catálogo open by default. Removed Modo Presentación. |
 | **Images per page + grid shape** | Right sidebar "Páginas" tab — pill selector for items per page (1–5) + `GridShapePicker` with layout variants per count. Per-page layout overrides stored in settings. CSS grid definitions in `grid-{1-5}.css`. |
 | **Auto-save to localStorage** | Zustand `persist` middleware saves settings (store name, contact, colors, fonts, opacity, items per page, page layouts) under `catalogmaker-settings`. CSS vars re-applied on rehydration. Note: products and bg image (object URL) are not persisted. |
+| **Gradient color picker (all pickers)** | Replaced all `<input type="color">` with `react-best-gradient-color-picker` via a `GradientPickerPopover` atom. Per-product bg supports full solid + gradient (linear/radial, multi-stop, angle). Page bg also supports gradients. Brand accent/text colors are solid-only. All color values normalized to `rgba()`. Portal-based popover bypasses overflow/transform clipping. Mobile: 36px touch target, `visualViewport` positioning, 70px bottom clearance for nav bar. |
+| **Artículos tab card redesign** | 64px thumbnail, SVG 6-dot grip handle with hover pill + "Arrastrar para reordenar" tooltip, removed ↑↓ buttons (drag-only), gradient swatch replaces flat color picker. |
 
 ---
 
@@ -23,7 +25,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 | Feature | Notes |
 |---|---|
 | ~~**Images per page + grid shape**~~ | ✅ Done — see above. |
-| **Individual image background: gradient + shape** | Per-product image background should support gradient fills (not just flat color) and different container shapes (square, rounded, circle, etc.). |
+| ~~**Individual image background: gradient**~~ | ✅ Done — full gradient picker per product (solid, linear, radial, multi-stop, opacity per stop). Shape variants dropped in favour of the full picker. |
 | **Typography size controls** | Add size inputs for each text role: *EMPRESA*, *Encabezado*, *Textos pequeños*, and *Párrafos*. Right now only font family is configurable. |
 | **Description box auto-grow** | The description field shows a scrollbar inside the catalog view. It should expand to fit its content so the full text is visible without scrolling. |
 
@@ -64,7 +66,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 ## Suggested order of attack
 
-1. **Client requests** — Description auto-grow, typography sizes, gradient backgrounds (grid options done)
+1. **Client requests** — Description auto-grow, typography sizes (grid options + gradients done)
 2. **Auto-save + JSON export/import** — Prevents data loss, builds trust
 5. **CSV import** — Biggest workflow accelerator
 6. **Product duplication + image fit toggle** — High-frequency editing improvements

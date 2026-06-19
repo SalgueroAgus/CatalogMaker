@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useProductStore } from '../../store/useProductStore';
 import { PLACEHOLDER_IMG } from '../../utils/image';
 import { scrollToProduct } from '../../utils/scroll';
+import { GradientPickerPopover } from '../atoms/GradientPickerPopover';
 import type { Product } from '../../types';
 
 interface Props {
@@ -17,14 +18,26 @@ interface Props {
   onDragEnd: () => void;
 }
 
+function GripIcon() {
+  return (
+    <svg viewBox="0 0 10 16" width="10" height="16" fill="currentColor" aria-hidden>
+      <circle cx="2" cy="2" r="1.5" />
+      <circle cx="8" cy="2" r="1.5" />
+      <circle cx="2" cy="7" r="1.5" />
+      <circle cx="8" cy="7" r="1.5" />
+      <circle cx="2" cy="12" r="1.5" />
+      <circle cx="8" cy="12" r="1.5" />
+    </svg>
+  );
+}
+
 export function ProductListItem({
-  product, index, total, isVisible,
+  product, index, total: _total, isVisible,
   isDragging, dragOverPosition,
   onDragStart, onDragOver, onDrop, onDragEnd,
 }: Props) {
   const [descOpen, setDescOpen] = useState(false);
   const updateField = useProductStore((s) => s.updateField);
-  const moveProduct = useProductStore((s) => s.moveProduct);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const replaceImage = useProductStore((s) => s.replaceImage);
 
@@ -35,8 +48,6 @@ export function ProductListItem({
     dragOverPosition === 'top' ? 'drag-over-top' : '',
     dragOverPosition === 'bottom' ? 'drag-over-bottom' : '',
   ].filter(Boolean).join(' ');
-
-  const bg = product.bgColor || '#ffffff';
 
   return (
     <div
@@ -54,7 +65,9 @@ export function ProductListItem({
     >
       <div className="rs-card-head">
         <div className="rs-card-left">
-          <span className="rs-drag-handle" title="Arrastrar">⠿</span>
+          <span className="rs-drag-handle" title="Arrastrar para reordenar">
+            <GripIcon />
+          </span>
           <span
             className="rs-index"
             onClick={() => scrollToProduct(product.id)}
@@ -63,27 +76,22 @@ export function ProductListItem({
             #{String(index + 1).padStart(2, '0')}
           </span>
         </div>
-        <div className="rs-card-actions">
-          {index > 0 && (
-            <button className="rs-act-btn" onClick={() => moveProduct(product.id, 'up')} title="Subir">↑</button>
-          )}
-          {index < total - 1 && (
-            <button className="rs-act-btn" onClick={() => moveProduct(product.id, 'down')} title="Bajar">↓</button>
-          )}
-          <button
-            className="rs-act-btn rs-act-del"
-            onClick={() => {
-              if (confirm('¿Eliminar este producto del catálogo?')) deleteProduct(product.id);
-            }}
-            title="Eliminar"
-          >
-            ✕
-          </button>
-        </div>
+        <button
+          className="rs-act-del"
+          onClick={() => {
+            if (confirm('¿Eliminar este producto del catálogo?')) deleteProduct(product.id);
+          }}
+          title="Eliminar"
+        >
+          ✕
+        </button>
       </div>
 
       <div className="rs-card-body">
-        <div className="rs-thumb-wrap" style={{ backgroundColor: bg }}>
+        <div
+          className="rs-thumb-wrap"
+          style={{ background: product.bgColor || 'rgba(255,255,255,1)' }}
+        >
           <img
             src={product.image}
             className="rs-thumb"
@@ -102,6 +110,7 @@ export function ProductListItem({
             />
           </label>
         </div>
+
         <div className="rs-fields">
           <input
             type="text"
@@ -119,13 +128,11 @@ export function ProductListItem({
           />
           <div className="rs-bg-row">
             <span className="rs-bg-label">Fondo</span>
-            <input
-              type="color"
-              className="rs-bg-picker"
-              value={bg}
-              onChange={(e) => updateField(product.id, 'bgColor', e.target.value)}
+            <GradientPickerPopover
+              value={product.bgColor || 'rgba(255,255,255,1)'}
+              onChange={(v) => updateField(product.id, 'bgColor', v)}
+              idSuffix={product.id}
             />
-            <span className="hex-label">{bg}</span>
           </div>
         </div>
       </div>
