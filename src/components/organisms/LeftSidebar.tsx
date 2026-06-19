@@ -1,7 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
-import { Toggle } from '../atoms/Toggle';
 import { FormField } from '../molecules/FormField';
 import { ColorGroup } from '../molecules/ColorGroup';
 import { FontSelector } from '../molecules/FontSelector';
@@ -14,8 +13,16 @@ interface Props {
   exportProgress: string;
 }
 
+type SectionKey = 'catalogo' | 'marca' | 'tipografia' | 'pagina';
+
 export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bgFileInputRef = useRef<HTMLInputElement>(null);
+
+  const [openSections, setOpenSections] = useState<Set<SectionKey>>(
+    new Set(['catalogo'])
+  );
+  const [fondoMode, setFondoMode] = useState<'color' | 'imagen'>('color');
 
   const addProducts = useProductStore((s) => s.addProducts);
   const addBlankProduct = useProductStore((s) => s.addBlankProduct);
@@ -24,91 +31,182 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
 
   const storeName = useSettingsStore((s) => s.storeName);
   const footerContact = useSettingsStore((s) => s.footerContact);
-  const presentationMode = useSettingsStore((s) => s.presentationMode);
+  const bgImage = useSettingsStore((s) => s.bgImage);
+  const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
   const updateStoreName = useSettingsStore((s) => s.updateStoreName);
   const updateContact = useSettingsStore((s) => s.updateContact);
-  const togglePresentation = useSettingsStore((s) => s.togglePresentation);
+  const setBgImage = useSettingsStore((s) => s.setBgImage);
+  const setBgImageOpacity = useSettingsStore((s) => s.setBgImageOpacity);
+
+  function toggleSection(key: SectionKey) {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function handleFondoMode(mode: 'color' | 'imagen') {
+    setFondoMode(mode);
+    if (mode === 'color') setBgImage(null);
+  }
+
+  function SectionHeader({ label, sectionKey }: { label: string; sectionKey: SectionKey }) {
+    const isOpen = openSections.has(sectionKey);
+    return (
+      <button className="sb-accordion-header" onClick={() => toggleSection(sectionKey)}>
+        <span>{label}</span>
+        <span className={`sb-chevron ${isOpen ? 'open' : ''}`}>▸</span>
+      </button>
+    );
+  }
 
   return (
     <aside className="sidebar-left">
       <div className="sb-header">
         <h1>🎴 CatalogFlow Pro</h1>
-        <p>3 productos por página • Offline</p>
+        <p>Offline</p>
       </div>
 
       <div className="sb-section">
-        <div className="sb-section-title">Marca</div>
-        <div className="sb-stack-sm">
-          <FormField label="Empresa">
-            <Input
-              value={storeName}
-              onChange={(e) => updateStoreName(e.target.value)}
-              style={{ textTransform: 'uppercase' }}
+        <SectionHeader label="Catálogo" sectionKey="catalogo" />
+        {openSections.has('catalogo') && (
+          <div className="sb-accordion-body sb-stack-sm">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                addProducts(Array.from(e.target.files ?? []));
+                e.target.value = '';
+              }}
             />
-          </FormField>
-          <FormField label="Contacto">
-            <Input
-              value={footerContact}
-              onChange={(e) => updateContact(e.target.value)}
-            />
-          </FormField>
-        </div>
+            <Button onClick={() => fileInputRef.current?.click()}>➕ Cargar Fotos</Button>
+            <Button onClick={addBlankProduct}>📄 Agregar Producto</Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                if (products.length === 0) return;
+                if (confirm('Se eliminarán todos los productos. ¿Continuar?')) resetCatalog();
+              }}
+            >
+              🗑 Vaciar Catálogo
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="sb-section">
-        <div className="sb-section-title">Tipografía</div>
-        <div className="sb-stack-sm">
-          <FontSelector label="Encabezados" fontKey="heading" />
-          <FontSelector label="Párrafos" fontKey="body" />
-          <FontSelector label="Textos pequeños" fontKey="small" />
-        </div>
+        <SectionHeader label="Marca" sectionKey="marca" />
+        {openSections.has('marca') && (
+          <div className="sb-accordion-body sb-stack-sm">
+            <FormField label="Empresa">
+              <Input
+                value={storeName}
+                onChange={(e) => updateStoreName(e.target.value)}
+                style={{ textTransform: 'uppercase' }}
+              />
+            </FormField>
+            <FormField label="Contacto">
+              <Input
+                value={footerContact}
+                onChange={(e) => updateContact(e.target.value)}
+              />
+            </FormField>
+          </div>
+        )}
       </div>
 
       <div className="sb-section">
-        <div className="sb-section-title">Colores</div>
-        <div className="color-grid">
-          <ColorGroup label="Fondo Páginas" colorKey="bg" />
-          <ColorGroup label="Acento Primario" colorKey="primary" />
-          <ColorGroup label="Acento Secundario" colorKey="secondary" />
-          <ColorGroup label="Texto" colorKey="text" />
-        </div>
+        <SectionHeader label="Tipografía" sectionKey="tipografia" />
+        {openSections.has('tipografia') && (
+          <div className="sb-accordion-body sb-stack-sm">
+            <FontSelector label="Encabezados" fontKey="heading" />
+            <FontSelector label="Párrafos" fontKey="body" />
+            <FontSelector label="Textos pequeños" fontKey="small" />
+          </div>
+        )}
       </div>
 
       <div className="sb-section">
-        <div className="sb-section-title">Catálogo</div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            addProducts(Array.from(e.target.files ?? []));
-            e.target.value = '';
-          }}
-        />
-        <div className="sb-stack-sm">
-          <Button onClick={() => fileInputRef.current?.click()}>➕ Cargar Fotos</Button>
-          <Button onClick={addBlankProduct}>📄 Agregar Producto</Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (products.length === 0) return;
-              if (confirm('Se eliminarán todos los productos. ¿Continuar?')) resetCatalog();
-            }}
-          >
-            🗑 Vaciar Catálogo
-          </Button>
-        </div>
-      </div>
+        <SectionHeader label="Página" sectionKey="pagina" />
+        {openSections.has('pagina') && (
+          <div className="sb-accordion-body">
+            <div className="sb-subsection-label">Fondo</div>
+            <div className="sb-fondo-tabs">
+              <button
+                className={`sb-fondo-tab ${fondoMode === 'color' ? 'active' : ''}`}
+                onClick={() => handleFondoMode('color')}
+              >
+                Color
+              </button>
+              <button
+                className={`sb-fondo-tab ${fondoMode === 'imagen' ? 'active' : ''}`}
+                onClick={() => handleFondoMode('imagen')}
+              >
+                Imagen
+              </button>
+            </div>
 
-      <div className="sb-section">
-        <div className="sb-section-title">Vista</div>
-        <Toggle
-          label="Modo Presentación"
-          active={presentationMode}
-          onToggle={togglePresentation}
-        />
+            {fondoMode === 'color' && (
+              <div className="sb-fondo-color">
+                <ColorGroup label="Fondo páginas" colorKey="bg" />
+              </div>
+            )}
+
+            {fondoMode === 'imagen' && (
+              <div className="sb-stack-sm">
+                <input
+                  ref={bgFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setBgImage(file);
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  className={`sb-bg-upload ${bgImage ? 'has-image' : ''}`}
+                  onClick={() => bgFileInputRef.current?.click()}
+                >
+                  {bgImage ? '🖼 Cambiar imagen' : '📂 Cargar imagen'}
+                </button>
+                {bgImage && (
+                  <button className="sb-btn sb-btn-ghost" onClick={() => setBgImage(null)}>
+                    ✕ Quitar imagen
+                  </button>
+                )}
+                <div className="sb-opacity-row">
+                  <span className="sb-opacity-label">Opacidad</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={bgImageOpacity}
+                    onChange={(e) => setBgImageOpacity(Number(e.target.value))}
+                    className="sb-opacity-slider"
+                  />
+                  <span className="sb-opacity-value">
+                    {Math.round(bgImageOpacity * 100)}%
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="sb-subsection-label" style={{ marginTop: 10 }}>Colores</div>
+            <div className="color-grid">
+              <ColorGroup label="Acento primario" colorKey="primary" />
+              <ColorGroup label="Acento secundario" colorKey="secondary" />
+              <ColorGroup label="Texto" colorKey="text" />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="sb-spacer" />

@@ -17,6 +17,7 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
   const updateField = useProductStore((s) => s.updateField);
   const colors = useSettingsStore((s) => s.colors);
   const storeName = useSettingsStore((s) => s.storeName);
+  const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
 
   const exportToPDF = async () => {
     if (products.length === 0) {
@@ -80,6 +81,13 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
 
         // Remove hover overlays — they would tint the captured image
         clone.querySelectorAll('.cell-img-overlay').forEach((el) => el.remove());
+
+        // The freeze-style above sets opacity:1 !important on all elements.
+        // Restore the bg-image overlay's intended opacity using inline !important,
+        // which takes precedence over stylesheet !important at the same origin.
+        clone.querySelectorAll('.page-bg-image').forEach((el) => {
+          (el as HTMLElement).style.setProperty('opacity', String(bgImageOpacity), 'important');
+        });
 
         // Replace inputs/textareas with divs — html2canvas clips text at overflow boundary
         clone.querySelectorAll('input.cell-name, input.cell-price').forEach((el) => {

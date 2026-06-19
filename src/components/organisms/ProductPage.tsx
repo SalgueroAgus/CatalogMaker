@@ -18,6 +18,8 @@ export const ProductPage = forwardRef<HTMLDivElement, Props>(
   ({ products, pageIndex }, ref) => {
     const storeName = useSettingsStore((s) => s.storeName);
     const footerContact = useSettingsStore((s) => s.footerContact);
+    const bgImage = useSettingsStore((s) => s.bgImage);
+    const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
 
     const displayPage = pageIndex + 2;
     const gridClass = getGridClass(products.length, pageIndex);
@@ -28,6 +30,12 @@ export const ProductPage = forwardRef<HTMLDivElement, Props>(
         ref={ref}
         style={{ animationDelay: `${(pageIndex + 1) * 0.04}s` }}
       >
+        {bgImage && (
+          <div
+            className="page-bg-image"
+            style={{ backgroundImage: `url(${bgImage})`, opacity: bgImageOpacity }}
+          />
+        )}
         <div className="page-hdr">
           <span className="store-name">{storeName}</span>
           <span className="page-num">Pág. {String(displayPage).padStart(2, '0')}</span>

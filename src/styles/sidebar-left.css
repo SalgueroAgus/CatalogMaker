@@ -1,8 +1,59 @@
 .sb-header { padding-bottom: 14px; border-bottom: 1px solid var(--sb-border); margin-bottom: 4px; }
 .sb-header h1 { font-size: 15px; font-weight: 700; color: var(--sb-accent); display: flex; align-items: center; gap: 7px; }
 .sb-header p { font-size: 11px; color: var(--sb-text-muted); margin-top: 3px; }
-.sb-section { background: var(--sb-bg-card); border: 1px solid var(--sb-border); border-radius: 10px; padding: 12px; }
+.sb-section { background: var(--sb-bg-card); border: 1px solid var(--sb-border); border-radius: 10px; overflow: hidden; }
 .sb-section-title { font-size: 11px; font-weight: 700; color: var(--sb-text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+.sb-accordion-header {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; background: none; border: none; cursor: pointer;
+  font-size: 11px; font-weight: 700; color: var(--sb-text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  transition: color var(--tr-fast);
+}
+.sb-accordion-header:hover { color: var(--sb-text); }
+.sb-chevron { font-size: 9px; transition: transform var(--tr-normal); display: inline-block; }
+.sb-chevron.open { transform: rotate(90deg); }
+
+.sb-accordion-body { padding: 0 12px 12px; }
+
+.sb-subsection-label { font-size: 10px; font-weight: 600; color: var(--sb-text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+
+.sb-fondo-tabs { display: flex; gap: 4px; margin-bottom: 8px; background: var(--sb-input-bg); border-radius: 7px; padding: 3px; }
+.sb-fondo-tab {
+  flex: 1; padding: 5px 8px; border: none; border-radius: 5px;
+  font-size: 11px; font-weight: 500; cursor: pointer;
+  background: transparent; color: var(--sb-text-muted);
+  transition: all var(--tr-fast);
+}
+.sb-fondo-tab.active { background: var(--sb-accent); color: #fff; }
+.sb-fondo-tab:not(.active):hover { color: var(--sb-text); }
+
+.sb-fondo-color { margin-bottom: 2px; }
+
+.sb-bg-upload {
+  width: 100%; padding: 7px 12px; border: 1px dashed var(--sb-input-border);
+  border-radius: 7px; background: transparent; color: var(--sb-text-muted);
+  font-size: 11px; cursor: pointer; transition: all var(--tr-fast);
+  text-align: center;
+}
+.sb-bg-upload:hover, .sb-bg-upload.has-image { border-color: var(--sb-accent); color: var(--sb-accent); border-style: solid; }
+
+.sb-opacity-row { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
+.sb-opacity-label { font-size: 11px; color: var(--sb-text-muted); white-space: nowrap; }
+.sb-opacity-value { font-size: 10px; font-family: 'Courier New', monospace; color: var(--sb-text-muted); width: 30px; text-align: right; flex-shrink: 0; }
+.sb-opacity-slider {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 3px; border-radius: 2px; background: var(--sb-input-border); outline: none; cursor: pointer;
+}
+.sb-opacity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px;
+  border-radius: 50%; background: var(--sb-accent); cursor: pointer;
+}
+.sb-opacity-slider::-moz-range-thumb {
+  width: 13px; height: 13px; border-radius: 50%; background: var(--sb-accent);
+  border: none; cursor: pointer;
+}
 .sb-label { display: block; font-size: 12px; color: var(--sb-text-muted); margin-bottom: 4px; }
 
 .sb-input {

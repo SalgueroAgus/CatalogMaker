@@ -1,14 +1,3 @@
-body.presentation-mode .cell-img-overlay { display: none !important; }
-body.presentation-mode .drop-zone { display: none !important; }
-body.presentation-mode .info-bar { display: none !important; }
-body.presentation-mode .cell-name,
-body.presentation-mode .cell-price,
-body.presentation-mode .cell-desc {
-  border-color: transparent !important; cursor: default; pointer-events: none;
-}
-body.presentation-mode .idx-entry { cursor: default; }
-body.presentation-mode .idx-entry:hover { padding-left: 4px; background: transparent; }
-
 @media print {
   @page { size: A4 portrait; margin: 0; }
   body { background: white; height: auto; overflow: visible; }
