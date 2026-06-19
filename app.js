@@ -108,12 +108,12 @@ function createIndexPage() {
     let entriesHTML = '';
     state.products.forEach((p, i) => {
         entriesHTML += `
-            <div class="idx-entry" onclick="scrollToProduct('${p.id}')">
+            <a class="idx-entry" href="#cell-${p.id}" onclick="event.preventDefault(); scrollToProduct('${p.id}')">
                 <span class="idx-num">${String(i + 1).padStart(2, '0')}</span>
                 <span class="idx-name" id="idx-name-${p.id}">${esc(p.name)}</span>
                 <span class="idx-leader"></span>
                 <span class="idx-page">${String(getProductPage(i)).padStart(2, '0')}</span>
-            </div>`;
+            </a>`;
         if ((i + 1) % 3 === 0 && i < state.products.length - 1) entriesHTML += '<div class="idx-gap"></div>';
     });
 
@@ -358,10 +358,7 @@ function processBulkFiles(files) {
         });
     });
     renderAll();
-    setTimeout(() => {
-        const pages = document.querySelectorAll('.page-a4');
-        if (pages.length > 1) pages[pages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 120);
+    scrollToLastPage();
 }
 
 function addBlankPage() {
@@ -374,9 +371,13 @@ function addBlankPage() {
         bgColor: '#ffffff'
     });
     renderAll();
+    scrollToLastPage();
+}
+
+function scrollToLastPage() {
     setTimeout(() => {
         const pages = document.querySelectorAll('.page-a4');
-        if (pages.length) pages[pages.length - 1].scrollIntoView({ behavior: 'smooth' });
+        if (pages.length) pages[pages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 120);
 }
 
@@ -411,182 +412,45 @@ function togglePresentation() {
 // PDF EXPORT
 // ═════════════════════════════════════════════════════════════
 
-// Convert any URL (blob:, data:, http:) to a base64 data URI
-function urlToBase64(url) {
+function blobUrlToBase64(url) {
     return new Promise((resolve) => {
-        if (!url || url.startsWith('data:')) { resolve(url); return; }
         const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = function() {
+        img.onload = () => {
             const canvas = document.createElement('canvas');
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
+            canvas.getContext('2d').drawImage(img, 0, 0);
             resolve(canvas.toDataURL('image/jpeg', 0.92));
         };
-        img.onerror = function() { resolve(url); }; // fallback: keep original
+        img.onerror = () => resolve(url);
         img.src = url;
     });
 }
 
 async function exportToPDF() {
-    const btn = document.getElementById('btn-export');
     if (state.products.length === 0) { alert('El catálogo está vacío.'); return; }
 
+    const btn = document.getElementById('btn-export');
     const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> Generando…';
+    btn.innerHTML = '<span class="spinner"></span> Preparando…';
     btn.disabled = true;
 
-    try {
-        // 1. Convert all product images to base64 so html2canvas can read them
-        const base64Images = {};
-        await Promise.all(state.products.map(async (p) => {
-            base64Images[p.id] = await urlToBase64(p.image);
-        }));
+    // Blob URLs are session-only and inaccessible to the print renderer.
+    // Convert them to base64 directly in the live DOM before printing.
+    await Promise.all(state.products.map(async (p) => {
+        if (!p.image || p.image.startsWith('data:')) return;
+        const b64 = await blobUrlToBase64(p.image);
+        p.image = b64;
+        const wsImg = document.getElementById('ws-img-' + p.id);
+        const rsImg = document.getElementById('rs-img-' + p.id);
+        if (wsImg) wsImg.src = b64;
+        if (rsImg) rsImg.src = b64;
+    }));
 
-        // 2. Build a self-contained export container (no inputs, no overlays, no IDs clashes)
-        const exportWrap = document.createElement('div');
-        exportWrap.style.cssText = 'position:fixed;top:0;left:0;z-index:-9999;width:210mm;background:transparent;';
-
-        // Collect current CSS custom properties from :root
-        const rootStyles = getComputedStyle(document.documentElement);
-        const cssVars = [
-            '--page-bg','--page-primary','--page-secondary','--page-text',
-            '--font-heading','--font-body','--font-small'
-        ].map(v => `${v}:${rootStyles.getPropertyValue(v)}`).join(';');
-
-        // Apply vars to wrap so pages inherit them
-        exportWrap.style.cssText += cssVars.split(';').map(v => '').join(''); // dummy
-        exportWrap.setAttribute('style', exportWrap.getAttribute('style') + ';' + cssVars);
-
-        // 3. Rebuild each page as static HTML (no inputs, unique IDs not needed)
-        const pages = [];
-
-        // Index page
-        pages.push(buildStaticIndexPage());
-
-        // Product pages
-        const chunks = chunkArray(state.products, 3);
-        chunks.forEach((chunk, pageIdx) => {
-            pages.push(buildStaticProductPage(chunk, pageIdx, base64Images));
-        });
-
-        pages.forEach(p => exportWrap.appendChild(p));
-        document.body.appendChild(exportWrap);
-
-        const now = new Date();
-        const ts = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0')
-            + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0') + String(now.getSeconds()).padStart(2,'0');
-
-        const opt = {
-            margin: 0,
-            filename: 'catalogo_' + ts + '.pdf',
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                letterRendering: true,
-                scrollX: 0,
-                scrollY: 0,
-                onclone: function(clonedDoc) {
-                    // Ensure the cloned wrap is fully visible
-                    const wrap = clonedDoc.querySelector('[data-export-wrap]');
-                    if (wrap) {
-                        wrap.style.position = 'static';
-                        wrap.style.zIndex = 'auto';
-                    }
-                }
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: 'avoid-all', before: '.page-a4' }
-        };
-
-        exportWrap.setAttribute('data-export-wrap', '1');
-
-        await html2pdf().from(exportWrap).set(opt).save();
-        document.body.removeChild(exportWrap);
-
-    } catch (err) {
-        console.error('PDF export error:', err);
-        alert('Error al generar el PDF. Ver consola para detalles.');
-    }
+    window.print();
 
     btn.innerHTML = originalHTML;
     btn.disabled = false;
-}
-
-// Build a static (no-input) version of the index page for export
-function buildStaticIndexPage() {
-    const page = document.createElement('div');
-    page.className = 'page-a4';
-
-    let entriesHTML = '';
-    state.products.forEach((p, i) => {
-        entriesHTML += `
-            <div class="idx-entry" style="cursor:default">
-                <span class="idx-num">${String(i + 1).padStart(2, '0')}</span>
-                <span class="idx-name">${esc(p.name)}</span>
-                <span class="idx-leader"></span>
-                <span class="idx-page">${String(getProductPage(i)).padStart(2, '0')}</span>
-            </div>`;
-        if ((i + 1) % 3 === 0 && i < state.products.length - 1) entriesHTML += '<div class="idx-gap"></div>';
-    });
-
-    page.innerHTML = `
-        <div class="idx-header">
-            <h1 class="idx-title store-name">${esc(state.storeName)}</h1>
-            <div class="idx-divider"></div>
-            <h2 class="idx-subtitle">Í N D I C E</h2>
-        </div>
-        <div class="idx-list">${entriesHTML}</div>
-        <div class="page-ftr">
-            <span class="footer-contact">${esc(state.footerContact)}</span>
-            <span class="footer-tag">Exclusivo</span>
-        </div>`;
-    return page;
-}
-
-// Build a static product page for export (divs instead of inputs, base64 images)
-function buildStaticProductPage(products, pageIdx, base64Images) {
-    const page = document.createElement('div');
-    page.className = 'page-a4';
-
-    let gridClass = 'grid-single';
-    if (products.length === 2) gridClass = 'grid-duo';
-    else if (products.length === 3) gridClass = pageIdx % 2 === 0 ? 'grid-trio' : 'grid-trio-alt';
-
-    const displayPage = pageIdx + 2;
-
-    const cellsHTML = products.map(p => {
-        const imgSrc = base64Images[p.id] || p.image;
-        return `
-        <div class="product-cell" style="overflow:hidden">
-            <div class="cell-img-area" style="background-color:${p.bgColor || '#ffffff'}">
-                <img src="${imgSrc}" alt="${esc(p.name)}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:3px;" />
-            </div>
-            <div class="cell-info">
-                <div class="cell-info-row">
-                    <div class="cell-name" style="border:none;background:transparent;">${esc(p.name)}</div>
-                    <div class="cell-price" style="border:none;background:transparent;">${esc(p.price)}</div>
-                </div>
-                <div class="cell-desc" style="border:none;background:transparent;white-space:pre-wrap;">${esc(p.description)}</div>
-            </div>
-        </div>`;
-    }).join('');
-
-    page.innerHTML = `
-        <div class="page-hdr">
-            <span class="store-name">${esc(state.storeName)}</span>
-            <span class="page-num">Pág. ${String(displayPage).padStart(2, '0')}</span>
-        </div>
-        <div class="product-grid ${gridClass}">${cellsHTML}</div>
-        <div class="page-ftr">
-            <span class="footer-contact">${esc(state.footerContact)}</span>
-            <span class="footer-tag">Exclusivo</span>
-        </div>`;
-    return page;
 }
 
 // ═════════════════════════════════════════════════════════════
