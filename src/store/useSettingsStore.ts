@@ -9,12 +9,14 @@ interface SettingsState {
   footerContact: string;
   colors: Colors;
   fonts: Fonts;
-  presentationMode: boolean;
+  bgImage: string | null;
+  bgImageOpacity: number;
   updateStoreName: (v: string) => void;
   updateContact: (v: string) => void;
   updateColor: (type: keyof Colors, value: string) => void;
   updateFont: (type: keyof Fonts, value: string) => void;
-  togglePresentation: () => void;
+  setBgImage: (file: File | null) => void;
+  setBgImageOpacity: (v: number) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -26,7 +28,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     body: 'Arial, Helvetica, sans-serif',
     small: 'Arial, Helvetica, sans-serif',
   },
-  presentationMode: false,
+  bgImage: null,
+  bgImageOpacity: 0.15,
 
   updateStoreName: (v) => set({ storeName: v.toUpperCase() }),
   updateContact: (v) => set({ footerContact: v }),
@@ -41,10 +44,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set((s) => ({ fonts: { ...s.fonts, [type]: value } }));
   },
 
-  togglePresentation: () =>
+  setBgImage: (file) =>
     set((s) => {
-      const next = !s.presentationMode;
-      document.body.classList.toggle('presentation-mode', next);
-      return { presentationMode: next };
+      if (s.bgImage) URL.revokeObjectURL(s.bgImage);
+      return { bgImage: file ? URL.createObjectURL(file) : null };
     }),
+
+  setBgImageOpacity: (v) => set({ bgImageOpacity: v }),
 }));
