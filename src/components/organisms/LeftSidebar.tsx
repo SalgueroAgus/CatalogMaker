@@ -1,8 +1,13 @@
 import { useRef, useState } from 'react';
+import {
+  ArrowRight, BookOpen, Check, ChevronRight,
+  Download, FilePlus, FolderOpen, Globe,
+  Image as ImageIcon, ImagePlus, RotateCcw, Trash2, X,
+} from 'lucide-react';
 import { Button } from '../atoms/Button';
-import { Input } from '../atoms/Input';
-import { FormField } from '../molecules/FormField';
 import { ColorGroup } from '../molecules/ColorGroup';
+import { FormField } from '../molecules/FormField';
+import { Input } from '../atoms/Input';
 import { TypographyRole } from '../molecules/TypographyRole';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -11,11 +16,25 @@ interface Props {
   onExport: () => void;
   isExporting: boolean;
   exportProgress: string;
+  onPublish: () => void;
+  isPublishing: boolean;
+  onDownloadHTML: () => void;
+  isDownloading: boolean;
+  publishProgress: string;
+  lastPublishUrl: string | null;
+  userEmail: string;
+  onLogout: () => void;
 }
 
 type SectionKey = 'catalogo' | 'marca' | 'tipografia' | 'pagina';
 
-export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
+export function LeftSidebar({
+  onExport, isExporting, exportProgress,
+  onPublish, isPublishing,
+  onDownloadHTML, isDownloading,
+  publishProgress, lastPublishUrl,
+  userEmail, onLogout,
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -70,7 +89,7 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
     return (
       <button className="sb-accordion-header" onClick={() => toggleSection(sectionKey)}>
         <span>{label}</span>
-        <span className={`sb-chevron ${isOpen ? 'open' : ''}`}>▸</span>
+        <ChevronRight className={`sb-chevron ${isOpen ? 'open' : ''}`} size={12} />
       </button>
     );
   }
@@ -79,8 +98,11 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
     <aside className="sidebar-left">
       <div className="sb-scroll-area">
         <div className="sb-header">
-          <h1>🎴 CatalogFlow Pro</h1>
-          <p>Offline</p>
+          <h1><BookOpen size={20} /> CatalogMaker</h1>
+          <div className="sb-user-row">
+            <span className="sb-user-email">{userEmail}</span>
+            <button className="sb-logout-btn" onClick={onLogout}>Salir</button>
+          </div>
         </div>
 
         <div className="sb-section">
@@ -98,8 +120,8 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
                   e.target.value = '';
                 }}
               />
-              <Button onClick={() => fileInputRef.current?.click()}>➕ Cargar Fotos</Button>
-              <Button onClick={addBlankProduct}>📄 Agregar Producto</Button>
+              <Button onClick={() => fileInputRef.current?.click()}><ImagePlus size={14} /> Cargar Fotos</Button>
+              <Button onClick={addBlankProduct}><FilePlus size={14} /> Agregar Producto</Button>
             </div>
           )}
         </div>
@@ -199,11 +221,11 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
                     className={`sb-bg-upload ${bgImage ? 'has-image' : ''}`}
                     onClick={() => bgFileInputRef.current?.click()}
                   >
-                    {bgImage ? '🖼 Cambiar imagen' : '📂 Cargar imagen'}
+                    {bgImage ? <><ImageIcon size={14} /> Cambiar imagen</> : <><FolderOpen size={14} /> Cargar imagen</>}
                   </button>
                   {bgImage && (
                     <button className="sb-btn sb-btn-ghost" onClick={() => setBgImage(null)}>
-                      ✕ Quitar imagen
+                      <X size={14} /> Quitar imagen
                     </button>
                   )}
                   <div className="sb-opacity-row">
@@ -229,7 +251,7 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
               <div className="typo-group">
                 <div className="typo-role">
                   <button className="typo-role-header" onClick={() => toggleColorGroup('pagina')}>
-                    <span className={`typo-chevron ${openColorGroups.has('pagina') ? 'open' : ''}`}>▸</span>
+                    <ChevronRight className={`typo-chevron ${openColorGroups.has('pagina') ? 'open' : ''}`} size={12} />
                     <span className="typo-role-name">Página</span>
                   </button>
                   {openColorGroups.has('pagina') && (
@@ -244,7 +266,7 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
 
                 <div className="typo-role">
                   <button className="typo-role-header" onClick={() => toggleColorGroup('articulos')}>
-                    <span className={`typo-chevron ${openColorGroups.has('articulos') ? 'open' : ''}`}>▸</span>
+                    <ChevronRight className={`typo-chevron ${openColorGroups.has('articulos') ? 'open' : ''}`} size={12} />
                     <span className="typo-role-name">Artículos</span>
                   </button>
                   {openColorGroups.has('articulos') && (
@@ -258,7 +280,7 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
 
                 <div className="typo-role">
                   <button className="typo-role-header" onClick={() => toggleColorGroup('indice')}>
-                    <span className={`typo-chevron ${openColorGroups.has('indice') ? 'open' : ''}`}>▸</span>
+                    <ChevronRight className={`typo-chevron ${openColorGroups.has('indice') ? 'open' : ''}`} size={12} />
                     <span className="typo-role-name">Índice</span>
                   </button>
                   {openColorGroups.has('indice') && (
@@ -273,6 +295,7 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
             </div>
           )}
         </div>
+
       </div>
 
       <div className="sb-export-footer">
@@ -284,7 +307,7 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
               if (confirm('Se eliminarán todos los productos. ¿Continuar?')) resetCatalog();
             }}
           >
-            🗑 Vaciar Catálogo
+            <Trash2 size={14} /> Vaciar Catálogo
           </Button>
           <Button
             variant="reset"
@@ -295,16 +318,35 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
               }
             }}
           >
-            ↺ Restablecer Todo
+            <RotateCcw size={14} /> Restablecer Todo
           </Button>
         </div>
-        <Button variant="export" onClick={onExport} disabled={isExporting}>
+        <Button variant="publish" onClick={onPublish} disabled={isPublishing || isDownloading || isExporting}>
+          {isPublishing ? (
+            <>
+              <span className="spinner" /> {publishProgress}
+            </>
+          ) : (
+            <><Globe size={14} /> Publicar en Web</>
+          )}
+        </Button>
+        {lastPublishUrl && (
+          <a
+            href={lastPublishUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sb-publish-url"
+          >
+            <Check size={14} /> Ver catálogo publicado <ArrowRight size={12} />
+          </a>
+        )}
+        <Button variant="export" onClick={onExport} disabled={isExporting || isPublishing || isDownloading}>
           {isExporting ? (
             <>
               <span className="spinner" /> {exportProgress}
             </>
           ) : (
-            '📥 Descargar PDF'
+            <><Download size={14} /> Descargar PDF</>
           )}
         </Button>
       </div>

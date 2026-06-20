@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { LayoutList } from 'lucide-react';
 import { ProductListItem } from '../molecules/ProductListItem';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -56,7 +57,7 @@ export function ArticulosTab({ visibleIds }: Props) {
   if (count === 0) {
     return (
       <div className="rs-empty">
-        <span>📋</span>
+        <LayoutList size={32} />
         <p>Subí fotos para ver el listado aquí</p>
       </div>
     );

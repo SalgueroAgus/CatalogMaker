@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { FolderOpen, LayoutList, X } from 'lucide-react';
 import { Badge } from '../atoms/Badge';
 import { IndexPage } from './IndexPage';
 import { ProductPage } from './ProductPage';
@@ -112,7 +113,7 @@ export function Workspace({
             className="sidebar-right-toggle"
             onClick={onToggleRightSidebar}
           >
-            {sidebarRightOpen ? '✕ Cerrar' : '📋 Productos'}
+            {sidebarRightOpen ? <><X size={14} /> Cerrar</> : <><LayoutList size={14} /> Productos</>}
           </button>
           <Badge>
             {totalPages} Página{totalPages !== 1 ? 's' : ''}
@@ -128,7 +129,7 @@ export function Workspace({
           onDragLeave={handleDragLeave}
           onClick={openFilePicker}
         >
-          <span className="dz-icon">📁</span>
+          <FolderOpen className="dz-icon" size={40} />
           <p className="dz-title">Arrastrá y soltá tus fotos aquí</p>
           <p className="dz-sub">Se agrupan automáticamente en páginas.</p>
         </div>

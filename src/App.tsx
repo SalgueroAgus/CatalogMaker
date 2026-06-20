@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppLayout } from './components/templates/AppLayout';
 import { LeftSidebar } from './components/organisms/LeftSidebar';
+import { LoginPage } from './components/organisms/LoginPage';
 import { Workspace } from './components/organisms/Workspace';
 import { RightSidebar } from './components/organisms/RightSidebar';
 import { MobileNav } from './components/organisms/MobileNav';
 import { usePDF } from './hooks/usePDF';
+import { usePublish } from './hooks/usePublish';
 import { usePageScale } from './hooks/usePageScale';
+import { useIdentity } from './hooks/useIdentity';
 import { useProductStore } from './store/useProductStore';
 import { useSettingsStore } from './store/useSettingsStore';
 import { dbLoadProducts, dbLoadBgImage, dbLoadSettings } from './db';
@@ -13,12 +16,14 @@ import { dbLoadProducts, dbLoadBgImage, dbLoadSettings } from './db';
 type Tab = 'preview' | 'settings' | 'products';
 
 export default function App() {
+  const { user, loading, openLogin, logout } = useIdentity();
   const pagesRef = useRef<(HTMLDivElement | null)[]>([]);
   const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<Tab>('preview');
   const [sidebarRightOpen, setSidebarRightOpen] = useState(false);
 
   const { exportToPDF, isExporting, progress } = usePDF(pagesRef);
+  const { publish, downloadHTML, isPublishing, isDownloading, progress: publishProgress, lastUrl: lastPublishUrl } = usePublish(pagesRef);
   const hydrateProducts  = useProductStore((s) => s.hydrateProducts);
   const hydrateSettings  = useSettingsStore((s) => s.hydrateSettings);
 
@@ -50,6 +55,10 @@ export default function App() {
     setVisibleIds(ids);
   }, []);
 
+  if (!import.meta.env.DEV && (loading || !user)) {
+    return <LoginPage onLogin={openLogin} loading={loading} />;
+  }
+
   return (
     <AppLayout
       left={
@@ -57,6 +66,14 @@ export default function App() {
           onExport={exportToPDF}
           isExporting={isExporting}
           exportProgress={progress}
+          onPublish={publish}
+          isPublishing={isPublishing}
+          onDownloadHTML={downloadHTML}
+          isDownloading={isDownloading}
+          publishProgress={publishProgress}
+          lastPublishUrl={lastPublishUrl}
+          userEmail={user?.email ?? ''}
+          onLogout={logout}
         />
       }
       center={

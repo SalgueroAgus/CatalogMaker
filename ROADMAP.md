@@ -1,36 +1,45 @@
-# CatalogFlow Pro — Roadmap
+# CatalogMaker — Roadmap
 
 ## What it is today
 Offline, browser-only catalog builder: upload images → edit name/price/description → customize brand colors/fonts/gradients → export via jsPDF + html2canvas. Settings auto-saved to localStorage.
 
 ---
 
-## Done
+## Client Requests — Current Sprint
 
-| Feature | Notes |
-|---|---|
-| **PDF on mobile** | jsPDF + html2canvas replacing `window.print()`. Works on iOS/Android. |
-| **Vite + React + TS migration** | Full rewrite from vanilla JS to Vite/React/TypeScript/Zustand with atomic design structure. |
-| **Page background image with opacity control** | Left sidebar "Página" section — Color/Imagen toggle, image upload, opacity slider. Applied globally to all pages. PDF export preserves correct opacity. |
-| **Left sidebar accordion + reorganization** | Collapsible sections, order: Catálogo → Marca → Tipografía → Página. Catálogo open by default. Removed Modo Presentación. |
-| **Images per page + grid shape** | Right sidebar "Páginas" tab — pill selector for items per page (1–5) + `GridShapePicker` with layout variants per count. Per-page layout overrides stored in settings. CSS grid definitions in `grid-{1-5}.css`. |
-| **Auto-save to localStorage** | Zustand `persist` middleware saves settings (store name, contact, colors, fonts, opacity, items per page, page layouts) under `catalogmaker-settings`. CSS vars re-applied on rehydration. Note: products and bg image (object URL) are not persisted. |
-| **Gradient color picker (all pickers)** | Replaced all `<input type="color">` with `react-best-gradient-color-picker` via a `GradientPickerPopover` atom. Per-product bg supports full solid + gradient (linear/radial, multi-stop, angle). Page bg also supports gradients. Brand accent/text colors are solid-only. All color values normalized to `rgba()`. Portal-based popover bypasses overflow/transform clipping. Mobile: 36px touch target, `visualViewport` positioning, 70px bottom clearance for nav bar. |
-| **Artículos tab card redesign** | 64px thumbnail, SVG 6-dot grip handle with hover pill + "Arrastrar para reordenar" tooltip, removed ↑↓ buttons (drag-only), gradient swatch replaces flat color picker. |
-| **Full typography system** | 10 independently configurable text roles across 3 groups — Página (Nombre empresa, Pie de página, Numeración), Artículos (Nombre, Precio, Descripción), Índice (Título, Subtítulo, Entradas, Numeración). Each role has its own font family + size control. Font family and size stored in settings and re-applied on rehydration. Precio split from Encabezados as its own independent role. |
-| **Full color system** | 11 independently configurable color roles across 3 collapsible groups — Página (Nombre empresa, Numeración, Separadores, Pie de página), Artículos (Nombre, Precio, Descripción), Índice (Título, Entradas, Números/acentos). Replaces the old 4-key system; previously hardcoded colors (header text, price, footer) are now user-controlled. CSS vars updated throughout. Store migrated to v5. |
-| **Description box auto-grow** | Both the catalog card (`cell-desc`) and the sidebar edit field (`rs-desc-textarea`) expand to fit content via `scrollHeight`. 500-char limit enforced on both. Sidebar shows a `{n}/500` counter turning amber at 400+ and red at the limit. PDF export swaps the textarea for a div with `overflow:visible` so html2canvas renders the full text. |
-| **Full IndexedDB persistence** | All data survives page reloads. Products (metadata + image blobs) stored under `cm:products` / `cm:img:{id}`. Page background image blob under `cm:bg`. All settings (colors, fonts, sizes, store name, contact, opacity, layouts) under `cm:settings` via Zustand subscribe auto-save. `localStorage` no longer used. Two footer buttons: **Vaciar Catálogo** (red fill — clears products only) and **Restablecer Todo** (red outline — wipes everything and resets to defaults). |
-| **Google Fonts** | 39 curated Google Fonts across sans-serif, display serif, bold display, script, and monospace categories. Fonts load on demand via dynamic `<link>` injection when selected. Previously selected Google Fonts are re-loaded on page reload via `loadStoredGoogleFonts` in the rehydration callback. |
-| **Typography UI — collapsible roles + grouped sections** | Each typography role is a collapsible card showing font name · size when collapsed. Roles grouped into labeled sub-sections (Página / Artículos / Índice) within the Tipografía accordion. |
-| **Left sidebar overflow scroll fix** | Sidebar content area is a dedicated scroll container (`flex: 1; overflow-y: auto; min-height: 0`) with `flex-shrink: 0` on all children to prevent flex compression. Export button is a sticky footer outside the scroll area, always visible. |
+| # | Feature | Notes |
+|---|---|---|
+| 1 | **Excel import → catalog entries** | Load an `.xlsx` file and auto-create products from it (name, description, price columns). Related to Phase 1 "Catalog excel export/import" — this is the import half. |
+| 2 | **Index page ignores background image** | When a bg image is set in settings, the index/TOC page does not apply it. Bug — should match product pages. |
+| 3 | **Description box: independent color control** | The description box currently inherits the page color. It needs its own color picker so it can be styled independently of the page background. (Merges requests 3 and 7.) |
+| 4 | **Description box: anchor to image bottom** | The overlay/description box should sit flush at the bottom of the product image, not the bottom of the card container. |
+| 5 | **Synchronized scroll: right sidebar ↔ PDF workspace** | Both the pages list and items list in the right sidebar should scroll in sync with the PDF preview — scrolling the workspace scrolls the sidebar, and vice versa. |
+| 6 | **Go to top button** | A fixed button that scrolls the workspace back to the top of the catalog. |
 
 ---
 
-## Client Requests — Current Sprint
+## Improvements — Technical debt & architecture
 
-| Feature | Notes |
+### Bugs
+
+| Issue | Detail |
 |---|---|
+| **Settings never persisted to IndexedDB** | `dbSaveSettings` is defined but never called. Every mutation in `useSettingsStore` (colors, fonts, sizes, store name, contact, opacity, items per page, page layouts) updates Zustand only — all lost on page refresh. Each setter needs to call `dbSaveSettings` with the updated state. |
+| **PDF export corrupts product image state** | `usePDF.ts` calls `updateField(id, 'image', b64)` to swap blob URLs for base64 before capture. This mutates the store and triggers IDB writes. After export the products still hold base64 strings — the conversion is never reverted. Base64 should be computed into a local `Map` and never written to the store. |
+
+### Library replacements
+
+| Improvement | Why |
+|---|---|
+| **Replace raw HTML5 DnD with `@dnd-kit/sortable`** | Native DnD is broken on iOS/iPadOS — `dragstart` doesn't fire on touch. `@dnd-kit` is touch-aware, built for React lists, and replaces the manual `draggedIdRef` + `dragOver` state in `ArticulosTab` with `SortableContext` + `useSortable`. |
+| **Replace custom accordion/tabs/popover with Radix UI primitives** | Three patterns are hand-rolled: accordion (`openSections` Set in `LeftSidebar`), tabs (`activeTab` in `RightSidebar`), and popover (`GradientPickerPopover` has 40 lines of custom viewport-clipping position logic). Radix `Accordion`, `Tabs`, and `Popover` are unstyled/headless — existing CSS stays intact, but behavior, keyboard nav, and ARIA come for free. |
+
+### Small fixes
+
+| Fix | Detail |
+|---|---|
+| **Debounce IndexedDB writes on text input** | `updateField` calls `dbSaveProducts()` on every keystroke (name, price, description). A 300ms debounce on the IDB write — while keeping in-memory state synchronous — removes the chatter. |
+| **Replace `Date.now()` IDs with `crypto.randomUUID()`** | `String(Date.now() + i)` collides when multiple products are added in the same millisecond. `crypto.randomUUID()` is available in all target browsers. |
 
 ---
 
@@ -38,9 +47,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 
 | Feature | Why it matters |
 |---|---|
-| **Catalog JSON export/import** | Save the session as a `.json` file and reload it later. Pairs with auto-save as a manual backup. |
-| **CSV import** | Drop a CSV → name, price, description auto-fill. Big time saver for users managing inventory in Excel/Sheets. |
-| **Product duplication** | "Copy" button on a product card. Common workflow: duplicate then change image/price. |
+| **Catalog excel export/import** | Save the session as a `.excel` file and reload it later. Pairs with auto-save as a manual backup. |
 
 ---
 
@@ -49,28 +56,7 @@ Offline, browser-only catalog builder: upload images → edit name/price/descrip
 | Feature | Why it matters |
 |---|---|
 | **Image fit toggle** | `object-fit: contain` vs `cover` per product, plus `object-position`. Some photos get cropped badly. |
-| **Preset palettes** | 6–8 one-click color+font combos (e.g., "Minimalista", "Lujo", "Vibrante"). Removes blank-slate paralysis for new users. |
-| **Editable "Exclusivo" tag** | The footer tag is hardcoded. Let users type their own tagline. |
+| **Editable "Exclusivo" tag/Hide/show fields** | The footer tag is hardcoded. Let users type their own tagline. Add ability to hide/show all possible parts (img bg, desc. box, header, footer, etc)|
 | **Undo/Redo** | A simple action stack. Currently one wrong move (e.g., reset catalog) is unrecoverable. |
-
----
-
-## Phase 3 — Growth features
-
-| Feature | Why it matters |
-|---|---|
 | **Section divider pages** | Title page between product groups (e.g., "LÍNEA COCINA"). Lets users build multi-section catalogs. |
-| **WhatsApp / image share** | Capture a single page as PNG and share via `navigator.share` or a WhatsApp link. Fits the Argentine small-business market. |
-| **SKU / code field** | Optional 4th field per product. Many vendors need this for ordering. |
 
----
-
-## Suggested order of attack
-
-1. **Client requests** — Description auto-grow, product persistence
-2. **JSON export/import** — Prevents data loss, builds trust
-3. **CSV import** — Biggest workflow accelerator
-4. **Product duplication + image fit toggle** — High-frequency editing improvements
-5. **Preset palettes + editable footer tag** — Polish
-6. **Layout options + section dividers** — Unlocks more catalog types
-7. **WhatsApp share** — Distribution/growth
