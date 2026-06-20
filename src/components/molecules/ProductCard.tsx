@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
 import { PLACEHOLDER_IMG } from '../../utils/image';
 import type { Product } from '../../types';
@@ -37,7 +38,7 @@ export function ProductCard({ product }: Props) {
           onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
         />
         <label className="cell-img-overlay">
-          🔄 Cambiar
+          <RefreshCw size={14} /> Cambiar
           <input
             type="file"
             accept="image/*"

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ChevronRight, GripVertical, RefreshCw, X } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
 import { PLACEHOLDER_IMG } from '../../utils/image';
 import { scrollToProduct } from '../../utils/scroll';
@@ -16,19 +17,6 @@ interface Props {
   onDragOver: (e: React.DragEvent, id: string, el: HTMLElement) => void;
   onDrop: (e: React.DragEvent, id: string, el: HTMLElement) => void;
   onDragEnd: () => void;
-}
-
-function GripIcon() {
-  return (
-    <svg viewBox="0 0 10 16" width="10" height="16" fill="currentColor" aria-hidden>
-      <circle cx="2" cy="2" r="1.5" />
-      <circle cx="8" cy="2" r="1.5" />
-      <circle cx="2" cy="7" r="1.5" />
-      <circle cx="8" cy="7" r="1.5" />
-      <circle cx="2" cy="12" r="1.5" />
-      <circle cx="8" cy="12" r="1.5" />
-    </svg>
-  );
 }
 
 const MAX_DESC = 500;
@@ -75,7 +63,7 @@ export function ProductListItem({
       <div className="rs-card-head">
         <div className="rs-card-left">
           <span className="rs-drag-handle" title="Arrastrar para reordenar">
-            <GripIcon />
+            <GripVertical size={14} />
           </span>
           <span
             className="rs-index"
@@ -92,7 +80,7 @@ export function ProductListItem({
           }}
           title="Eliminar"
         >
-          ✕
+          <X size={14} />
         </button>
       </div>
 
@@ -108,7 +96,7 @@ export function ProductListItem({
             onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
           />
           <label className="rs-thumb-overlay">
-            🔄
+            <RefreshCw size={14} />
             <input
               type="file"
               accept="image/*"
@@ -147,7 +135,7 @@ export function ProductListItem({
       </div>
 
       <button className="rs-desc-toggle" onClick={() => setDescOpen((o) => !o)}>
-        <span className={`rs-desc-arrow ${descOpen ? 'open' : ''}`}>▸</span> Descripción
+        <ChevronRight className={`rs-desc-arrow ${descOpen ? 'open' : ''}`} size={12} /> Descripción
       </button>
       <div className="rs-desc-body" style={{ maxHeight: descOpen ? '600px' : '0' }}>
         <textarea

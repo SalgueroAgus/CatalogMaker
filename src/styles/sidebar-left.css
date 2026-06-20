@@ -16,7 +16,7 @@
   transition: color var(--tr-fast);
 }
 .sb-accordion-header:hover { color: var(--sb-text); }
-.sb-chevron { font-size: 9px; transition: transform var(--tr-normal); display: inline-block; }
+.sb-chevron { transition: transform var(--tr-normal); display: inline-block; vertical-align: middle; }
 .sb-chevron.open { transform: rotate(90deg); }
 
 .sb-accordion-body { padding: 0 12px 12px; }
@@ -201,8 +201,8 @@
 .typo-role-header:hover { background: rgba(255,255,255,0.03); }
 
 .typo-chevron {
-  font-size: 8px; color: var(--sb-text-muted); flex-shrink: 0;
-  transition: transform var(--tr-normal); display: inline-block;
+  color: var(--sb-text-muted); flex-shrink: 0;
+  transition: transform var(--tr-normal); display: inline-block; vertical-align: middle;
 }
 .typo-chevron.open { transform: rotate(90deg); }
 

@@ -1,3 +1,4 @@
+import { BookOpen } from 'lucide-react';
 import essaLogo from '../../assets/essa_logo.jpeg';
 
 interface Props {
@@ -13,7 +14,7 @@ export function LoginPage({ onLogin, loading = false }: Props) {
           <img src={essaLogo} alt="ESSA Home" className="lp-logo" draggable={false} />
         </div>
         <div className="lp-title-row">
-          <span>🎴</span>
+          <BookOpen size={24} />
           <span className="lp-title">CatalogMaker</span>
         </div>
         <div className="lp-body">

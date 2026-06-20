@@ -1,4 +1,9 @@
 import { useRef, useState } from 'react';
+import {
+  ArrowRight, BookOpen, Check, ChevronRight,
+  Download, FilePlus, FolderOpen, Globe,
+  Image as ImageIcon, ImagePlus, RotateCcw, Trash2, X,
+} from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { ColorGroup } from '../molecules/ColorGroup';
 import { FormField } from '../molecules/FormField';
@@ -84,7 +89,7 @@ export function LeftSidebar({
     return (
       <button className="sb-accordion-header" onClick={() => toggleSection(sectionKey)}>
         <span>{label}</span>
-        <span className={`sb-chevron ${isOpen ? 'open' : ''}`}>▸</span>
+        <ChevronRight className={`sb-chevron ${isOpen ? 'open' : ''}`} size={12} />
       </button>
     );
   }
@@ -93,7 +98,7 @@ export function LeftSidebar({
     <aside className="sidebar-left">
       <div className="sb-scroll-area">
         <div className="sb-header">
-          <h1>🎴 CatalogMaker</h1>
+          <h1><BookOpen size={20} /> CatalogMaker</h1>
           <div className="sb-user-row">
             <span className="sb-user-email">{userEmail}</span>
             <button className="sb-logout-btn" onClick={onLogout}>Salir</button>
@@ -115,8 +120,8 @@ export function LeftSidebar({
                   e.target.value = '';
                 }}
               />
-              <Button onClick={() => fileInputRef.current?.click()}>➕ Cargar Fotos</Button>
-              <Button onClick={addBlankProduct}>📄 Agregar Producto</Button>
+              <Button onClick={() => fileInputRef.current?.click()}><ImagePlus size={14} /> Cargar Fotos</Button>
+              <Button onClick={addBlankProduct}><FilePlus size={14} /> Agregar Producto</Button>
             </div>
           )}
         </div>
@@ -216,11 +221,11 @@ export function LeftSidebar({
                     className={`sb-bg-upload ${bgImage ? 'has-image' : ''}`}
                     onClick={() => bgFileInputRef.current?.click()}
                   >
-                    {bgImage ? '🖼 Cambiar imagen' : '📂 Cargar imagen'}
+                    {bgImage ? <><ImageIcon size={14} /> Cambiar imagen</> : <><FolderOpen size={14} /> Cargar imagen</>}
                   </button>
                   {bgImage && (
                     <button className="sb-btn sb-btn-ghost" onClick={() => setBgImage(null)}>
-                      ✕ Quitar imagen
+                      <X size={14} /> Quitar imagen
                     </button>
                   )}
                   <div className="sb-opacity-row">
@@ -246,7 +251,7 @@ export function LeftSidebar({
               <div className="typo-group">
                 <div className="typo-role">
                   <button className="typo-role-header" onClick={() => toggleColorGroup('pagina')}>
-                    <span className={`typo-chevron ${openColorGroups.has('pagina') ? 'open' : ''}`}>▸</span>
+                    <ChevronRight className={`typo-chevron ${openColorGroups.has('pagina') ? 'open' : ''}`} size={12} />
                     <span className="typo-role-name">Página</span>
                   </button>
                   {openColorGroups.has('pagina') && (
@@ -261,7 +266,7 @@ export function LeftSidebar({
 
                 <div className="typo-role">
                   <button className="typo-role-header" onClick={() => toggleColorGroup('articulos')}>
-                    <span className={`typo-chevron ${openColorGroups.has('articulos') ? 'open' : ''}`}>▸</span>
+                    <ChevronRight className={`typo-chevron ${openColorGroups.has('articulos') ? 'open' : ''}`} size={12} />
                     <span className="typo-role-name">Artículos</span>
                   </button>
                   {openColorGroups.has('articulos') && (
@@ -275,7 +280,7 @@ export function LeftSidebar({
 
                 <div className="typo-role">
                   <button className="typo-role-header" onClick={() => toggleColorGroup('indice')}>
-                    <span className={`typo-chevron ${openColorGroups.has('indice') ? 'open' : ''}`}>▸</span>
+                    <ChevronRight className={`typo-chevron ${openColorGroups.has('indice') ? 'open' : ''}`} size={12} />
                     <span className="typo-role-name">Índice</span>
                   </button>
                   {openColorGroups.has('indice') && (
@@ -302,7 +307,7 @@ export function LeftSidebar({
               if (confirm('Se eliminarán todos los productos. ¿Continuar?')) resetCatalog();
             }}
           >
-            🗑 Vaciar Catálogo
+            <Trash2 size={14} /> Vaciar Catálogo
           </Button>
           <Button
             variant="reset"
@@ -313,7 +318,7 @@ export function LeftSidebar({
               }
             }}
           >
-            ↺ Restablecer Todo
+            <RotateCcw size={14} /> Restablecer Todo
           </Button>
         </div>
         <Button variant="publish" onClick={onPublish} disabled={isPublishing || isDownloading || isExporting}>
@@ -322,7 +327,7 @@ export function LeftSidebar({
               <span className="spinner" /> {publishProgress}
             </>
           ) : (
-            '🌐 Publicar en Web'
+            <><Globe size={14} /> Publicar en Web</>
           )}
         </Button>
         {lastPublishUrl && (
@@ -332,7 +337,7 @@ export function LeftSidebar({
             rel="noopener noreferrer"
             className="sb-publish-url"
           >
-            ✓ Ver catálogo publicado →
+            <Check size={14} /> Ver catálogo publicado <ArrowRight size={12} />
           </a>
         )}
         <Button variant="export" onClick={onExport} disabled={isExporting || isPublishing || isDownloading}>
@@ -341,7 +346,7 @@ export function LeftSidebar({
               <span className="spinner" /> {exportProgress}
             </>
           ) : (
-            '📥 Descargar PDF'
+            <><Download size={14} /> Descargar PDF</>
           )}
         </Button>
       </div>

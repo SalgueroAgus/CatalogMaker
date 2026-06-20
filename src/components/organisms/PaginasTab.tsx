@@ -1,3 +1,4 @@
+import { FileText } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { GridShapePicker } from '../molecules/GridShapePicker';
@@ -45,7 +46,7 @@ export function PaginasTab() {
 
       {pageCount === 0 ? (
         <div className="rs-empty">
-          <span>📄</span>
+          <FileText size={32} />
           <p>Subí fotos para configurar las páginas</p>
         </div>
       ) : (

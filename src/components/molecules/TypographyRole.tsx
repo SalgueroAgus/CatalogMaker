@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import type { Fonts, FontSizes } from '../../types';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { SYSTEM_FONTS, GOOGLE_FONTS, loadGoogleFont } from '../../constants/fonts';
@@ -60,7 +61,7 @@ export function TypographyRole({
   return (
     <div className="typo-role">
       <button className="typo-role-header" onClick={() => setOpen((o) => !o)}>
-        <span className={`typo-chevron ${open ? 'open' : ''}`}>▸</span>
+        <ChevronRight className={`typo-chevron ${open ? 'open' : ''}`} size={12} />
         <span className="typo-role-name">{label}</span>
         {!open && <span className="typo-role-summary">{summary}</span>}
       </button>

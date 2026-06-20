@@ -181,7 +181,7 @@
   transition: color var(--tr-fast); width: 100%; text-align: left;
 }
 .rs-desc-toggle:hover { color: var(--sb-text); }
-.rs-desc-arrow { display: inline-block; transition: transform var(--tr-fast); font-size: 9px; }
+.rs-desc-arrow { display: inline-block; transition: transform var(--tr-fast); vertical-align: middle; }
 .rs-desc-arrow.open { transform: rotate(90deg); }
 .rs-desc-body { max-height: 0; overflow: hidden; transition: max-height var(--tr-normal); }
 .rs-desc-textarea {
