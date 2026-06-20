@@ -329,15 +329,6 @@ export function LeftSidebar({
             ✓ Ver catálogo publicado →
           </a>
         )}
-        <Button onClick={onDownloadHTML} disabled={isDownloading || isPublishing || isExporting}>
-          {isDownloading ? (
-            <>
-              <span className="spinner" /> {publishProgress}
-            </>
-          ) : (
-            '📄 Descargar HTML'
-          )}
-        </Button>
         <Button variant="export" onClick={onExport} disabled={isExporting || isPublishing || isDownloading}>
           {isExporting ? (
             <>
