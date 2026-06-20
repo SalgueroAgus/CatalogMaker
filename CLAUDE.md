@@ -49,7 +49,7 @@ Use these before planning or implementing — not as an afterthought.
 
 ## Architecture
 
-**CatalogFlow Pro** is a browser-only PDF catalog generator. Users upload product images, edit names/prices/descriptions, and export a styled A4 PDF. All state is persisted in IndexedDB — there is no backend.
+**CatalogMaker** is a browser-only PDF catalog generator. Users upload product images, edit names/prices/descriptions, and export a styled A4 PDF. All state is persisted in IndexedDB — there is no backend.
 
 ---
 

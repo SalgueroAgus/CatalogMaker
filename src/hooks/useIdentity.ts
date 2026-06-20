@@ -16,10 +16,13 @@ export function useIdentity() {
     netlify.on('login', onLogin);
     netlify.on('logout', onLogout);
 
+    const fallback = setTimeout(() => setLoading(false), 1500);
+
     return () => {
       netlify.off('init', onInit);
       netlify.off('login', onLogin);
       netlify.off('logout', onLogout);
+      clearTimeout(fallback);
     };
   }, []);
 

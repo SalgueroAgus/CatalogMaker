@@ -1,4 +1,4 @@
-# CatalogFlow Pro — Roadmap
+# CatalogMaker — Roadmap
 
 ## What it is today
 Offline, browser-only catalog builder: upload images → edit name/price/description → customize brand colors/fonts/gradients → export via jsPDF + html2canvas. Settings auto-saved to localStorage.

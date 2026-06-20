@@ -93,7 +93,7 @@ export function LeftSidebar({
     <aside className="sidebar-left">
       <div className="sb-scroll-area">
         <div className="sb-header">
-          <h1>🎴 CatalogFlow Pro</h1>
+          <h1>🎴 CatalogMaker</h1>
           <div className="sb-user-row">
             <span className="sb-user-email">{userEmail}</span>
             <button className="sb-logout-btn" onClick={onLogout}>Salir</button>

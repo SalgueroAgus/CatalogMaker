@@ -1,4 +1,4 @@
-# CatalogFlow Pro
+# CatalogMaker
 
 Generador de catálogos PDF profesionales. Cargás fotos, editás nombre y precio, y descargás un PDF listo para compartir.
 
