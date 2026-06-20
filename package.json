@@ -11,12 +11,14 @@
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.2.5",
     "jspdf": "^2.5.1",
+    "netlify-identity-widget": "^2.0.3",
     "react": "^18.3.1",
     "react-best-gradient-color-picker": "^3.0.14",
     "react-dom": "^18.3.1",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@types/netlify-identity-widget": "^1.9.7",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

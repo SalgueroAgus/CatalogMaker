@@ -1,6 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import netlify from 'netlify-identity-widget';
 import App from './App';
+
+netlify.init();
 
 import './styles/globals.css';
 import './styles/layout.css';
@@ -17,6 +20,7 @@ import './styles/index-page.css';
 import './styles/sidebar-right.css';
 import './styles/print.css';
 import './styles/mobile.css';
+import './styles/login.css';
 
 import { useSettingsStore } from './store/useSettingsStore';
 import { dbSaveSettings } from './db';

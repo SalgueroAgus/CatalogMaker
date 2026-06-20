@@ -1,6 +1,10 @@
 .sb-header { padding-bottom: 14px; border-bottom: 1px solid var(--sb-border); margin-bottom: 4px; }
 .sb-header h1 { font-size: 15px; font-weight: 700; color: var(--sb-accent); display: flex; align-items: center; gap: 7px; }
 .sb-header p { font-size: 11px; color: var(--sb-text-muted); margin-top: 3px; }
+.sb-user-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+.sb-user-email { font-size: 11px; color: var(--sb-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+.sb-logout-btn { font-size: 10px; color: var(--sb-text-muted); background: none; border: none; cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: color var(--tr-fast); flex-shrink: 0; }
+.sb-logout-btn:hover { color: var(--sb-text); }
 .sb-section { background: var(--sb-bg-card); border: 1px solid var(--sb-border); border-radius: 10px; overflow: hidden; }
 .sb-section-title { font-size: 11px; font-weight: 700; color: var(--sb-text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
 

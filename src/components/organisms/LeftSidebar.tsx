@@ -17,6 +17,8 @@ interface Props {
   isDownloading: boolean;
   publishProgress: string;
   lastPublishUrl: string | null;
+  userEmail: string;
+  onLogout: () => void;
 }
 
 type SectionKey = 'catalogo' | 'marca' | 'tipografia' | 'pagina';
@@ -26,6 +28,7 @@ export function LeftSidebar({
   onPublish, isPublishing,
   onDownloadHTML, isDownloading,
   publishProgress, lastPublishUrl,
+  userEmail, onLogout,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgFileInputRef = useRef<HTMLInputElement>(null);
@@ -91,7 +94,10 @@ export function LeftSidebar({
       <div className="sb-scroll-area">
         <div className="sb-header">
           <h1>🎴 CatalogFlow Pro</h1>
-          <p>Offline</p>
+          <div className="sb-user-row">
+            <span className="sb-user-email">{userEmail}</span>
+            <button className="sb-logout-btn" onClick={onLogout}>Salir</button>
+          </div>
         </div>
 
         <div className="sb-section">
