@@ -211,3 +211,62 @@
 }
 .rs-empty span { font-size: 32px; opacity: 0.5; }
 .rs-empty p { font-size: 12px; color: var(--sb-text-muted); margin-top: 10px; line-height: 1.5; }
+
+/* ── Excel import ───────────────────────────────────── */
+.excel-panel-wrap {
+  flex-shrink: 0; border-bottom: 1px solid var(--sb-border);
+}
+
+.excel-toolbar {
+  display: flex; gap: 6px; padding: 8px 8px 8px;
+}
+
+.excel-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr-fast); border: 1px solid var(--sb-input-border);
+  background: var(--sb-bg-card); color: var(--sb-text-muted); white-space: nowrap;
+}
+.excel-btn:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
+.excel-btn-accent {
+  background: rgba(16,185,129,0.12); border-color: var(--sb-accent);
+  color: var(--sb-accent);
+}
+.excel-btn-accent:hover { background: rgba(16,185,129,0.22); color: var(--sb-accent); }
+.excel-btn-full { width: 100%; justify-content: center; }
+
+.excel-confirm-panel {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 0 8px 10px;
+}
+
+.excel-found-label {
+  font-size: 12px; color: var(--sb-text); margin: 0;
+}
+.excel-found-label strong { color: var(--sb-accent); }
+
+.excel-warning {
+  display: flex; gap: 9px; align-items: flex-start;
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.45);
+  border-radius: 8px; padding: 10px 11px;
+}
+.excel-warning-icon {
+  flex-shrink: 0; color: #f59e0b; margin-top: 1px;
+}
+.excel-warning-text {
+  font-size: 12px; color: #fcd34d; line-height: 1.55; margin: 0;
+}
+.excel-warning-text strong { color: #fde68a; }
+
+.excel-img-section { display: flex; flex-direction: column; gap: 5px; }
+
+.excel-match-label {
+  font-size: 11px; color: var(--sb-text-muted); margin: 0;
+  display: flex; align-items: center; gap: 5px;
+}
+.excel-match-icon { color: var(--sb-accent); flex-shrink: 0; }
+.excel-match-icon-warn { color: #f59e0b; flex-shrink: 0; }
+
+.excel-actions { display: flex; gap: 6px; }
+.excel-actions .excel-btn { flex: 1; justify-content: center; }

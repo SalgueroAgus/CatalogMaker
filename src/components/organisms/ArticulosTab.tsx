@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { LayoutList } from 'lucide-react';
 import { ProductListItem } from '../molecules/ProductListItem';
+import { ExcelImportPanel } from '../molecules/ExcelImportPanel';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { getProductPage, getIndexPageCount } from '../../utils/chunks';
@@ -56,15 +57,20 @@ export function ArticulosTab({ visibleIds }: Props) {
 
   if (count === 0) {
     return (
-      <div className="rs-empty">
-        <LayoutList size={32} />
-        <p>Subí fotos para ver el listado aquí</p>
-      </div>
+      <>
+        <ExcelImportPanel />
+        <div className="rs-empty">
+          <LayoutList size={32} />
+          <p>Subí fotos para ver el listado aquí</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="rs-list">
+    <>
+      <ExcelImportPanel />
+      <div className="rs-list">
       {products.map((product, index) => (
         <div key={product.id}>
           {index % itemsPerPage === 0 && (
@@ -86,6 +92,7 @@ export function ArticulosTab({ visibleIds }: Props) {
           />
         </div>
       ))}
-    </div>
+      </div>
+    </>
   );
 }
