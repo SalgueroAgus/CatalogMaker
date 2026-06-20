@@ -5,6 +5,7 @@ import { Workspace } from './components/organisms/Workspace';
 import { RightSidebar } from './components/organisms/RightSidebar';
 import { MobileNav } from './components/organisms/MobileNav';
 import { usePDF } from './hooks/usePDF';
+import { usePublish } from './hooks/usePublish';
 import { usePageScale } from './hooks/usePageScale';
 import { useProductStore } from './store/useProductStore';
 import { useSettingsStore } from './store/useSettingsStore';
@@ -19,6 +20,7 @@ export default function App() {
   const [sidebarRightOpen, setSidebarRightOpen] = useState(false);
 
   const { exportToPDF, isExporting, progress } = usePDF(pagesRef);
+  const { publish, downloadHTML, isPublishing, isDownloading, progress: publishProgress, lastUrl: lastPublishUrl } = usePublish(pagesRef);
   const hydrateProducts  = useProductStore((s) => s.hydrateProducts);
   const hydrateSettings  = useSettingsStore((s) => s.hydrateSettings);
 
@@ -57,6 +59,12 @@ export default function App() {
           onExport={exportToPDF}
           isExporting={isExporting}
           exportProgress={progress}
+          onPublish={publish}
+          isPublishing={isPublishing}
+          onDownloadHTML={downloadHTML}
+          isDownloading={isDownloading}
+          publishProgress={publishProgress}
+          lastPublishUrl={lastPublishUrl}
         />
       }
       center={

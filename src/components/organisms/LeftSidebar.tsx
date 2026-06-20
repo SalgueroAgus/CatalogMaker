@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { Button } from '../atoms/Button';
-import { Input } from '../atoms/Input';
-import { FormField } from '../molecules/FormField';
 import { ColorGroup } from '../molecules/ColorGroup';
+import { FormField } from '../molecules/FormField';
+import { Input } from '../atoms/Input';
 import { TypographyRole } from '../molecules/TypographyRole';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -11,11 +11,22 @@ interface Props {
   onExport: () => void;
   isExporting: boolean;
   exportProgress: string;
+  onPublish: () => void;
+  isPublishing: boolean;
+  onDownloadHTML: () => void;
+  isDownloading: boolean;
+  publishProgress: string;
+  lastPublishUrl: string | null;
 }
 
 type SectionKey = 'catalogo' | 'marca' | 'tipografia' | 'pagina';
 
-export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
+export function LeftSidebar({
+  onExport, isExporting, exportProgress,
+  onPublish, isPublishing,
+  onDownloadHTML, isDownloading,
+  publishProgress, lastPublishUrl,
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -273,6 +284,7 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
             </div>
           )}
         </div>
+
       </div>
 
       <div className="sb-export-footer">
@@ -298,7 +310,35 @@ export function LeftSidebar({ onExport, isExporting, exportProgress }: Props) {
             ↺ Restablecer Todo
           </Button>
         </div>
-        <Button variant="export" onClick={onExport} disabled={isExporting}>
+        <Button variant="publish" onClick={onPublish} disabled={isPublishing || isDownloading || isExporting}>
+          {isPublishing ? (
+            <>
+              <span className="spinner" /> {publishProgress}
+            </>
+          ) : (
+            '🌐 Publicar en Web'
+          )}
+        </Button>
+        {lastPublishUrl && (
+          <a
+            href={lastPublishUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sb-publish-url"
+          >
+            ✓ Ver catálogo publicado →
+          </a>
+        )}
+        <Button onClick={onDownloadHTML} disabled={isDownloading || isPublishing || isExporting}>
+          {isDownloading ? (
+            <>
+              <span className="spinner" /> {publishProgress}
+            </>
+          ) : (
+            '📄 Descargar HTML'
+          )}
+        </Button>
+        <Button variant="export" onClick={onExport} disabled={isExporting || isPublishing || isDownloading}>
           {isExporting ? (
             <>
               <span className="spinner" /> {exportProgress}

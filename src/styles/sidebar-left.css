@@ -98,7 +98,7 @@
 .sb-btn-export:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 .sb-footer-actions {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
 }
 
 .sb-btn-danger {
@@ -152,8 +152,27 @@
   flex-shrink: 0; padding: 10px 14px 18px;
   border-top: 1px solid var(--sb-border);
   background: linear-gradient(to bottom, #0f172a, #131c2e);
-  display: flex; flex-direction: column; gap: 0;
+  display: flex; flex-direction: column; gap: 6px;
 }
+
+.sb-btn-publish {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border: none; color: #fff; font-size: 12px; font-weight: 700;
+  padding: 12px 16px; border-radius: 10px; box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+  cursor: pointer; transition: all var(--tr-normal); display: flex;
+  align-items: center; justify-content: center; gap: 7px; width: 100%; flex-shrink: 0;
+}
+.sb-btn-publish:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(99,102,241,0.4); }
+.sb-btn-publish:active { transform: translateY(0); }
+.sb-btn-publish:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.sb-publish-url {
+  display: block; text-align: center; font-size: 11px; font-weight: 500;
+  color: #818cf8; text-decoration: none; padding: 2px 0;
+  transition: color var(--tr-fast);
+}
+.sb-publish-url:hover { color: #a5b4fc; }
+
 
 /* ── Typography groups ─────────────────────────────── */
 .typo-group { display: flex; flex-direction: column; gap: 3px; }
