@@ -60,8 +60,12 @@ export function TypographyRole({
 
   return (
     <div className="typo-role">
-      <button className="typo-role-header" onClick={() => setOpen((o) => !o)}>
-        <ChevronRight className={`typo-chevron ${open ? 'open' : ''}`} size={12} />
+      <button
+        className="typo-role-header"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <ChevronRight className={`typo-chevron ${open ? 'open' : ''}`} size={12} aria-hidden="true" />
         <span className="typo-role-name">{label}</span>
         {!open && <span className="typo-role-summary">{summary}</span>}
       </button>

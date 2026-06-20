@@ -1,5 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+*:focus { outline: none; }
+*:focus-visible { outline: 2px solid var(--sb-accent); outline-offset: 2px; border-radius: 3px; }
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--sb-bg);

@@ -6,16 +6,20 @@
 .rs-tab-btn {
   flex: 1; padding: 12px 8px; background: transparent; border: none;
   border-bottom: 2px solid transparent; margin-bottom: -1px;
-  color: var(--sb-text-muted); font-size: 11px; font-weight: 600;
+  color: var(--sb-text-muted); font-size: 13px; font-weight: 600;
   cursor: pointer; transition: all var(--tr-fast);
   display: flex; align-items: center; justify-content: center; gap: 5px;
 }
 .rs-tab-btn:hover { color: var(--sb-text); }
-.rs-tab-btn.active { color: var(--sb-accent); border-bottom-color: var(--sb-accent); }
+.rs-tab-btn[data-state="active"] { color: var(--sb-accent); border-bottom-color: var(--sb-accent); }
 .rs-tab-badge {
-  font-size: 9px; font-weight: 700; background: rgba(16,185,129,0.15);
+  font-size: 10px; font-weight: 700; background: rgba(16,185,129,0.15);
   color: var(--sb-accent); padding: 2px 6px; border-radius: 8px; line-height: 1;
 }
+
+/* ── Tab panels ─────────────────────────────────────── */
+.rs-tab-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.rs-tab-panel[hidden] { display: none; }
 
 /* ── Páginas panel ───────────────────────────────────── */
 .paginas-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -24,14 +28,14 @@
   padding: 12px 12px 10px; border-bottom: 1px solid var(--sb-border); flex-shrink: 0;
 }
 .paginas-global-label {
-  display: block; font-size: 9px; font-weight: 700; color: var(--sb-text-muted);
+  display: block; font-size: 10px; font-weight: 700; color: var(--sb-text-muted);
   text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
 }
 .paginas-count-pills { display: flex; gap: 4px; }
 .paginas-pill {
-  flex: 1; padding: 5px 0; background: var(--sb-bg-card);
+  flex: 1; padding: 6px 0; background: var(--sb-bg-card);
   border: 1px solid var(--sb-input-border); border-radius: 6px;
-  color: var(--sb-text-muted); font-size: 12px; font-weight: 700;
+  color: var(--sb-text-muted); font-size: 13px; font-weight: 700;
   cursor: pointer; transition: all var(--tr-fast);
 }
 .paginas-pill:hover { border-color: var(--sb-accent); color: var(--sb-text); }
@@ -50,11 +54,11 @@
   display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
 }
 .paginas-page-label {
-  font-size: 9px; font-weight: 700; color: var(--sb-accent);
+  font-size: 11px; font-weight: 700; color: var(--sb-accent);
   text-transform: uppercase; letter-spacing: 1px;
 }
 .paginas-partial-badge {
-  font-size: 8px; font-weight: 600; color: #f59e0b;
+  font-size: 10px; font-weight: 600; color: #f59e0b;
   background: rgba(245,158,11,0.12); padding: 2px 6px; border-radius: 6px;
 }
 
@@ -62,14 +66,14 @@
 .gsp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .gsp-btn {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 5px 3px 4px; background: var(--sb-input-bg);
+  padding: 6px 3px 5px; background: var(--sb-input-bg);
   border: 1px solid var(--sb-input-border); border-radius: 6px;
   color: var(--sb-text-muted); cursor: pointer; transition: all var(--tr-fast);
 }
 .gsp-btn:hover { border-color: var(--sb-text-muted); color: var(--sb-text); }
 .gsp-btn.active { border-color: var(--sb-accent); color: var(--sb-accent); background: rgba(16,185,129,0.08); }
 .gsp-btn svg { width: 36px; height: 26px; flex-shrink: 0; }
-.gsp-label { font-size: 8px; font-weight: 500; line-height: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.gsp-label { font-size: 10px; font-weight: 500; line-height: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
 .rs-list {
   flex: 1; overflow-y: auto; padding: 6px 8px;
@@ -80,7 +84,7 @@
 .rs-list::-webkit-scrollbar-thumb { background: var(--sb-input-border); border-radius: 2px; }
 
 .rs-page-sep {
-  font-size: 9px; font-weight: 700; color: var(--sb-accent);
+  font-size: 10px; font-weight: 700; color: var(--sb-accent);
   text-transform: uppercase; letter-spacing: 1px;
   padding: 10px 8px 4px; display: flex; align-items: center; gap: 8px;
 }
@@ -112,15 +116,16 @@
 .rs-drag-handle:hover { background: rgba(255,255,255,0.08); color: var(--sb-text); }
 .rs-drag-handle:active { cursor: grabbing; }
 .rs-index {
-  font-size: 9px; font-weight: 700; color: var(--sb-text-muted);
-  background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; color: var(--sb-text-muted);
+  background: rgba(255,255,255,0.06); padding: 3px 7px; border-radius: 4px;
   cursor: pointer; transition: all var(--tr-fast);
 }
 .rs-index:hover { background: var(--sb-accent); color: #fff; }
 .rs-act-del {
   background: transparent; border: 1px solid var(--sb-input-border);
-  color: var(--sb-text-muted); font-size: 10px; padding: 2px 7px;
-  border-radius: 4px; cursor: pointer; transition: all var(--tr-fast); line-height: 1.3;
+  color: var(--sb-text-muted); font-size: 12px; padding: 4px 9px;
+  border-radius: 4px; cursor: pointer; transition: all var(--tr-fast); line-height: 1.4;
+  display: flex; align-items: center; gap: 4px;
 }
 .rs-act-del:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
@@ -141,9 +146,9 @@
 
 .rs-fields { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .rs-input {
-  width: 100%; padding: 4px 7px; background: var(--sb-input-bg);
+  width: 100%; padding: 5px 7px; background: var(--sb-input-bg);
   border: 1px solid var(--sb-input-border); border-radius: 5px;
-  color: var(--sb-text); font-size: 11px; outline: none;
+  color: var(--sb-text); font-size: 12px; outline: none;
   transition: border-color var(--tr-fast);
 }
 .rs-input:focus { border-color: var(--sb-accent); }
@@ -152,7 +157,7 @@
 .rs-input-price { font-weight: 700; color: var(--sb-accent); }
 
 .rs-bg-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-.rs-bg-label { font-size: 9px; font-weight: 600; color: var(--sb-text-muted); flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+.rs-bg-label { font-size: 10px; font-weight: 600; color: var(--sb-text-muted); flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* ── Gradient picker popover ─────────────── */
 .gpp-swatch {
@@ -176,8 +181,8 @@
 
 .rs-desc-toggle {
   background: transparent; border: none; color: var(--sb-text-muted);
-  font-size: 10px; cursor: pointer; padding: 5px 0 1px;
-  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; cursor: pointer; padding: 5px 0 1px;
+  display: flex; align-items: center; gap: 5px;
   transition: color var(--tr-fast); width: 100%; text-align: left;
 }
 .rs-desc-toggle:hover { color: var(--sb-text); }
@@ -187,14 +192,14 @@
 .rs-desc-textarea {
   width: 100%; padding: 5px 7px; background: var(--sb-input-bg);
   border: 1px solid var(--sb-input-border); border-radius: 5px;
-  color: var(--sb-text); font-size: 10px; outline: none;
+  color: var(--sb-text); font-size: 11px; outline: none;
   resize: none; margin-top: 3px; line-height: 1.5;
   transition: border-color var(--tr-fast);
   overflow: hidden; min-height: 44px;
 }
 .rs-desc-textarea:focus { border-color: var(--sb-accent); }
 .rs-desc-counter {
-  display: block; text-align: right; font-size: 9px;
+  display: block; text-align: right; font-size: 10px;
   color: var(--sb-text-muted); margin-top: 2px; padding-right: 2px;
 }
 .rs-desc-counter-warn { color: #f59e0b; }

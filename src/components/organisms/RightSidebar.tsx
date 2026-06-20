@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import * as Tabs from '@radix-ui/react-tabs';
 import { useProductStore } from '../../store/useProductStore';
 import { ArticulosTab } from './ArticulosTab';
 import { PaginasTab } from './PaginasTab';
@@ -7,32 +7,28 @@ interface Props {
   visibleIds: Set<string>;
 }
 
-type Tab = 'articulos' | 'paginas';
-
 export function RightSidebar({ visibleIds }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>('articulos');
   const count = useProductStore((s) => s.products.length);
 
   return (
-    <aside className="sidebar-right">
-      <div className="rs-tabs">
-        <button
-          className={`rs-tab-btn ${activeTab === 'articulos' ? 'active' : ''}`}
-          onClick={() => setActiveTab('articulos')}
-        >
-          Artículos
-          {count > 0 && <span className="rs-tab-badge">{count}</span>}
-        </button>
-        <button
-          className={`rs-tab-btn ${activeTab === 'paginas' ? 'active' : ''}`}
-          onClick={() => setActiveTab('paginas')}
-        >
-          Páginas
-        </button>
-      </div>
-
-      {activeTab === 'articulos' && <ArticulosTab visibleIds={visibleIds} />}
-      {activeTab === 'paginas' && <PaginasTab />}
-    </aside>
+    <Tabs.Root defaultValue="articulos" asChild>
+      <aside className="sidebar-right">
+        <Tabs.List className="rs-tabs">
+          <Tabs.Trigger value="articulos" className="rs-tab-btn">
+            Artículos
+            {count > 0 && <span className="rs-tab-badge">{count}</span>}
+          </Tabs.Trigger>
+          <Tabs.Trigger value="paginas" className="rs-tab-btn">
+            Páginas
+          </Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="articulos" className="rs-tab-panel">
+          <ArticulosTab visibleIds={visibleIds} />
+        </Tabs.Content>
+        <Tabs.Content value="paginas" className="rs-tab-panel">
+          <PaginasTab />
+        </Tabs.Content>
+      </aside>
+    </Tabs.Root>
   );
 }
