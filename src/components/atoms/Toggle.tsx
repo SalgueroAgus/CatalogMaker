@@ -1,3 +1,6 @@
+import { useId } from 'react';
+import * as Switch from '@radix-ui/react-switch';
+
 interface Props {
   label: string;
   active: boolean;
@@ -5,12 +8,18 @@ interface Props {
 }
 
 export function Toggle({ label, active, onToggle }: Props) {
+  const id = useId();
   return (
     <div className="toggle-row">
-      <span className="toggle-label">{label}</span>
-      <div className={`toggle-track ${active ? 'active' : ''}`} onClick={onToggle}>
-        <div className="toggle-thumb" />
-      </div>
+      <label className="toggle-label" htmlFor={id}>{label}</label>
+      <Switch.Root
+        className="toggle-track"
+        id={id}
+        checked={active}
+        onCheckedChange={onToggle}
+      >
+        <Switch.Thumb className="toggle-thumb" />
+      </Switch.Root>
     </div>
   );
 }

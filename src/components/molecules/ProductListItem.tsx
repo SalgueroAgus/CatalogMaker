@@ -134,8 +134,12 @@ export function ProductListItem({
         </div>
       </div>
 
-      <button className="rs-desc-toggle" onClick={() => setDescOpen((o) => !o)}>
-        <ChevronRight className={`rs-desc-arrow ${descOpen ? 'open' : ''}`} size={12} /> Descripción
+      <button
+        className="rs-desc-toggle"
+        onClick={() => setDescOpen((o) => !o)}
+        aria-expanded={descOpen}
+      >
+        <ChevronRight className={`rs-desc-arrow ${descOpen ? 'open' : ''}`} size={12} aria-hidden="true" /> Descripción
       </button>
       <div className="rs-desc-body" style={{ maxHeight: descOpen ? '600px' : '0' }}>
         <textarea

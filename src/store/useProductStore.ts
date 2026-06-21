@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Product } from '../types';
 import { PLACEHOLDER_IMG } from '../utils/image';
+import type { ExcelRow } from '../utils/excel';
 import {
   dbSaveProducts,
   dbSaveImage,
@@ -26,6 +27,7 @@ interface ProductState {
   reorderProduct: (fromId: string, toId: string, above: boolean) => void;
   updateField: (id: string, field: keyof Omit<Product, 'id'>, value: string) => void;
   replaceImage: (id: string, file: File) => void;
+  importProducts: (rows: ExcelRow[], imageFiles: File[]) => void;
   resetCatalog: () => void;
   hydrateProducts: (products: Product[]) => void;
 }
@@ -117,6 +119,32 @@ export const useProductStore = create<ProductState>((set) => ({
       return {
         products: s.products.map((p) => (p.id === id ? { ...p, image: url } : p)),
       };
+    });
+  },
+
+  importProducts: (rows, imageFiles) => {
+    const fileMap = new Map<string, File>();
+    imageFiles.forEach((f) => {
+      const key = f.name.replace(/\.[^.]+$/, '').trim().toLowerCase();
+      fileMap.set(key, f);
+    });
+    const newProducts: Product[] = rows.map((row, i) => {
+      const id = String(Date.now() + i);
+      const imageFile = fileMap.get(row.name.trim().toLowerCase());
+      if (imageFile) dbSaveImage(id, imageFile);
+      return {
+        id,
+        name: row.name,
+        price: row.price,
+        description: row.description || 'Descripción del producto.',
+        image: imageFile ? URL.createObjectURL(imageFile) : PLACEHOLDER_IMG,
+        bgColor: 'rgba(255,255,255,1)',
+      };
+    });
+    set((s) => {
+      const updated = [...s.products, ...newProducts];
+      dbSaveProducts(updated.map(toMeta));
+      return { products: updated };
     });
   },
 
