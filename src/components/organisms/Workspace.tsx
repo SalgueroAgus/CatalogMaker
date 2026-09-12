@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { FolderOpen, LayoutList, X } from 'lucide-react';
+import { SaveStatus } from '../molecules/SaveStatus';
 import { Badge } from '../atoms/Badge';
 import { IndexPage } from './IndexPage';
 import { ProductPage } from './ProductPage';
@@ -31,6 +32,10 @@ export function Workspace({
   const indexChunks = chunkArray(allProducts, INDEX_ITEMS_PER_PAGE);
   const productChunks = chunkArray(allProducts, itemsPerPage);
   const totalPages = allProducts.length === 0 ? 0 : indexChunks.length + productChunks.length;
+
+  useEffect(() => {
+    pagesRef.current.length = totalPages;
+  }, [pagesRef, totalPages]);
 
   useEffect(() => {
     if (allProducts.length > prevLengthRef.current) {
@@ -103,6 +108,7 @@ export function Workspace({
 
   return (
     <main className="workspace" ref={workspaceRef as React.RefObject<HTMLElement>}>
+      <div className="preview-save-status"><SaveStatus /></div>
       <div className="info-bar">
         <div>
           <h2>Vista Previa (A4)</h2>
@@ -111,6 +117,8 @@ export function Workspace({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <button
             className="sidebar-right-toggle"
+            aria-expanded={sidebarRightOpen}
+            aria-controls="products-sidebar"
             onClick={onToggleRightSidebar}
           >
             {sidebarRightOpen ? <><X size={14} /> Cerrar</> : <><LayoutList size={14} /> Productos</>}
@@ -122,7 +130,7 @@ export function Workspace({
       </div>
 
       {allProducts.length === 0 && (
-        <div
+        <button
           className="drop-zone"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -130,9 +138,9 @@ export function Workspace({
           onClick={openFilePicker}
         >
           <FolderOpen className="dz-icon" size={40} />
-          <p className="dz-title">Arrastrá y soltá tus fotos aquí</p>
-          <p className="dz-sub">Se agrupan automáticamente en páginas.</p>
-        </div>
+          <span className="dz-title">Cargar fotos o arrastrarlas aquí</span>
+          <span className="dz-sub">Se agrupan automáticamente en páginas.</span>
+        </button>
       )}
 
       {allProducts.length > 0 && (

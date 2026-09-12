@@ -2,8 +2,7 @@ import { forwardRef } from 'react';
 import { ProductCard } from '../molecules/ProductCard';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { DEFAULT_GRID_SHAPE, SHAPE_ITEM_COUNT } from '../../types';
-import { getIndexPageCount } from '../../utils/chunks';
+import { getIndexPageCount, getProductPage, resolveGridShape } from '../../utils/chunks';
 import type { Product } from '../../types';
 
 interface Props {
@@ -22,14 +21,10 @@ export const ProductPage = forwardRef<HTMLDivElement, Props>(
     const allProducts = useProductStore((s) => s.products);
 
     const indexPageCount = getIndexPageCount(allProducts.length);
-    const displayPage = pageIndex + indexPageCount + 1;
+    const displayPage = getProductPage(pageIndex * itemsPerPage, itemsPerPage, indexPageCount);
     const actualCount = products.length;
 
-    const stored = pageLayouts[pageIndex];
-    const gridShape =
-      stored && SHAPE_ITEM_COUNT[stored] === actualCount
-        ? stored
-        : DEFAULT_GRID_SHAPE[actualCount] ?? DEFAULT_GRID_SHAPE[itemsPerPage];
+    const gridShape = resolveGridShape(pageLayouts[pageIndex], actualCount);
 
     return (
       <div

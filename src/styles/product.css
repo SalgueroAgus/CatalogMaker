@@ -19,9 +19,10 @@
 }
 
 .cell-img-overlay {
-  position: absolute; inset: 0; background: rgba(0,0,0,0.4);
+  position: absolute; right: 8px; bottom: 8px; background: var(--sb-bg);
+  border: 1px solid var(--sb-input-border); border-radius: 6px; padding: 8px; min-height: 44px; min-width: 44px;
   display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity var(--tr-fast); cursor: pointer; font-size: 12px;
+  opacity: 1; transition: opacity var(--tr-fast); cursor: pointer; font-size: 16px;
   color: #fff; font-weight: 600;
 }
 .cell-img-area:hover .cell-img-overlay { opacity: 1; }

@@ -9,52 +9,70 @@ The app runs in the browser with React 18, TypeScript, Vite, and Zustand. There 
 application backend in this repo. IndexedDB holds catalog data locally; Netlify Identity,
 Google Fonts, and web publishing use network services.
 
-[main.tsx](../src/main.tsx) initializes Netlify Identity, loads global CSS, registers settings
-auto-save, and renders React StrictMode. [App.tsx](../src/App.tsx) owns startup hydration,
-the ordered page refs used by export, mobile tab state, and the tablet sidebar toggle.
-The UI is organized as atoms, molecules, organisms, and templates.
+[main.tsx](../src/main.tsx) initializes Netlify Identity, loads global CSS and renders
+React StrictMode. [App.tsx](../src/App.tsx) starts single-session hydration, owns page refs,
+mobile tab state and the tablet sidebar toggle. Editing UI is mounted only after a coherent
+load. A failed load remains visible with retry; existing records are never replaced with an
+empty catalog to hide a failure. Development still uses the existing login bypass.
 
 ## State and persistence
 
-[useProductStore.ts](../src/store/useProductStore.ts) owns product metadata and image URLs.
-Product metadata mutations call database helpers; image uploads/replacements write blobs separately.
+[useProductStore.ts](../src/store/useProductStore.ts) owns product metadata and rendering URLs.
 [useSettingsStore.ts](../src/store/useSettingsStore.ts) owns branding, typography, background,
-items per page, and per-page grid choices. Setters update state and the applicable CSS variables.
+items per page and page layouts; its actions also apply the existing CSS variable mappings.
+[usePersistenceStore.ts](../src/store/usePersistenceStore.ts) exposes typed loading, saving,
+error, revision and busy states. There is no settings subscription writing during hydration.
 
-Settings auto-save is a store subscription in `main.tsx`, not a call in each setter.
-It serializes settings on changes while excluding the background URL. On startup, `App.tsx`
-loads products independently and loads settings/background together. Settings hydration applies
-colors, fonts, sizes, and stored Google Fonts. It currently runs only when a settings record exists.
-UI state such as active tabs, import confirmation, export progress, and the last published URL is transient.
+[catalogSession.ts](../src/store/catalogSession.ts) coordinates the existing stores. A mutation
+updates the displayed draft synchronously and queues a captured state. Writes run serially;
+only the latest revision can announce saved. A later edit includes failed earlier changes,
+so retry and continued editing cannot hide unsaved metadata or images. Actions return an
+awaitable result (saved, ignored, invalid or failed); all database rejections reach this path.
 
-All storage access belongs in [db/index.ts](../src/db/index.ts), using `idb-keyval`:
+All storage access remains in [db/index.ts](../src/db/index.ts). It uses native IndexedDB
+transactions against the same `keyval-store` database / `keyval` object store and keys used
+by the earlier idb-keyval implementation:
 
 | Key | Stored value |
 |---|---|
-| `cm:products` | Product metadata array: id, name, price, description, bgColor. |
-| `cm:img:<id>` | Uploaded product image blob. |
-| `cm:bg` | Background image blob. |
-| `cm:settings` | `PersistedSettings`: branding, colors, fonts, sizes, opacity, counts, layouts. |
+| `cm:products` | Ordered metadata: id, name, price, description, bgColor. |
+| `cm:img:<id>` | Product image Blob. |
+| `cm:bg` | Background image Blob. |
+| `cm:settings` | Branding, colors, fonts, sizes, opacity, item count and layouts. |
 
-Database write helpers currently return `void`; a store update is not proof that an asynchronous
-write has completed. Changes to persistence must consider refresh, hydration races, failed writes,
-and compatibility with existing records. Catalog reset clears products; settings reset calls
-`dbClearAll`, which also clears products and the background.
+Hydration reads one transaction, validates records, then creates URLs. Valid legacy IDs and
+text are preserved, including descriptions longer than the new-edit limit. Missing photos
+use the placeholder. Invalid records produce a load error without writing or clearing them.
+
+Each save writes metadata/settings and any changed blobs/deletions in one transaction. Blob
+identity is compared with the last committed state so unchanged images are not rewritten on
+every keystroke. Commit confirmation comes from transaction completion, with failures finalized
+on abort. Closing/reloading during a pending transaction can lose that draft, but cannot commit
+only half its metadata/image changes. This does not guarantee writes survive hardware failure.
+
+Management uses the same queue. Empty removes products/photos; settings reset restores
+settings/layout/background defaults while preserving products/photos/order; full reset does both.
+Controls are disabled while management is pending, and another action can proceed after its
+awaited result. Failures retain the session draft and show retry.
 
 ## Images and import
 
-Uploaded files become IndexedDB blobs plus object URLs for rendering. Missing images use the
-encoded SVG `PLACEHOLDER_IMG` from [image.ts](../src/utils/image.ts). Replacements revoke the old URL;
-deletion and reset currently clear stored data without revoking every product URL. Treat that as
-existing behavior to investigate when relevant, not a cleanup pattern to copy.
+Uploaded files remain IndexedDB blobs with object URLs in rendering state. The placeholder
+owns no object URL. Session ownership includes active drafts, the last durable state, queued
+writes and exports. Obsolete URLs are revoked only when none of these owners retains them.
+Failed replacement keeps both the old durable image and the new active draft; successful retry
+releases the obsolete one. Hydration allocates only after the complete validated read, reuses
+one in-flight load across StrictMode effects, and cleans allocations if adoption fails.
 
-Export builds temporary base64 maps; product state must keep its rendering URLs. Both PDF and
-HTML export use this approach. The placeholder is a data URL and does not own an object URL.
+Export acquires a session lease before asynchronous preparation, blocks concurrent mutations,
+and releases it in `finally`. Temporary base64 maps include product photos and background and
+never enter stores. No session history, cross-catalog ownership or persistent recovery was added.
 
 [ExcelImportPanel.tsx](../src/components/molecules/ExcelImportPanel.tsx) accepts `.xlsx`/`.xls`,
 shows parsing errors or confirmation, and optionally accepts separate image files.
 [excel.ts](../src/utils/excel.ts) reads the first sheet's `Nombre`, `Descripción`, and `Precio`
-columns and skips blank names. Import appends products; filenames match trimmed product names
+columns and skips blank names. Import rejects descriptions above the shared 500-character limit before allocating images or
+appending; the panel retains invalid rows for correction. Accepted imports append products; filenames match trimmed product names
 case-insensitively after removing the file extension. The downloadable template contains headers
 only. There is no full-session Excel backup/restore.
 
@@ -64,11 +82,13 @@ only. There is no full-session Excel backup/restore.
 pages and registers their `.page-a4` elements in `pagesRef`. Empty catalogs render no pages.
 [chunks.ts](../src/utils/chunks.ts) defines the 30-entry index limit and page-number helpers.
 Items per page is a global setting from 1–5; grid shapes can vary by product-page index.
-Changing the global count clears layout overrides. Product pages validate a stored shape against
-their actual item count and choose a default for partial pages.
+Changing the global count clears layout overrides. The shared shape resolver validates stored
+choices against actual item count and selects a compatible partial-page default. Zero products
+means zero index/product pages; all numbering uses ceil(productCount / 30) index pages.
 
 Theme mappings live in the settings store; global styles and `grid-1.css` through `grid-5.css`
-define the A4 layouts. Product pages render a background-image layer; index pages currently do not.
+define the A4 layouts. Index and product pages share the configured background image and opacity behind their content.
+Background Color/Image tabs only change the shown controls; removal is explicit.
 `usePageScale` sets `--page-scale` for tablet/mobile. Body classes select mobile tabs and toggle
 the tablet sidebar. Workspace visibility highlights sidebar items; item-number clicks navigate
 to products. This is not bidirectional synchronized scrolling.
@@ -76,12 +96,13 @@ to products. This is not bidirectional synchronized scrolling.
 ## Export and publishing
 
 [usePDF.ts](../src/hooks/usePDF.ts) orchestrates image conversion, progress, errors, and file
-download or mobile file sharing. [pdf.ts](../src/utils/pdf.ts) owns A4/capture constants,
-`ExportContext`, page transforms, canvas capture, and jsPDF output with link annotations.
+download or mobile file sharing. [pdf.ts](../src/utils/pdf.ts) builds jsPDF output and link
+annotations; it re-exports capture constants and types for existing callers.
 
-`PAGE_TRANSFORMS` freezes animation, removes image hover controls, restores background opacity,
-replaces editable fields, and patches cloned images from the local map. Extend transforms when
-new page elements require capture handling. The export utilities have no React/store imports;
+[capture.ts](../src/utils/capture.ts) shares preparation, clone transforms, image/font readiness
+and canvas capture between PDF and HTML. It copies current field values into clones, removes
+editor actions, preserves intentional opacity and replaces product/background URLs with temporary
+base64. It cleans capture wrappers in `finally`. Extend transforms for new page elements. The export utilities have no React/store imports;
 they perform DOM work when called and remove temporary capture wrappers in `finally`.
 
 Both export hooks add `pdf-exporting` to the body and remove it in `finally`.
@@ -103,7 +124,14 @@ or test by deploying to a live site during a review.
 
 ## Verification
 
-`npm run verify` compiles TypeScript, builds production assets, and checks staged/unstaged
-whitespace. There is no configured linter or automated behavior suite. Use relevant browser
-checks for refresh persistence, import, 30/31-product pagination, partial grids, mobile navigation,
-and repeated exports. Record checks not performed; a passing build is not a browser test.
+`npm run verify` compiles TypeScript, builds production assets and checks staged/unstaged
+whitespace. `npm run test` runs the focused Playwright suite against a local Vite server with
+external requests blocked. Each test uses and deletes a disposable persistent browser profile;
+WebKit private contexts reject IndexedDB blobs on the tested macOS environment. Native failure
+injection exercises transactions rather than mocking successful store updates.
+
+The artifact checks generate real PDF/HTML files and use the system's macOS PDFKit/Vision tools
+for page dimensions, links, raster text and background checks. See
+[priority1-verification.md](priority1-verification.md) for current evidence and limitations and
+[priority1-device-checks.md](priority1-device-checks.md) for required actual-device/parent tasks.
+Build and emulation results do not establish real mobile keyboard/share behavior or family usability.

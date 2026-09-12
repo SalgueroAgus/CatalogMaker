@@ -1,5 +1,4 @@
 import { forwardRef } from 'react';
-import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { getProductPage } from '../../utils/chunks';
 import { scrollToProduct } from '../../utils/scroll';
@@ -14,13 +13,15 @@ interface Props {
 
 export const IndexPage = forwardRef<HTMLDivElement, Props>(
   ({ products, globalStartIndex, pageNum, totalIndexPages }, ref) => {
-    const allProducts = useProductStore((s) => s.products);
+    const bgImage = useSettingsStore((s) => s.bgImage);
+    const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
     const storeName = useSettingsStore((s) => s.storeName);
     const footerContact = useSettingsStore((s) => s.footerContact);
     const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
 
     return (
       <div className="page-a4" ref={ref} id={`index-page-${pageNum}`}>
+        {bgImage && <div className="page-bg-image" style={{ backgroundImage: `url(${bgImage})`, opacity: bgImageOpacity }} />}
         <div className="page-hdr">
           <span className="store-name">{storeName}</span>
           <span className="page-num">Pág. {String(pageNum).padStart(2, '0')}</span>

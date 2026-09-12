@@ -7,8 +7,8 @@ body {
   background: var(--sb-bg);
   color: var(--sb-text);
   overflow: hidden;
-  height: 100dvh;
   height: 100vh;
+  height: 100dvh;
 }
 
 :root {
@@ -20,7 +20,11 @@ body {
   --sb-text: #e2e8f0;
   --sb-text-muted: #94a3b8;
   --sb-input-bg: #1e293b;
-  --sb-input-border: #334155;
+  --sb-input-border: #71839b;
+  --editor-error: #fda4af;
+  --editor-on-accent: #08251c;
+  --editor-danger: #b91c1c;
+  --editor-action-bg: #047857;
   --page-bg: #fafafa;
   --color-company: #64748b;
   --color-page-num: #94a3b8;

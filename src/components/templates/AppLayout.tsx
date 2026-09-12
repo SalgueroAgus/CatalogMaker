@@ -1,3 +1,5 @@
+import { usePersistenceStore } from '../../store/usePersistenceStore';
+
 interface Props {
   left: React.ReactNode;
   center: React.ReactNode;
@@ -6,13 +8,14 @@ interface Props {
 }
 
 export function AppLayout({ left, center, right, nav }: Props) {
+  const busy = usePersistenceStore((s) => s.managing || s.exporting);
   return (
     <>
-      <div className="app-layout">
+      <fieldset className="app-layout" disabled={busy} aria-label="Editor de catálogo" aria-busy={busy}>
         {left}
         {center}
         {right}
-      </div>
+      </fieldset>
       {nav}
     </>
   );

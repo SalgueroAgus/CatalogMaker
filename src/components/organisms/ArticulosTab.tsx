@@ -8,9 +8,10 @@ import { getProductPage, getIndexPageCount } from '../../utils/chunks';
 
 interface Props {
   visibleIds: Set<string>;
+  onShowProduct: (id: string) => void;
 }
 
-export function ArticulosTab({ visibleIds }: Props) {
+export function ArticulosTab({ visibleIds, onShowProduct }: Props) {
   const products = useProductStore((s) => s.products);
   const reorderProduct = useProductStore((s) => s.reorderProduct);
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
@@ -85,6 +86,7 @@ export function ArticulosTab({ visibleIds }: Props) {
             isVisible={visibleIds.has(product.id)}
             isDragging={draggingId === product.id}
             dragOverPosition={dragOver?.id === product.id ? dragOver.pos : null}
+            onShowProduct={onShowProduct}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDrop={handleDrop}

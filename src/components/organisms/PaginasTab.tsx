@@ -2,7 +2,7 @@ import { FileText } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { GridShapePicker } from '../molecules/GridShapePicker';
-import { DEFAULT_GRID_SHAPE, SHAPE_ITEM_COUNT } from '../../types';
+import { getIndexPageCount, getProductPage, resolveGridShape } from '../../utils/chunks';
 
 const COUNTS = [1, 2, 3, 4, 5];
 
@@ -20,13 +20,6 @@ export function PaginasTab() {
     return Math.min(itemsPerPage, products.length - start);
   }
 
-  function resolveShape(pageIndex: number, actualCount: number) {
-    const stored = pageLayouts[pageIndex];
-    return stored && SHAPE_ITEM_COUNT[stored] === actualCount
-      ? stored
-      : DEFAULT_GRID_SHAPE[actualCount];
-  }
-
   return (
     <div className="paginas-panel">
       <div className="paginas-global">
@@ -36,6 +29,8 @@ export function PaginasTab() {
             <button
               key={n}
               className={`paginas-pill ${itemsPerPage === n ? 'active' : ''}`}
+              aria-pressed={itemsPerPage === n}
+              aria-label={`${n} fotos por página`}
               onClick={() => setItemsPerPage(n)}
             >
               {n}
@@ -54,12 +49,12 @@ export function PaginasTab() {
           {Array.from({ length: pageCount }, (_, i) => {
             const actualCount = getActualCount(i);
             const isPartial = actualCount < itemsPerPage;
-            const currentShape = resolveShape(i, actualCount);
+            const currentShape = resolveGridShape(pageLayouts[i], actualCount);
 
             return (
               <div key={i} className="paginas-page-item">
                 <div className="paginas-page-header">
-                  <span className="paginas-page-label">Página {i + 2}</span>
+                  <span className="paginas-page-label">Página {getProductPage(i * itemsPerPage, itemsPerPage, getIndexPageCount(products.length))}</span>
                   {isPartial && (
                     <span className="paginas-partial-badge">{actualCount} foto{actualCount !== 1 ? 's' : ''}</span>
                   )}

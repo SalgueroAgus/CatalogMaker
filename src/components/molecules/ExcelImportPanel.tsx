@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Upload, AlertTriangle, X, ImagePlus, Check } from 'lucide-react';
 import { downloadExcelTemplate, parseExcelFile, countImageMatches, type ExcelRow } from '../../utils/excel';
+import { DESCRIPTION_LIMIT, validateProductFields } from '../../utils/products';
 import { useProductStore } from '../../store/useProductStore';
 
 type Step = 'idle' | 'confirm' | 'error';
@@ -11,8 +12,10 @@ export function ExcelImportPanel() {
   const xlsxInputRef = useRef<HTMLInputElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
 
+  const [importing, setImporting] = useState(false);
   const [step, setStep] = useState<Step>('idle');
   const [parsedRows, setParsedRows] = useState<ExcelRow[]>([]);
+  const [correctionRows, setCorrectionRows] = useState<Set<number>>(() => new Set());
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -27,7 +30,9 @@ export function ExcelImportPanel() {
         setStep('error');
         return;
       }
+      setErrorMsg('');
       setParsedRows(rows);
+      setCorrectionRows(new Set(rows.flatMap((row, index) => row.description.length > DESCRIPTION_LIMIT ? [index] : [])));
       setImageFiles([]);
       setStep('confirm');
     } catch {
@@ -42,16 +47,30 @@ export function ExcelImportPanel() {
     setImageFiles(files);
   }
 
-  function handleConfirm() {
-    importProducts(parsedRows, imageFiles);
+  async function handleConfirm() {
+    if (importing) return;
+    const invalid = parsedRows.findIndex((row) => validateProductFields(row));
+    if (invalid >= 0) {
+      setErrorMsg(`Fila ${invalid + 2}: la descripción supera ${DESCRIPTION_LIMIT} caracteres. Corregí la fila antes de importar.`);
+      return;
+    }
+    setImporting(true);
+    const result = await importProducts(parsedRows, imageFiles);
+    setImporting(false);
+    if (result.status === 'invalid' || result.status === 'ignored') {
+      setErrorMsg(result.status === 'invalid' ? result.error : 'Esperá a que termine la operación actual y reintentá.');
+      return;
+    }
     setStep('idle');
     setParsedRows([]);
+    setCorrectionRows(new Set());
     setImageFiles([]);
   }
 
   function handleCancel() {
     setStep('idle');
     setParsedRows([]);
+    setCorrectionRows(new Set());
     setImageFiles([]);
     setErrorMsg('');
   }
@@ -93,7 +112,7 @@ export function ExcelImportPanel() {
             <AlertTriangle size={15} className="excel-warning-icon" />
             <p className="excel-warning-text">{errorMsg}</p>
           </div>
-          <button className="excel-btn" onClick={handleCancel}>
+          <button className="excel-btn" onClick={handleCancel} disabled={importing}>
             <X size={13} />
             Cerrar
           </button>
@@ -130,12 +149,23 @@ export function ExcelImportPanel() {
             )}
           </div>
 
+          {errorMsg && <p className="field-error" role="alert">{errorMsg}</p>}
+          {parsedRows.map((row, index) => correctionRows.has(index) && (
+            <label key={index} className="rs-field-label">
+              Corregir descripción, fila {index + 2}: {row.name}
+              <textarea className="rs-desc-textarea" value={row.description} aria-invalid={row.description.length > DESCRIPTION_LIMIT} onChange={(e) => {
+                const description = e.target.value;
+                setParsedRows((rows) => rows.map((value, i) => i === index ? { ...value, description } : value));
+                setErrorMsg('');
+              }} />
+            </label>
+          ))}
           <div className="excel-actions">
-            <button className="excel-btn" onClick={handleCancel}>
+            <button className="excel-btn" onClick={handleCancel} disabled={importing}>
               <X size={13} />
               Cancelar
             </button>
-            <button className="excel-btn excel-btn-accent" onClick={handleConfirm}>
+            <button className="excel-btn excel-btn-accent" onClick={handleConfirm} disabled={importing}>
               <Check size={13} />
               Importar {parsedRows.length} artículo{parsedRows.length !== 1 ? 's' : ''}
             </button>

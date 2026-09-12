@@ -24,6 +24,7 @@ export function MobileNav({ activeTab, onTabChange }: Props) {
             data-tab={id}
             onClick={() => onTabChange(id)}
             aria-label={label}
+            aria-current={activeTab === id ? 'page' : undefined}
           >
             <span className="mnav-icon"><Icon size={20} /></span>
             <span className="mnav-label">{label}</span>

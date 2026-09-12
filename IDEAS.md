@@ -17,10 +17,7 @@ C3 is distinct from duplicating a whole catalog, which is already agreed and req
 
 ## Appearance and catalog structure
 
-| ID | Category | Work and completion criteria |
-|---|---|---|
-| L5 | Appearance and layout | **A small set of safe design choices.** Provide a few readable presets, an editable “Exclusivo” footer tag, and specific useful visibility controls: price, description, and optional index. Avoid an initial toggle for every visual element. Index visibility must update page offsets and links everywhere. |
-| L6 | Appearance and layout | **Optional image framing.** Product-page images already use `object-fit: contain`; sidebar thumbnails use `cover`. Add “Mostrar completa” / “Llenar espacio” and positioning only if real photos need it. Show when filling crops the image; persist per-product choice and match output. Do not describe this as a confirmed product-image cropping bug. |
+L5 (design presets and visibility controls) and L6 (image framing) are covered in [Roadmap priority 2](ROADMAP.md#priority-2--everyday-editing-import-dependable-output-and-design-choices).
 
 | Idea | When it would help | Scope to consider |
 |---|---|---|
@@ -43,11 +40,16 @@ A spreadsheet export is not a full backup. Backup-file transfer between devices 
 | Radix Popover replacement | Maintaining focus, Escape, and viewport behavior in the custom picker becomes harder than adopting a primitive. | Compare against the A6 requirements and request dependency approval if selected. Accessibility fixes do not depend on choosing a new library. Accordions/tabs already use Radix. |
 | Installable/offline app | Parents want a home-screen shortcut or reliable use with poor connectivity. | Define offline launch, login behavior, fonts, and updates. Existing browser storage does not establish a fully offline experience. |
 
-## Performance and technical refinements
+## Conditional technical ideas
+
+Revisit S1 when publishing work is resumed. Performance refinements below are conditional on demonstrated need.
 
 | ID | Category | Work and completion criteria |
 |---|---|---|
+| S1 | Publishing safety | **Remove privileged publishing credentials from the browser build.** `usePublish` reads `VITE_NETLIFY_PAT`; Vite bundles `VITE_*` values into client code. Identity login does not secure that token. If a token has been shipped, remove it from builds and revoke/rotate it through the deployment owner. Recommended browser-only option: remove direct deployment and use PDF or an intentional HTML-download/manual-publish workflow. If one-click publishing is essential, agree on an authenticated external publishing service as a separate architecture change. Hiding the button alone is insufficient. |
 | A4 | Architecture and code quality | **Coalesce frequent writes safely.** Text edits currently write the full metadata list and settings updates trigger saves immediately. If batching is needed, retain synchronous UI updates and order pending writes by catalog. Flush/await before switching, backing up, exporting, or resetting; test lifecycle interruptions and never equate a queued write with “saved.” A fixed 300ms debounce alone is not a complete persistence design. |
+
+The S1 credential concern follows the browser implementation and [Vite's environment-variable documentation](https://vite.dev/guide/env-and-mode); no credential values or live deployments were inspected.
 
 | Idea | Evidence needed before prioritizing |
 |---|---|
@@ -64,7 +66,7 @@ These are decisions to revisit, not recommendations to build next.
 | Automatic cross-device sync | Deferred by agreement: backup-file transfer is enough for now. Revisit if the family needs frequent shared editing; define storage, authentication, and conflict behavior before expanding the browser-only architecture. |
 | Real-time collaboration, roles, approvals, and audit trails | Outside the current family scope. Do not add enterprise workflows without a new need. |
 | Catalog folders/tags and complex organization | A main catalog and a few named experiments should suffice. Revisit only if the catalog list becomes hard to use. |
-| Hidden HTML-download path | Resolve as part of required publishing decision S1: expose/support it if selected as the publishing alternative, or remove unused UI plumbing when obsolete. It is not an independent feature commitment. Preserve shared capture code still in use. |
+| Hidden HTML-download path | Revisit with deferred publishing decision S1: expose/support it if selected as the publishing alternative, or remove unused UI plumbing when obsolete. It is not an independent feature commitment. Preserve shared capture code still in use. |
 | Framework rewrite or blanket dependency upgrades | No demonstrated need. Targeted maintenance and fixes remain Q3 in the roadmap. |
 
 ## Review boundary

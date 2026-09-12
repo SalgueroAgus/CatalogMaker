@@ -1,5 +1,4 @@
-import html2canvas from 'html2canvas';
-import { A4_PX, CAPTURE, PAGE_TRANSFORMS, type ExportContext } from './pdf';
+import { capturePage, type ExportContext } from './capture';
 
 export interface LinkOverlay {
   href: string;
@@ -60,56 +59,8 @@ export async function capturePages(
   for (let i = 0; i < pages.length; i++) {
     onProgress(i + 1, pages.length);
 
-    pages[i].querySelectorAll('input').forEach((inp) => inp.setAttribute('value', inp.value));
-    pages[i].querySelectorAll('textarea').forEach((ta) => { ta.textContent = ta.value; });
-
-    let wrap: HTMLDivElement | null = null;
-    try {
-      const clone = pages[i].cloneNode(true) as HTMLDivElement;
-      clone.style.cssText = [
-        `width:${A4_PX.w}px`, `height:${A4_PX.h}px`,
-        'position:relative', 'top:0', 'left:0',
-        'margin:0', 'box-shadow:none', 'border-radius:0',
-        'zoom:1', 'transform:none',
-        'animation:none', 'transition:none', 'opacity:1',
-      ].join(';');
-
-      for (const transform of PAGE_TRANSFORMS) transform(clone, ctx);
-
-      wrap = document.createElement('div');
-      wrap.style.cssText = [
-        'position:absolute', 'top:0', `left:-${A4_PX.w + 100}px`,
-        `width:${A4_PX.w}px`, `height:${A4_PX.h}px`,
-        'overflow:visible', 'z-index:0', 'pointer-events:none',
-      ].join(';');
-      wrap.appendChild(clone);
-      document.body.appendChild(wrap);
-
-      await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-      await Promise.all(
-        Array.from(clone.querySelectorAll('img')).map((img) =>
-          img.decode ? img.decode().catch(() => {}) : Promise.resolve(),
-        ),
-      );
-
-      const canvas = await html2canvas(clone, {
-        scale: CAPTURE.scale,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        backgroundColor: ctx.bgColor,
-        width: A4_PX.w,
-        height: A4_PX.h,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-      });
-
-      dataUrls.push(canvas.toDataURL('image/jpeg', 0.88));
-    } finally {
-      if (wrap?.parentNode) document.body.removeChild(wrap);
-    }
+    const canvas = await capturePage(pages[i], ctx);
+    dataUrls.push(canvas.toDataURL('image/jpeg', 0.88));
   }
 
   return dataUrls;

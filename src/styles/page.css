@@ -12,7 +12,7 @@
   pointer-events: none; z-index: 0;
 }
 
-.page-hdr, .product-grid, .page-ftr { position: relative; z-index: 1; }
+.page-hdr, .product-grid, .page-ftr, .idx-header, .idx-list { position: relative; z-index: 1; }
 
 .page-hdr {
   display: flex; justify-content: space-between; align-items: flex-end;

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useProductStore } from '../store/useProductStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { blobUrlToBase64 } from '../utils/image';
-import { buildPDF, type ExportContext } from '../utils/pdf';
+import { prepareExportContext } from '../utils/capture';
+import { acquireExport } from '../store/catalogSession';
+import { buildPDF } from '../utils/pdf';
 
 export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[]>) {
   const [isExporting, setIsExporting] = useState(false);
@@ -11,6 +12,7 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
   const products = useProductStore((s) => s.products);
   const colors = useSettingsStore((s) => s.colors);
   const storeName = useSettingsStore((s) => s.storeName);
+  const bgImage = useSettingsStore((s) => s.bgImage);
   const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
 
   const exportToPDF = async () => {
@@ -19,24 +21,14 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
       return;
     }
 
+    const release = acquireExport();
+    if (!release) return;
     setIsExporting(true);
     setProgress('Preparando…');
     document.body.classList.add('pdf-exporting');
 
     try {
-      const imageMap = new Map<string, string>();
-      await Promise.all(
-        products.map(async (p) => {
-          if (!p.image) return;
-          imageMap.set(p.id, p.image.startsWith('data:') ? p.image : await blobUrlToBase64(p.image));
-        })
-      );
-
-      const ctx: ExportContext = {
-        imageMap,
-        bgImageOpacity,
-        bgColor: colors.bg || '#fafafa',
-      };
+      const ctx = await prepareExportContext(products, bgImage, bgImageOpacity, colors.bg || '#fafafa');
 
       const pages = pagesRef.current.filter((p): p is HTMLDivElement => p !== null);
       const pdf = await buildPDF(pages, ctx, (current, total) => {
@@ -58,6 +50,7 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
       console.error('PDF export error:', err);
       alert('Error al generar el PDF. Intente de nuevo.');
     } finally {
+      release();
       document.body.classList.remove('pdf-exporting');
       setIsExporting(false);
       setProgress('');
