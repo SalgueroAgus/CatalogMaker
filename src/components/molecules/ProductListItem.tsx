@@ -1,7 +1,8 @@
 import { usePersistenceStore } from '../../store/usePersistenceStore';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ChevronRight, GripVertical, RefreshCw, X } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
+import { useTextareaAutoHeight } from '../../hooks/useTextareaAutoHeight';
 import { DESCRIPTION_LIMIT, validateProductField } from '../../utils/products';
 import { PLACEHOLDER_IMG } from '../../utils/image';
 import { GradientPickerPopover } from '../atoms/GradientPickerPopover';
@@ -32,13 +33,7 @@ export function ProductListItem({
   const moveProduct = useProductStore((s) => s.moveProduct);
   const descriptionError = validateProductField('description', product.description);
   const updateField = useProductStore((s) => s.updateField);
-  const descRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (!descRef.current || !descOpen) return;
-    descRef.current.style.height = 'auto';
-    descRef.current.style.height = `${descRef.current.scrollHeight}px`;
-  }, [product.description, descOpen]);
+  const descRef = useTextareaAutoHeight(product.description);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const replaceImage = useProductStore((s) => s.replaceImage);
 

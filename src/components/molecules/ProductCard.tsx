@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useTextareaAutoHeight } from '../../hooks/useTextareaAutoHeight';
 import { DESCRIPTION_LIMIT, validateProductField } from '../../utils/products';
 import { PLACEHOLDER_IMG } from '../../utils/image';
 import type { Product } from '../../types';
@@ -14,13 +16,9 @@ export function ProductCard({ product }: Props) {
   const replaceImage = useProductStore((s) => s.replaceImage);
   const photoInput = useRef<HTMLInputElement>(null);
   const descriptionError = validateProductField('description', product.description);
-  const descRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (!descRef.current) return;
-    descRef.current.style.height = 'auto';
-    descRef.current.style.height = `${descRef.current.scrollHeight}px`;
-  }, [product.description]);
+  const fontFamily = useSettingsStore((s) => s.fonts.body);
+  const fontSize = useSettingsStore((s) => s.fontSizes.body);
+  const descRef = useTextareaAutoHeight(product.description, fontFamily, fontSize);
 
   return (
     <div

@@ -81,17 +81,26 @@ only. There is no full-session Excel backup/restore.
 [Workspace.tsx](../src/components/organisms/Workspace.tsx) renders index pages followed by product
 pages and registers their `.page-a4` elements in `pagesRef`. Empty catalogs render no pages.
 [chunks.ts](../src/utils/chunks.ts) defines the 30-entry index limit and page-number helpers.
-Items per page is a global setting from 1–5; grid shapes can vary by product-page index.
-Changing the global count clears layout overrides. The shared shape resolver validates stored
-choices against actual item count and selects a compatible partial-page default. Zero products
-means zero index/product pages; all numbering uses ceil(productCount / 30) index pages.
+Items per page has a global default from 1–5 and optional `pageItemCounts` overrides by
+zero-based product-page position. `paginateProducts` accumulates those capacities, preserving
+product order, and supplies the page boundaries to preview and editing panels. Index references
+use the same capacity rules. Changing the default retains quantity overrides and clears shape
+overrides; choosing General on an individual page removes its quantity override. Settings reset
+clears both kinds of customization. Legacy settings without `pageItemCounts` use an empty map.
+The shared shape resolver validates stored shapes against actual item count and selects a
+compatible partial-page default. Zero products means zero index/product pages; all numbering
+uses ceil(productCount / 30) index pages.
 
 Theme mappings live in the settings store; global styles and `grid-1.css` through `grid-5.css`
 define the A4 layouts. Index and product pages share the configured background image and opacity behind their content.
-Background Color/Image tabs only change the shown controls; removal is explicit.
+Background Color/Image tabs only change the shown controls; removal is explicit. Product
+cells have an opaque base beneath their own color, preventing the page image from showing
+through transparent product backgrounds. Description textareas resize on content, typography,
+available-width and font-loading changes through `useTextareaAutoHeight`.
 `usePageScale` sets `--page-scale` for tablet/mobile. Body classes select mobile tabs and toggle
 the tablet sidebar. Workspace visibility highlights sidebar items; item-number clicks navigate
-to products. This is not bidirectional synchronized scrolling.
+to products. This is not bidirectional synchronized scrolling. Back-to-top buttons scroll and
+focus the active preview, product list or page-settings list; they remain outside captured A4 pages.
 
 ## Export and publishing
 

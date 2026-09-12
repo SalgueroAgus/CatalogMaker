@@ -1,6 +1,7 @@
 .product-grid { flex: 1; gap: 12px; min-height: 0; }
 
 .product-cell {
+  background: var(--product-bg);
   display: flex; flex-direction: column; border-radius: 10px;
   overflow: hidden; border: 1px solid rgba(0,0,0,0.06);
   box-shadow: 0 1px 6px rgba(0,0,0,0.03); transition: box-shadow var(--tr-fast);

@@ -4,7 +4,7 @@ import { ProductListItem } from '../molecules/ProductListItem';
 import { ExcelImportPanel } from '../molecules/ExcelImportPanel';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { getProductPage, getIndexPageCount } from '../../utils/chunks';
+import { paginateProducts, getIndexPageCount } from '../../utils/chunks';
 
 interface Props {
   visibleIds: Set<string>;
@@ -15,8 +15,10 @@ export function ArticulosTab({ visibleIds, onShowProduct }: Props) {
   const products = useProductStore((s) => s.products);
   const reorderProduct = useProductStore((s) => s.reorderProduct);
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
+  const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
 
   const indexPageCount = getIndexPageCount(products.length);
+  const pageStarts = new Map(paginateProducts(products, itemsPerPage, pageItemCounts).map((page, index) => [page.startIndex, indexPageCount + index + 1]));
 
   const draggedIdRef = useRef<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -74,9 +76,9 @@ export function ArticulosTab({ visibleIds, onShowProduct }: Props) {
       <div className="rs-list">
       {products.map((product, index) => (
         <div key={product.id}>
-          {index % itemsPerPage === 0 && (
+          {pageStarts.has(index) && (
             <div className="rs-page-sep">
-              Página {getProductPage(index, itemsPerPage, indexPageCount)}
+              Página {pageStarts.get(index)}
             </div>
           )}
           <ProductListItem

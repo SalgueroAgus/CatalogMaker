@@ -2,6 +2,10 @@
 
 Estado: pendientes. Versión preparada: S3; huella de la aplicación `657d12d29a21058613e0c23a7cce0a93fa14aeafecdba84de86718278237302d`. La automatización no sustituye estas observaciones. Usar datos descartables en un navegador/perfil separado; nunca vaciar el catálogo familiar para probar.
 
+## Reporte posterior de uso cotidiano
+
+El dueño informó una prueba exploratoria con la familia centrada en las tareas diarias, sin incidentes observados. Solicitó mejoras en navegación, descripción, cantidades por página y separación visual del fondo. No especificó equipos/versiones ni resultados separados por persona y tarea. Ver [seguimiento de las mejoras](family-feedback-verification.md). Las filas pendientes de abajo se refieren al protocolo detallado original.
+
 ## Datos que debe confirmar el dueño
 
 | Dato | Resultado |

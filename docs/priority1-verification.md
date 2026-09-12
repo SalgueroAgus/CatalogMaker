@@ -1,5 +1,7 @@
 # Priority 1 verification record
 
+This is the historical S3 verification record. The owner subsequently reported exploratory family use and authorized further changes, including per-page quantities. See [family-feedback-verification.md](family-feedback-verification.md) for the current change scope and affected verification. S3 results are retained as historical evidence and are reused only for unchanged behavior.
+
 Status: **incomplete—awaiting verification**. All 406 automated cases have current passing evidence from FULL400 plus affected S3 reruns for the relevant final source. Required actual-device and both-parent evidence remains unavailable; the overall Priority 1 gate is not approved.
 
 ## Fixed scope and preserved starting state

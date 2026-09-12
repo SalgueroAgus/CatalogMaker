@@ -18,6 +18,7 @@ export const IndexPage = forwardRef<HTMLDivElement, Props>(
     const storeName = useSettingsStore((s) => s.storeName);
     const footerContact = useSettingsStore((s) => s.footerContact);
     const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
+    const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
 
     return (
       <div className="page-a4" ref={ref} id={`index-page-${pageNum}`}>
@@ -49,7 +50,7 @@ export const IndexPage = forwardRef<HTMLDivElement, Props>(
                   <span className="idx-name">{p.name}</span>
                   <span className="idx-leader" />
                   <span className="idx-page">
-                    {String(getProductPage(globalIndex, itemsPerPage, totalIndexPages)).padStart(2, '0')}
+                    {String(getProductPage(globalIndex, itemsPerPage, totalIndexPages, pageItemCounts)).padStart(2, '0')}
                   </span>
                 </a>
               </div>

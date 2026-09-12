@@ -17,6 +17,12 @@ también podés descargar el PDF con los cambios de la sesión. Los cambios sin 
 perderse al cerrar por fuerza. Si la carga falla, usá **Reintentar carga**: la app no vacía tus datos.
 
 Editá con los campos etiquetados de **Productos** y usá **Cambiar foto**, **Subir** y **Bajar**.
+La flecha **Volver arriba** lleva al comienzo de Productos o Vista Previa.
+En **Productos → Páginas** podés elegir una cantidad general y, en cada página,
+seleccionar de 1 a 5 fotos o volver a **General**. Los productos siguientes se
+redistribuyen conservando su orden; las cantidades propias se guardan en este navegador.
+La altura de la descripción se ajusta al texto y a la tipografía.
+
 Las descripciones nuevas admiten hasta 500 caracteres. Una importación que excede ese límite
 se detiene para que corrijas la fila; no recorta el texto importado.
 

@@ -29,12 +29,35 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .rs-fields { gap: 6px; }
 .rs-card-head { gap: 6px; flex-wrap: wrap; }
 .rs-tab-panel { overflow-y: auto; }
+.workspace, .rs-tab-panel { padding-bottom: 80px; }
+.workspace:focus-visible { outline-offset: -2px; }
+.paginas-list { padding-bottom: 72px; }
+.back-to-top {
+  position: fixed; right: 16px; bottom: 16px; z-index: 20;
+  display: grid; place-items: center; width: 48px; height: 48px;
+  border: 1px solid var(--sb-input-border); border-radius: 50%;
+  background: var(--editor-action-bg); color: var(--sb-text); cursor: pointer;
+  box-shadow: 0 2px 8px var(--sb-bg);
+}
+.back-to-top[hidden] { display: none; }
+@media (min-width: 1200px) {
+  .workspace .back-to-top { right: 356px; }
+}
+@media (max-width: 767px) {
+  .back-to-top { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+}
+@media print {
+  .back-to-top { display: none !important; }
+}
 .rs-list { flex: none; overflow: visible; }
 .excel-toolbar, .excel-actions { flex-wrap: wrap; }
 .excel-btn { white-space: normal; }
 .excel-confirm-panel { max-height: 60dvh; overflow-y: auto; }
 .typo-size-input { width: 60px; }
 .typo-size-row { flex-wrap: wrap; gap: 8px; }
+.paginas-page-count { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; color: var(--sb-text); }
+.paginas-page-count select { width: 120px; }
+.paginas-count-help { margin-top: 8px; font-size: 14px; line-height: 1.5; color: var(--sb-text); }
 .gsp-label { white-space: normal; line-height: 1.35; font-size: 12px; }
 .gsp-btn svg { fill: currentColor; }
 .gpp-swatch { width: 44px; height: 44px; }

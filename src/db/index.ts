@@ -1,4 +1,5 @@
 import type { Colors, Fonts, FontSizes, GridShape, Product } from '../types';
+import { isPageItemCount } from '../utils/chunks';
 
 export type ProductMeta = Omit<Product, 'image'>;
 
@@ -11,6 +12,7 @@ export type PersistedSettings = {
   bgImageOpacity: number;
   itemsPerPage: number;
   pageLayouts: Record<number, GridShape>;
+  pageItemCounts?: Record<number, number>;
 };
 
 export interface StoredCatalog {
@@ -95,7 +97,9 @@ function readSettings(value: unknown): PersistedSettings | null {
   if (value === undefined) return null;
   if (!isRecord(value) || typeof value.storeName !== 'string' || typeof value.footerContact !== 'string'
     || !isRecord(value.colors) || !isRecord(value.fonts) || !isRecord(value.fontSizes) || !isRecord(value.pageLayouts)
-    || !Number.isInteger(value.itemsPerPage) || Number(value.itemsPerPage) < 1 || Number(value.itemsPerPage) > 5
+    || !isPageItemCount(value.itemsPerPage)
+    || (value.pageItemCounts !== undefined && (!isRecord(value.pageItemCounts)
+      || !Object.entries(value.pageItemCounts).every(([key, count]) => /^(0|[1-9]\d*)$/.test(key) && Number.isSafeInteger(Number(key)) && isPageItemCount(count))))
     || typeof value.bgImageOpacity !== 'number' || !Number.isFinite(value.bgImageOpacity)
     || value.bgImageOpacity < 0 || value.bgImageOpacity > 1
     || !Object.values(value.colors).every((v) => typeof v === 'string')

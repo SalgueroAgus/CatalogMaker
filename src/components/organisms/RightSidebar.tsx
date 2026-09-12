@@ -1,4 +1,6 @@
 import { SaveStatus } from '../molecules/SaveStatus';
+import { BackToTop } from '../molecules/BackToTop';
+import { useRef } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useProductStore } from '../../store/useProductStore';
 import { ArticulosTab } from './ArticulosTab';
@@ -12,6 +14,7 @@ interface Props {
 
 export function RightSidebar({ visibleIds, onClose, onShowProduct }: Props) {
   const count = useProductStore((s) => s.products.length);
+  const productsRef = useRef<HTMLDivElement>(null);
 
   return (
     <Tabs.Root defaultValue="articulos" asChild>
@@ -27,8 +30,9 @@ export function RightSidebar({ visibleIds, onClose, onShowProduct }: Props) {
             Páginas
           </Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content value="articulos" className="rs-tab-panel">
+        <Tabs.Content value="articulos" className="rs-tab-panel" ref={productsRef}>
           <ArticulosTab visibleIds={visibleIds} onShowProduct={onShowProduct} />
+          <BackToTop target={productsRef} label="Volver arriba en Productos" />
         </Tabs.Content>
         <Tabs.Content value="paginas" className="rs-tab-panel">
           <PaginasTab />

@@ -4,6 +4,7 @@ import { loadStoredGoogleFonts } from '../constants/fonts';
 import type { PersistedSettings } from '../db';
 import { createImageResource, manageCatalog, mutateCatalog } from './catalogSession';
 import type { MutationResult } from './usePersistenceStore';
+import { isPageItemCount } from '../utils/chunks';
 
 const setCSSVar = (name: string, value: string) =>
   document.documentElement.style.setProperty(name, value);
@@ -76,6 +77,7 @@ interface SettingsState {
   bgImageOpacity: number;
   itemsPerPage: number;
   pageLayouts: Record<number, GridShape>;
+  pageItemCounts: Record<number, number>;
   updateStoreName: (v: string) => Promise<MutationResult>;
   updateContact: (v: string) => Promise<MutationResult>;
   updateColor: (type: keyof Colors, value: string) => Promise<MutationResult>;
@@ -85,6 +87,7 @@ interface SettingsState {
   setBgImageOpacity: (v: number) => Promise<MutationResult>;
   setItemsPerPage: (n: number) => Promise<MutationResult>;
   setPageLayout: (pageIndex: number, shape: GridShape) => Promise<MutationResult>;
+  setPageItemCount: (pageIndex: number, count: number | null) => Promise<MutationResult>;
   hydrateSettings: (s: PersistedSettings, bgImageUrl: string | null) => void;
   resetSettings: () => Promise<MutationResult>;
 }
@@ -139,6 +142,7 @@ export const DEFAULT_STATE = {
   bgImageOpacity: 0.15,
   itemsPerPage:   3,
   pageLayouts:    {} as Record<number, GridShape>,
+  pageItemCounts: {} as Record<number, number>,
 };
 
 export const useSettingsStore = create<SettingsState>()((set) => ({
@@ -165,10 +169,21 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
   setBgImage: (file) => mutateCatalog(() => set({ bgImage: file ? createImageResource(file) : null })),
   setBgImageOpacity: (v) => mutateCatalog(() => set({ bgImageOpacity: v })),
   setItemsPerPage: (n) => {
-    if (!Number.isInteger(n) || n < 1 || n > 5) return Promise.resolve({ status: 'ignored' });
+    if (!isPageItemCount(n)) return Promise.resolve({ status: 'ignored' });
     return mutateCatalog(() => set({ itemsPerPage: n, pageLayouts: {} }));
   },
   setPageLayout: (pageIndex, shape) => mutateCatalog(() => set((s) => ({ pageLayouts: { ...s.pageLayouts, [pageIndex]: shape } }))),
+  setPageItemCount: (pageIndex, count) => {
+    if (!Number.isSafeInteger(pageIndex) || pageIndex < 0 || (count !== null && !isPageItemCount(count))) return Promise.resolve({ status: 'ignored' });
+    return mutateCatalog(() => set((s) => {
+      const pageItemCounts = { ...s.pageItemCounts };
+      const pageLayouts = { ...s.pageLayouts };
+      if (count === null) delete pageItemCounts[pageIndex];
+      else pageItemCounts[pageIndex] = count;
+      delete pageLayouts[pageIndex];
+      return { pageItemCounts, pageLayouts };
+    }));
+  },
 
   hydrateSettings: (s, bgImageUrl) => {
     const colors = { ...DEFAULT_COLORS, ...s.colors };
@@ -178,7 +193,7 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
     applyFonts(fonts);
     applyFontSizes(fontSizes);
     loadStoredGoogleFonts(fonts as unknown as Record<string, string>);
-    set({ ...s, colors, fonts, fontSizes, bgImage: bgImageUrl });
+    set({ ...s, colors, fonts, fontSizes, pageItemCounts: s.pageItemCounts ?? {}, bgImage: bgImageUrl });
   },
 
   resetSettings: () => manageCatalog('settings'),
