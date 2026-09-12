@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify": "npm run build && git diff --check && git diff --cached --check"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.14",
