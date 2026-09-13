@@ -22,7 +22,7 @@ export function ProductCard({ product }: Props) {
 
   return (
     <div
-      className="product-cell"
+      className="product-cell grid-item"
       role="group"
       aria-label={`Producto ${product.name}`}
       tabIndex={-1}

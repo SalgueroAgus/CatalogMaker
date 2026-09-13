@@ -81,48 +81,98 @@ for (const count of [31, 61]) {
   });
 }
 
-test('product backdrop blocks the page image and enlarged description reaches actual PDF and HTML', async ({ page, context }, testInfo) => {
-  await openApp(page);
-  await page.evaluate(async () => {
-    const h = window.catalogTest;
-    await h.fixture(1, 1);
-    const id = h.products.getState().products[0].id;
-    await h.products.getState().replaceImage(id, await h.photo());
-    await h.products.getState().updateField(id, 'bgColor', 'rgba(255,255,255,0)');
-    await h.products.getState().updateField(id, 'description', 'Texto descriptivo con varias líneas para probar el tamaño. '.repeat(5) + 'TEXTO FINAL CORRECTO');
-    await h.settings.getState().setBgImage(await h.photo('background.png', '#2060b0'));
-    await h.settings.getState().setBgImageOpacity(1);
-    await h.settings.getState().updateFontSize('body', 22);
+for (const scenario of [
+  { name: '0-percent', bgColor: 'rgba(255,255,255,0)', image: true, alphas: [0, 0, 0] },
+  { name: '50-percent', bgColor: 'rgba(255,255,255,0.5)', image: true, alphas: [0.5, 0.5, 0.5] },
+  { name: '100-percent-default', bgColor: null, image: true, alphas: [1, 1, 1] },
+  { name: 'gradient', bgColor: 'linear-gradient(90deg, rgba(255,255,255,0) 25%, rgba(255,255,255,1) 75%)', image: true, alphas: [0, 1, 0.5] },
+  { name: 'no-page-image', bgColor: 'rgba(255,255,255,0)', image: false, alphas: [0, 0, 0] },
+]) {
+  test(`photo backdrop ${scenario.name} preserves transparency and description in preview, PDF and HTML`, async ({ page, context }, testInfo) => {
+    await page.setViewportSize({ width: 1800, height: 1500 });
+    await openApp(page);
+    await page.evaluate(async ({ bgColor, image }) => {
+      const h = window.catalogTest;
+      await h.fixture(1, 1);
+      const id = h.products.getState().products[0].id;
+      const canvas = document.createElement('canvas'); canvas.width = 96; canvas.height = 128;
+      const context = canvas.getContext('2d')!;
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 64, 96, 64);
+      const blob = await new Promise<Blob>((resolve) => canvas.toBlob((value) => resolve(value!)));
+      await h.products.getState().replaceImage(id, new File([blob], 'transparent.png', { type: 'image/png' }));
+      if (bgColor !== null) await h.products.getState().updateField(id, 'bgColor', bgColor);
+      await h.products.getState().updateField(id, 'description', 'Texto descriptivo con varias líneas para probar el tamaño. '.repeat(5) + 'TEXTO FINAL CORRECTO');
+      await h.settings.getState().updateColor('bg', '#d8e8c8');
+      if (image) await h.settings.getState().setBgImage(await h.photo('background.png', '#2060b0'));
+      await h.settings.getState().setBgImageOpacity(1);
+      await h.settings.getState().updateFontSize('body', 22);
+    }, scenario);
+    const sheet = page.locator('.workspace .page-a4').last();
+    await sheet.locator('.cell-img-area img').evaluate((image: HTMLImageElement) => image.decode());
+    await sheet.evaluate(async (element) => {
+      await document.fonts.ready;
+      await Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished));
+    });
+    const prefix = `${root}/${testInfo.project.name}-backdrop-${scenario.name}`;
+    const preview = await sheet.screenshot({ path: `${prefix}.preview.png` });
+    const samples = await sheet.locator('.cell-img-area').evaluate((area) => {
+      const sheet = area.closest('.page-a4')!;
+      const page = sheet.getBoundingClientRect();
+      const rect = area.getBoundingClientRect();
+      const photo = area.querySelector('img')!.getBoundingClientRect();
+      const info = sheet.querySelector('.cell-info')!.getBoundingClientRect();
+      return [
+        [rect.left + 14, rect.top + 14],
+        [rect.right - 14, rect.top + 14],
+        [photo.left + photo.width / 2, photo.top + photo.height / 4],
+        [photo.left + photo.width / 2, photo.top + photo.height * 3 / 4],
+        [info.left + info.width / 2, info.bottom - 4],
+        [page.left + 14, page.top + 14],
+      ].map(([x, y]) => ({ x: (x - page.left) / page.width, y: (y - page.top) / page.height }));
+    });
+    await writeFile(`${prefix}.pdf`, Buffer.from(await page.evaluate(() => window.catalogTest.output('pdf')), 'base64'));
+    const inspected = await execute(inspector, [`${prefix}.pdf`]);
+    await writeFile(`${prefix}.inspection.json`, inspected.stdout);
+    const pdf: Inspection = JSON.parse(inspected.stdout);
+    expect(pdf.pages[1].text.join(' ')).toContain('TEXTO FINAL CORRECTO');
+    const html = await page.evaluate(() => window.catalogTest.output('html'));
+    await writeFile(`${prefix}.html`, html);
+    const matches = [...html.matchAll(/class="pg" src="data:image\/jpeg;base64,([^"]+)"/g)];
+    expect(matches).toHaveLength(2);
+    await writeFile(`${prefix}.html-last.jpg`, Buffer.from(matches[1][1], 'base64'));
+    const ocr = await execute(inspector, ['--images', `${prefix}.html-last.jpg`]);
+    expect((JSON.parse(ocr.stdout) as ImageText[])[0].text.join(' ')).toContain('TEXTO FINAL CORRECTO');
+    const pageColor = [216, 232, 200];
+    const background = scenario.image ? [32, 96, 176] : pageColor;
+    const expected = [
+      ...scenario.alphas.map((alpha) => background.map((channel) => Math.round(255 * alpha + channel * (1 - alpha)))),
+      [255, 255, 255],
+      pageColor,
+      background,
+    ];
+    const viewer = await context.newPage();
+    try {
+      for (const [format, mime, bytes] of [
+        ['preview', 'image/png', preview],
+        ['pdf', 'image/png', await readFile(`${prefix}.page-2.png`)],
+        ['html', 'image/jpeg', Buffer.from(matches[1][1], 'base64')],
+      ] as const) {
+        const pixels = await viewer.evaluate(async ({ data, mime, samples }) => {
+          const image = new Image(); image.src = `data:${mime};base64,${data}`; await image.decode();
+          const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+          const context = canvas.getContext('2d')!; context.drawImage(image, 0, 0);
+          return samples.map(({ x, y }) => Array.from(context.getImageData(Math.round(x * canvas.width), Math.round(y * canvas.height), 1, 1).data).slice(0, 3));
+        }, { data: bytes.toString('base64'), mime, samples });
+        for (const [index, pixel] of pixels.entries()) {
+          for (const [channel, value] of pixel.entries()) {
+            expect(Math.abs(value - expected[index][channel]), `${format} sample ${index} RGB ${pixel}`).toBeLessThanOrEqual(6);
+          }
+        }
+      }
+    } finally {
+      await viewer.close();
+      await page.bringToFront();
+    }
   });
-  const sample = await page.locator('.cell-img-area').evaluate((area) => {
-    const page = area.closest('.page-a4')!.getBoundingClientRect();
-    const rect = area.getBoundingClientRect();
-    return { x: (rect.left + 14 - page.left) / page.width, y: (rect.top + 14 - page.top) / page.height };
-  });
-  const prefix = `${root}/${testInfo.project.name}-backdrop-description`;
-  await writeFile(`${prefix}.pdf`, Buffer.from(await page.evaluate(() => window.catalogTest.output('pdf')), 'base64'));
-  const inspected = await execute(inspector, [`${prefix}.pdf`]);
-  await writeFile(`${prefix}.inspection.json`, inspected.stdout);
-  const pdf: Inspection = JSON.parse(inspected.stdout);
-  expect(pdf.pages[1].text.join(' ')).toContain('TEXTO FINAL CORRECTO');
-  const html = await page.evaluate(() => window.catalogTest.output('html'));
-  await writeFile(`${prefix}.html`, html);
-  const matches = [...html.matchAll(/class="pg" src="data:image\/jpeg;base64,([^"]+)"/g)];
-  expect(matches).toHaveLength(2);
-  await writeFile(`${prefix}.html-last.jpg`, Buffer.from(matches[1][1], 'base64'));
-  const ocr = await execute(inspector, ['--images', `${prefix}.html-last.jpg`]);
-  expect((JSON.parse(ocr.stdout) as ImageText[])[0].text.join(' ')).toContain('TEXTO FINAL CORRECTO');
-  const viewer = await context.newPage();
-  for (const [format, bytes] of [['pdf', await readFile(`${prefix}.page-2.png`)], ['html', Buffer.from(matches[1][1], 'base64')]] as const) {
-    const pixels = await viewer.evaluate(async ({ data, sample }) => {
-      const image = new Image(); image.src = `data:image/png;base64,${data}`; await image.decode();
-      const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
-      const context = canvas.getContext('2d')!; context.drawImage(image, 0, 0);
-      return { product: Array.from(context.getImageData(Math.round(sample.x * canvas.width), Math.round(sample.y * canvas.height), 1, 1).data).slice(0, 3), page: Array.from(context.getImageData(10, 10, 1, 1).data).slice(0, 3) };
-    }, { data: bytes.toString('base64'), sample });
-    expect(pixels.product, format).toEqual([255, 255, 255]);
-    expect(pixels.page.every((value, index) => Math.abs(value - [32, 96, 176][index]) <= 6), format).toBe(true);
-  }
-  await page.bringToFront();
-  await viewer.close();
-});
+}

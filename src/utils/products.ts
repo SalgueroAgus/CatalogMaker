@@ -4,6 +4,10 @@ export const DESCRIPTION_LIMIT = 500;
 export const EDITABLE_PRODUCT_FIELDS = ['name', 'price', 'description', 'bgColor'] as const;
 export type EditableProductField = typeof EDITABLE_PRODUCT_FIELDS[number];
 
+export function normalizeProductSearch(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
+}
+
 export function validateProductField(field: EditableProductField, value: string): string | null {
   if (!EDITABLE_PRODUCT_FIELDS.includes(field) || typeof value !== 'string') return 'Campo de producto inválido.';
   if (field === 'description' && value.length > DESCRIPTION_LIMIT) return `La descripción admite hasta ${DESCRIPTION_LIMIT} caracteres. Corregila para guardar.`;

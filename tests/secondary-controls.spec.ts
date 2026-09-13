@@ -43,6 +43,7 @@ test('open color controls remain reachable after viewport height changes', async
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(3));
   await page.getByRole('button', { name: 'Productos', exact: true }).click();
+  await page.locator('.rs-card').last().getByRole('button', { name: 'Detalles', exact: true }).click();
   await page.getByRole('button', { name: 'Editar Fondo del producto' }).last().click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.setViewportSize({ width: 390, height: 360 });

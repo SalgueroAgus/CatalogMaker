@@ -94,13 +94,30 @@ uses ceil(productCount / 30) index pages.
 Theme mappings live in the settings store; global styles and `grid-1.css` through `grid-5.css`
 define the A4 layouts. Index and product pages share the configured background image and opacity behind their content.
 Background Color/Image tabs only change the shown controls; removal is explicit. Product
-cells have an opaque base beneath their own color, preventing the page image from showing
-through transparent product backgrounds. Description textareas resize on content, typography,
+cells have a transparent base, allowing the page background to show through the photo area's
+color or gradient according to its opacity. The text area retains its separate page-color
+background, and new products start with an opaque white photo-area background. Description textareas resize on content, typography,
 available-width and font-loading changes through `useTextareaAutoHeight`.
 `usePageScale` sets `--page-scale` for tablet/mobile. Body classes select mobile tabs and toggle
-the tablet sidebar. Workspace visibility highlights sidebar items; item-number clicks navigate
+the tablet sidebar. Workspace visibility highlights sidebar items; “Ver catálogo” navigates
 to products. This is not bidirectional synchronized scrolling. Back-to-top buttons scroll and
 focus the active preview, product list or page-settings list; they remain outside captured A4 pages.
+
+The product editor keeps 96px photos beside labeled name/price fields, with secondary actions
+under Details. Name search ignores accents/case and retains a renamed active article until the
+query changes or another article is activated. Product-tab content stays mounted but hidden
+when inactive, preserving search, expanded details and scroll position; its color popovers close.
+Filtering never changes product order or catalog page numbering.
+
+[ReorderProducts.tsx](../src/components/organisms/ReorderProducts.tsx) opens a modal photo grid
+with navigation-only page thumbnails on the right, or above the grid below 768px. Thumbnails
+reuse pagination, shape resolution and the shared `.grid-item` placement rules, without mounting
+editable product cards or `.page-a4` export targets. Pointer dragging uses dedicated handles,
+capture, cancellation and edge scrolling; keyboard/touch controls also support adjacent and
+absolute-position moves. Each completed move uses the existing reorder action and save queue.
+The latest move can be undone during that modal session while its resulting order remains current;
+this is not general editing history. The grid and thumbnails scroll within their own containers.
+See [article verification](articles-verification.md) for automated checks and device limitations.
 
 ## Export and publishing
 

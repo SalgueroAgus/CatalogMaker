@@ -1,102 +1,94 @@
-import { useRef, useState } from 'react';
-import { LayoutList } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { LayoutGrid, LayoutList, Search, X } from 'lucide-react';
 import { ProductListItem } from '../molecules/ProductListItem';
 import { ExcelImportPanel } from '../molecules/ExcelImportPanel';
+import { ReorderProducts } from './ReorderProducts';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { usePersistenceStore } from '../../store/usePersistenceStore';
 import { paginateProducts, getIndexPageCount } from '../../utils/chunks';
+import { normalizeProductSearch } from '../../utils/products';
 
 interface Props {
+  active: boolean;
   visibleIds: Set<string>;
   onShowProduct: (id: string) => void;
 }
 
-export function ArticulosTab({ visibleIds, onShowProduct }: Props) {
+export function ArticulosTab({ active, visibleIds, onShowProduct }: Props) {
   const products = useProductStore((s) => s.products);
-  const reorderProduct = useProductStore((s) => s.reorderProduct);
+  const addBlankProduct = useProductStore((s) => s.addBlankProduct);
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
   const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
-
-  const indexPageCount = getIndexPageCount(products.length);
-  const pageStarts = new Map(paginateProducts(products, itemsPerPage, pageItemCounts).map((page, index) => [page.startIndex, indexPageCount + index + 1]));
-
-  const draggedIdRef = useRef<string | null>(null);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState<{ id: string; pos: 'top' | 'bottom' } | null>(null);
-
+  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const [query, setQuery] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
+  const [reordering, setReordering] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const pointerInteraction = useRef(false);
   const count = products.length;
+  const search = normalizeProductSearch(query);
+  const pages = paginateProducts(products, itemsPerPage, pageItemCounts);
+  const indexPages = getIndexPageCount(count);
+  const entries = pages.flatMap((page, pageIndex) => page.products.map((product, offset) => ({ product, index: page.startIndex + offset, page: indexPages + pageIndex + 1 })));
+  const matches = entries.filter(({ product }) => normalizeProductSearch(product.name).includes(search));
+  const filtered = entries.filter(({ product }) => product.id === editingId || normalizeProductSearch(product.name).includes(search));
+  const retained = filtered.length > matches.length;
 
-  function handleDragStart(e: React.DragEvent, id: string) {
-    draggedIdRef.current = id;
-    e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => setDraggingId(id), 0);
+  useEffect(() => {
+    if (count !== 0) return;
+    setQuery('');
+    setEditingId(null);
+    setOpenIds((current) => current.size ? new Set() : current);
+  }, [count]);
+
+  function changeSearch(value: string) {
+    setQuery(value);
+    setEditingId(null);
   }
 
-  function handleDragOver(e: React.DragEvent, id: string, el: HTMLElement) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const rect = el.getBoundingClientRect();
-    const pos = e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom';
-    setDragOver({ id, pos });
-  }
-
-  function handleDrop(e: React.DragEvent, targetId: string, el: HTMLElement) {
-    e.preventDefault();
-    setDragOver(null);
-    const fromId = draggedIdRef.current;
-    if (!fromId || fromId === targetId) return;
-    const rect = el.getBoundingClientRect();
-    const above = e.clientY < rect.top + rect.height / 2;
-    reorderProduct(fromId, targetId, above);
-    draggedIdRef.current = null;
-    setDraggingId(null);
-  }
-
-  function handleDragEnd() {
-    setDragOver(null);
-    setDraggingId(null);
-    draggedIdRef.current = null;
-  }
-
-  if (count === 0) {
-    return (
-      <>
-        <ExcelImportPanel />
-        <div className="rs-empty">
-          <LayoutList size={32} />
-          <p>Subí fotos para ver el listado aquí</p>
-        </div>
-      </>
-    );
+  function toggleDetails(id: string) {
+    setOpenIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
   return (
     <>
-      <ExcelImportPanel />
-      <div className="rs-list">
-      {products.map((product, index) => (
-        <div key={product.id}>
-          {pageStarts.has(index) && (
-            <div className="rs-page-sep">
-              Página {pageStarts.get(index)}
-            </div>
-          )}
-          <ProductListItem
-            product={product}
-            index={index}
-            total={count}
-            isVisible={visibleIds.has(product.id)}
-            isDragging={draggingId === product.id}
-            dragOverPosition={dragOver?.id === product.id ? dragOver.pos : null}
-            onShowProduct={onShowProduct}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onDragEnd={handleDragEnd}
-          />
+      {count > 0 && <div className="rs-articles-toolbar">
+        <label className="rs-field-label" htmlFor="articles-search">Buscar artículos</label>
+        <div className="rs-search-field">
+          <Search size={18} aria-hidden="true" />
+          <input ref={searchRef} id="articles-search" type="search" className="rs-input" placeholder="Nombre del artículo" value={query} onChange={(e) => changeSearch(e.target.value)} />
+          {query && <button className="rs-action" aria-label="Limpiar búsqueda" onClick={() => { changeSearch(''); searchRef.current?.focus(); }}><X size={18} aria-hidden="true" /></button>}
         </div>
-      ))}
-      </div>
+        <div className="rs-articles-tools">
+          <p className="rs-results" role="status">{search ? `${matches.length} de ${count} artículos${retained ? ' · 1 en edición' : ''}` : `${count} artículos`}</p>
+          <button className="rs-action" disabled={busy || count < 2} onClick={() => setReordering(true)}><LayoutGrid size={16} aria-hidden="true" /> Reordenar</button>
+        </div>
+      </div>}
+      <details className="rs-import" open={count === 0 ? true : undefined}>
+        <summary>Importar artículos desde Excel</summary>
+        <ExcelImportPanel />
+      </details>
+      {count === 0 ? <div className="rs-empty">
+        <LayoutList size={32} aria-hidden="true" />
+        <p>Todavía no hay artículos.</p>
+        <button className="rs-action" disabled={busy} onClick={() => void addBlankProduct()}>Agregar artículo</button>
+      </div> : filtered.length === 0 ? <div className="rs-empty">
+        <p>No encontramos artículos con ese nombre.</p>
+        <button className="rs-action" onClick={() => { changeSearch(''); searchRef.current?.focus(); }}>Mostrar todos</button>
+      </div> : <div className="rs-list" onPointerDownCapture={() => { pointerInteraction.current = true; }} onPointerCancel={() => { pointerInteraction.current = false; }} onKeyDownCapture={() => { pointerInteraction.current = false; }} onClickCapture={() => { pointerInteraction.current = false; }}>
+        {filtered.map(({ product, index, page }, position) => <div key={product.id}>
+          {(position === 0 || filtered[position - 1].page !== page) && <div className="rs-page-sep">Página {page}</div>}
+          <ProductListItem product={product} index={index} total={count} active={active && !reordering} isVisible={visibleIds.has(product.id)} detailsOpen={openIds.has(product.id)} onToggleDetails={() => toggleDetails(product.id)} onEdit={(id) => { if (!pointerInteraction.current) setEditingId(id); }} onShowProduct={onShowProduct} />
+        </div>)}
+      </div>}
+      {reordering && <ReorderProducts initialId={editingId ?? filtered[0]?.product.id} onClose={() => setReordering(false)} />}
     </>
   );
 }

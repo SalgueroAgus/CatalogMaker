@@ -22,7 +22,7 @@ test('mobile product preview action reveals the requested product', async ({ pag
   await page.getByRole('button', { name: 'Productos', exact: true }).click();
   const card = page.locator('.rs-card').nth(5);
   const id = await card.getAttribute('data-id');
-  await card.getByRole('button', { name: 'Ver producto 6 en la vista previa', exact: true }).click();
+  await card.getByRole('button', { name: 'Ver catálogo, artículo 6', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Vista Previa', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.locator(`[id="cell-${id}"]`)).toBeInViewport();
   await expect(page.locator(`[id="cell-${id}"]`)).toBeFocused();
@@ -44,7 +44,7 @@ test('keyboard-only essential editor workflow keeps focus, actions, saving and e
   await expect(page.getByLabel('Precio', { exact: true }).first()).toBeFocused();
   await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.type('$12345');
-  await activate('Descripción');
+  await activate('Detalles');
   await page.getByLabel('Descripción', { exact: true }).first().focus();
   await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.type('DESCRIPCION');
@@ -54,6 +54,8 @@ test('keyboard-only essential editor workflow keeps focus, actions, saving and e
   await (await choice).setFiles({ name: 'keyboard.png', mimeType: 'image/png', buffer: Buffer.from(png) });
   await saved(page);
   await activate('Agregar Producto');
+  await page.locator('.rs-card').last().getByRole('button', { name: 'Detalles', exact: true }).focus();
+  await page.keyboard.press('Enter');
   await page.locator('.rs-card').last().getByRole('button', { name: 'Subir', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.rs-card').first().getByRole('button', { name: 'Bajar', exact: true })).toBeFocused();

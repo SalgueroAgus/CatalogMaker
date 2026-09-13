@@ -10,9 +10,9 @@ test.beforeAll(async () => {
 });
 import { openApp, readyAfterReload, saved } from './helpers';
 
-test('200% actual desktop browser zoom through Chromium native settings', async ({ playwright }, testInfo) => {
+test('200% actual desktop browser zoom through Chromium native settings', async ({ playwright, launchOptions }, testInfo) => {
   const profile = await mkdtemp('/private/tmp/catalogmaker-zoom-');
-  const context = await playwright.chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true, viewport: null, args: ['--window-size=1440,1000'], baseURL: 'http://127.0.0.1:5173' });
+  const context = await playwright.chromium.launchPersistentContext(profile, { ...launchOptions, channel: 'chromium', headless: true, viewport: null, args: ['--window-size=1440,1000'], baseURL: 'http://127.0.0.1:5173' });
   try {
     const page = context.pages()[0];
     await page.goto('chrome://settings/appearance');
@@ -29,7 +29,7 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     await page.getByRole('button', { name: 'Productos', exact: true }).click();
     await page.getByLabel('Nombre', { exact: true }).fill('VALOR LEGIBLE CON ZOOM');
     await page.getByLabel('Precio', { exact: true }).fill('$123456');
-    await page.getByRole('button', { name: 'Descripción', exact: true }).click();
+    await page.getByRole('button', { name: 'Detalles', exact: true }).click();
     await page.getByLabel('Descripción', { exact: true }).fill('Descripción con zoom real del navegador.');
     await page.getByRole('button', { name: 'Cambiar foto', exact: true }).scrollIntoViewIfNeeded();
     await expect(page.getByRole('button', { name: 'Cambiar foto', exact: true })).toBeInViewport();
@@ -41,14 +41,26 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     await page.getByRole('button', { name: 'Ajustes', exact: true }).click();
     await page.getByRole('button', { name: 'Agregar Producto', exact: true }).click();
     await page.getByRole('button', { name: 'Productos', exact: true }).click();
+    await page.locator('.rs-card').last().getByRole('button', { name: 'Detalles', exact: true }).click();
     await page.locator('.rs-card').last().getByRole('button', { name: 'Subir', exact: true }).focus();
     await page.keyboard.press('Enter');
     await expect(page.locator('.rs-card').first().getByRole('button', { name: 'Bajar', exact: true })).toBeFocused();
+    await page.getByRole('button', { name: 'Reordenar', exact: true }).click();
+    const reorder = page.getByRole('dialog', { name: 'Reordenar artículos', exact: true });
+    expect(await reorder.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await expect(reorder.locator('.reorder-page')).toHaveCount(1);
+    await reorder.getByLabel('Mover a posición', { exact: true }).fill('2');
+    await reorder.getByRole('button', { name: 'Mover', exact: true }).click();
+    await expect(reorder.locator('.reorder-selection')).toContainText('Artículo 2 de 2');
+    await reorder.getByRole('button', { name: 'Deshacer último movimiento', exact: true }).click();
+    await expect(reorder.getByLabel('Mover a posición', { exact: true })).toBeFocused();
+    await reorder.getByRole('button', { name: 'Volver al editor', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Reordenar', exact: true })).toBeFocused();
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Eliminar producto 1', exact: true }).click();
     await saved(page);
     await expect(page.locator('.rs-card')).toHaveCount(1);
-    await page.getByRole('button', { name: 'Ver producto 1 en la vista previa', exact: true }).click();
+    await page.getByRole('button', { name: 'Ver catálogo, artículo 1', exact: true }).click();
     await expect(page.locator('.product-cell')).toBeFocused();
     await page.getByRole('button', { name: 'Ajustes', exact: true }).click();
     await page.getByRole('button', { name: 'Marca', exact: true }).click();

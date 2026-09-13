@@ -47,7 +47,7 @@ test('central limits reject import before append, preserve stored text and allow
   await readyAfterReload(page);
   await expect(page.locator('.rs-input-name')).toHaveValue('n'.repeat(1000));
   await expect(page.locator('.rs-input-price')).toHaveValue('p'.repeat(1000));
-  await page.locator('.rs-desc-toggle').click();
+  await page.getByRole('button', { name: 'Detalles', exact: true }).click();
   await expect(page.locator('.rs-desc-textarea')).toHaveAttribute('maxlength', '500');
   await expect(page.locator('.cell-desc')).toHaveAttribute('maxlength', '500');
   await page.locator('.rs-desc-textarea').fill('LISTA');
@@ -63,6 +63,7 @@ test('keyboard moves keep focus and persist order across list, index and preview
   await expect(page.locator('[data-move="down"]').last()).toBeDisabled();
   const middle = page.locator('.rs-card').nth(1);
   const id = await middle.getAttribute('data-id');
+  await middle.getByRole('button', { name: 'Detalles', exact: true }).click();
   await middle.getByRole('button', { name: 'Subir', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.rs-card').first()).toHaveAttribute('data-id', id!);
@@ -76,6 +77,7 @@ test('keyboard moves keep focus and persist order across list, index and preview
   expect(await page.locator('.cell-name').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value))).toEqual(names);
   expect(await page.locator('.idx-name').allTextContents()).toEqual(names);
   await page.evaluate(() => window.catalogTest.fixture(1));
+  await page.getByRole('button', { name: 'Detalles', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Subir', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Bajar', exact: true })).toBeDisabled();
 });
@@ -128,22 +130,21 @@ test('every supported shape and partial occupancy resolves incompatible stored l
   expect(checks.every((row) => row.expected === row.actual)).toBe(true);
 });
 
-test('desktop native dragging preserves order after reload', async ({ page }, testInfo) => {
+test('desktop pointer dragging preserves order after reload', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(3));
-  const source = page.locator('.rs-card').nth(1);
-  const destination = page.locator('.rs-card').first();
-  const sourceId = await source.getAttribute('data-id');
-  await page.evaluate(() => {
-    const events: object[] = [];
-    for (const type of ['dragstart', 'drop', 'dragend']) document.addEventListener(type, (event) => {
-      events.push({ type, target: (event.target as Element).closest('.rs-card')?.getAttribute('data-id') });
-      document.documentElement.dataset.dragEvents = JSON.stringify(events);
-    });
-  });
-  await source.dragTo(destination, { sourcePosition: { x: 20, y: 20 }, targetPosition: { x: 20, y: 20 } });
-  await testInfo.attach('native-drag-events', { body: await page.evaluate(() => document.documentElement.dataset.dragEvents ?? '[]'), contentType: 'application/json' });
-  await expect(page.locator('.rs-card').first()).toHaveAttribute('data-id', sourceId!);
+  await page.getByRole('button', { name: 'Reordenar', exact: true }).click();
+  const source = page.locator('.reorder-card').nth(1);
+  const sourceId = await source.getAttribute('data-reorder-id');
+  const grip = await source.locator('.reorder-grip').boundingBox();
+  const destination = await page.locator('.reorder-card').first().boundingBox();
+  await page.mouse.move(grip!.x + 22, grip!.y + 22);
+  await page.mouse.down();
+  await page.mouse.move(destination!.x + 12, destination!.y + 80, { steps: 10 });
+  await expect(page.locator('.reorder-before')).toHaveCount(1);
+  await page.mouse.up();
+  await expect(page.locator('.reorder-card').first()).toHaveAttribute('data-reorder-id', sourceId!);
+  await page.getByRole('button', { name: 'Volver al editor', exact: true }).click();
   await saved(page);
   await readyAfterReload(page);
   await expect(page.locator('.rs-card').first()).toHaveAttribute('data-id', sourceId!);

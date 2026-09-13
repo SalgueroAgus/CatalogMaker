@@ -89,7 +89,7 @@ test('invalid stored data is preserved; partial failed hydration allocates no UR
   });
   await page.getByRole('button', { name: 'Reintentar carga' }).click();
   await expect(page.locator('.rs-input-name')).toHaveValue('LEGACY');
-  await page.locator('.rs-desc-toggle').click();
+  await page.getByRole('button', { name: 'Detalles', exact: true }).click();
   await expect(page.locator('.rs-desc-textarea')).toHaveValue('l'.repeat(600));
   await expect(page.locator('.rs-desc-textarea')).toHaveAttribute('aria-invalid', 'true');
   await page.locator('.rs-desc-textarea').fill('CORREGIDO');
