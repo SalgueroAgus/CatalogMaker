@@ -17,6 +17,7 @@ export const IndexPage = forwardRef<HTMLDivElement, Props>(
     const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
     const storeName = useSettingsStore((s) => s.storeName);
     const footerContact = useSettingsStore((s) => s.footerContact);
+    const footerTag = useSettingsStore((s) => s.footerTag);
     const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
     const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
 
@@ -60,7 +61,7 @@ export const IndexPage = forwardRef<HTMLDivElement, Props>(
 
         <div className="page-ftr">
           <span className="footer-contact">{footerContact}</span>
-          <span className="footer-tag">Exclusivo</span>
+          {footerTag.trim() && <span className="footer-tag">{footerTag}</span>}
         </div>
       </div>
     );

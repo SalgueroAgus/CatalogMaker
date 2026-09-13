@@ -50,7 +50,7 @@ function collectResources() {
 
 function captureState(): SessionSnapshot {
   const products = useProductStore.getState().products;
-  const { storeName, footerContact, colors, fonts, fontSizes, bgImage, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts } = useSettingsStore.getState();
+  const { storeName, footerContact, footerTag, colors, fonts, fontSizes, bgImage, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts } = useSettingsStore.getState();
   const images = new Map<string, Blob>();
   for (const product of products) {
     const blob = resources.get(product.image);
@@ -60,7 +60,7 @@ function captureState(): SessionSnapshot {
     urls: activeUrls(),
     data: {
       products: products.map(({ image: _image, ...meta }) => meta),
-      settings: { storeName, footerContact, colors, fonts, fontSizes, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts },
+      settings: { storeName, footerContact, footerTag, colors, fonts, fontSizes, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts },
       images,
       background: bgImage ? resources.get(bgImage) ?? null : null,
     },
