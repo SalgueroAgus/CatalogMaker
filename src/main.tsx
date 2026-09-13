@@ -2,7 +2,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import netlify from 'netlify-identity-widget';
 import App from './App';
+import { initializeUITheme } from './store/useUIThemeStore';
 
+initializeUITheme();
 netlify.init();
 
 import '@radix-ui/themes/styles.css';
@@ -21,6 +23,7 @@ import './styles/print.css';
 import './styles/editor.css';
 import './styles/articles.css';
 import './styles/mobile.css';
+import './styles/editor-theme.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

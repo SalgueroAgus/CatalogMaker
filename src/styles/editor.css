@@ -13,6 +13,7 @@
   --ui-accent-hover: #00664f;
   --ui-input-border: #607268;
   --ui-shadow: #00000012;
+  --ui-on-accent: #ffffff;
 }
 .editor-ui {
   min-height: 0;
@@ -42,6 +43,14 @@
 .editor-ui :focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
 .editor-ui .ui-button { min-height: 44px; min-width: 44px; height: auto; white-space: normal; font-size: 14px; line-height: 1.35; padding: 10px 12px; gap: 8px; cursor: pointer; }
 .editor-ui .ui-button svg { flex-shrink: 0; }
+.theme-switch { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; white-space: nowrap; cursor: pointer; }
+.editor-ui .theme-switch .rt-SwitchRoot { min-width: 44px; min-height: 44px; cursor: pointer; --switch-height: 28px; --switch-thumb-inset: 3px; }
+.theme-switch .rt-SwitchRoot::before { background: var(--ui-subtle); box-shadow: inset 0 0 0 1px var(--ui-border); transition: none; }
+.theme-switch .rt-SwitchRoot[data-state="checked"]::before { background: var(--ui-accent); box-shadow: none; }
+.theme-switch .rt-SwitchThumb { background: var(--ui-text); box-shadow: none; }
+.theme-switch .rt-SwitchThumb[data-state="checked"] { background: var(--ui-on-accent); box-shadow: none; }
+.theme-switch .rt-SwitchRoot:focus-visible::before { outline-color: var(--ui-accent); }
+.theme-notice { padding: 8px 16px; color: var(--ui-warning); background: var(--ui-warning-soft); font-size: 14px; line-height: 1.5; }
 .editor-ui .ui-button.rt-variant-surface { box-shadow: inset 0 0 0 1px var(--ui-border); }
 .editor-ui button:disabled { cursor: not-allowed; }
 .editor-ui .rt-TextFieldRoot, .editor-ui .rt-TextAreaRoot { box-shadow: inset 0 0 0 1px var(--ui-input-border); }
@@ -139,7 +148,7 @@
 .paginas-global-label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 12px; }
 .paginas-count-pills { display: flex; gap: 6px; }
 .paginas-pill { flex: 1; }
-.paginas-pill.active.ui-button { background: var(--ui-accent); color: var(--ui-surface); box-shadow: none; }
+.paginas-pill.active.ui-button { background: var(--ui-accent); color: var(--ui-on-accent); box-shadow: none; }
 .paginas-count-help { margin-top: 12px; font-size: 14px; color: var(--ui-muted); }
 .paginas-list { padding: 0 16px 64px; overflow-y: auto; flex: 1; min-height: 0; }
 .paginas-page-item { padding: 20px 0; border-bottom: 1px solid var(--ui-border); }

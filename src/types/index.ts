@@ -1,3 +1,5 @@
+export type UITheme = 'light' | 'dark';
+
 export interface Product {
   id: string;
   name: string;

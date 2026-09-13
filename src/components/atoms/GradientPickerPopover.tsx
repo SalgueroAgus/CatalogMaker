@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useId, createContext, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import ColorPicker from 'react-best-gradient-color-picker';
+import { useUIThemeStore } from '../../store/useUIThemeStore';
 
 interface Props {
   value: string;
@@ -17,6 +18,7 @@ const PICKER_W = 260;
 const PICKER_H = 320;
 
 export function GradientPickerPopover({ value, onChange, solidOnly, idSuffix, label = 'Fondo del producto', disabled = false }: Props) {
+  const theme = useUIThemeStore((s) => s.theme);
   const active = useContext(ColorPickerActivity);
   const unavailable = disabled || !active;
   const dialogId = useId();
@@ -147,6 +149,19 @@ export function GradientPickerPopover({ value, onChange, solidOnly, idSuffix, la
             height={200}
             idSuffix={idSuffix ?? ''}
             disableLightMode
+            style={theme === 'dark' ? {
+              body: { background: 'var(--ui-subtle)' },
+              rbgcpInput: { color: 'var(--ui-text)', borderColor: 'var(--ui-border)' },
+              rbgcpInputLabel: { color: 'var(--ui-muted)' },
+              rbgcpControlInput: { color: 'var(--ui-text)' },
+              rbgcpControlBtn: { color: 'var(--ui-text)' },
+              rbgcpControlBtnWrapper: { background: 'var(--ui-hover)' },
+              rbgcpControlBtnSelected: { color: 'var(--ui-accent)', background: 'var(--ui-accent-soft)' },
+              rbgcpControlIcon: { stroke: 'var(--ui-text)' },
+              rbgcpControlIcon2: { fill: 'var(--ui-text)' },
+              rbgcpColorModelDropdown: { background: 'var(--ui-hover)', border: '1px solid var(--ui-border)' },
+              rbgcpComparibleLabel: { color: 'var(--ui-muted)' },
+            } : undefined}
           />
         </div>,
         document.body

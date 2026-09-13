@@ -10,7 +10,8 @@ test.beforeAll(async () => {
 });
 import { openApp, readyAfterReload, saved, showSection, openManagement, downloadPDF } from './helpers';
 
-test('200% actual desktop browser zoom through Chromium native settings', async ({ playwright, launchOptions, baseURL }, testInfo) => {
+for (const theme of ['light', 'dark']) {
+test(`200% actual desktop browser zoom through Chromium native settings in ${theme} mode`, async ({ playwright, launchOptions, baseURL }, testInfo) => {
   const profile = await mkdtemp('/private/tmp/catalogmaker-zoom-');
   const context = await playwright.chromium.launchPersistentContext(profile, { ...launchOptions, headless: true, viewport: null, args: ['--window-size=1440,1000'], baseURL });
   try {
@@ -19,6 +20,8 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     await page.locator('#zoomLevel').selectOption({ label: '200%' });
     await expect(page.locator('#zoomLevel')).toHaveValue('2');
     await openApp(page);
+    if (theme === 'dark') await page.getByRole('switch', { name: 'Modo oscuro' }).click();
+    await expect(page.getByRole('switch', { name: 'Modo oscuro' })).toBeInViewport();
     const dimensions = await page.evaluate(() => ({ outerWidth, innerWidth, devicePixelRatio, visualScale: visualViewport?.scale, cssZoom: getComputedStyle(document.documentElement).zoom }));
     expect(dimensions.outerWidth / dimensions.innerWidth).toBeCloseTo(2, 1);
     expect(dimensions.visualScale).toBe(1);
@@ -97,3 +100,4 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     await rm(profile, { recursive: true, force: true });
   }
 });
+}
