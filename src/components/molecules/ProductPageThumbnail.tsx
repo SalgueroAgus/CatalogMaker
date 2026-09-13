@@ -15,7 +15,7 @@ export const ProductPageThumbnail = forwardRef<HTMLButtonElement, Props>(
     <button ref={ref} className={`reorder-page${selected ? ' reorder-page-selected' : ''}`} aria-label={`Ir a página ${pageNumber}`} aria-current={selected ? 'page' : undefined} onClick={onSelect}>
       <span className={`reorder-page-sheet grid-${shape}`} aria-hidden="true">
         {products.map((product) => <span key={product.id} className="grid-item reorder-page-cell">
-          <img src={product.image} alt="" loading="lazy" draggable={false} onError={(event) => { event.currentTarget.src = PLACEHOLDER_IMG; }} />
+          <img src={product.image} alt="" loading="lazy" draggable={false} style={{ objectPosition: `50% ${product.imagePositionY ?? 50}%` }} onError={(event) => { event.currentTarget.src = PLACEHOLDER_IMG; }} />
         </span>)}
       </span>
       <span>Página {pageNumber}</span>

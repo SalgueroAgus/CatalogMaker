@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Product } from '../types';
-import { PLACEHOLDER_IMG } from '../utils/image';
+import { isImagePosition, PLACEHOLDER_IMG } from '../utils/image';
 import type { ExcelRow } from '../utils/excel';
 import { validateProductField, validateProductFields, type EditableProductField } from '../utils/products';
 import { canMutate, createImageResource, manageCatalog, mutateCatalog } from './catalogSession';
@@ -15,6 +15,7 @@ interface ProductState {
   reorderProduct: (fromId: string, toId: string, above: boolean) => Promise<MutationResult>;
   updateField: (id: string, field: EditableProductField, value: string) => Promise<MutationResult>;
   replaceImage: (id: string, file: File) => Promise<MutationResult>;
+  setImagePosition: (id: string, position: number) => Promise<MutationResult>;
   importProducts: (rows: ExcelRow[], imageFiles: File[]) => Promise<MutationResult>;
   resetCatalog: () => Promise<MutationResult>;
   hydrateProducts: (products: Product[]) => void;
@@ -30,6 +31,7 @@ function blankProduct(): Product {
     description: 'Descripción del producto.',
     image: PLACEHOLDER_IMG,
     bgColor: 'rgba(255,255,255,1)',
+    imagePositionY: 50,
   };
 }
 
@@ -85,11 +87,18 @@ export const useProductStore = create<ProductState>((set, get) => ({
     return mutateCatalog(() => set({ products: get().products.map((p) => p.id === id ? { ...p, [field]: value } : p) }));
   },
 
+  setImagePosition: (id, position) => {
+    if (!isImagePosition(position)) return Promise.resolve({ status: 'invalid', error: 'Posición de imagen inválida.' });
+    const product = get().products.find((p) => p.id === id);
+    if (!product || (product.imagePositionY ?? 50) === position) return ignored();
+    return mutateCatalog(() => set({ products: get().products.map((p) => p.id === id ? { ...p, imagePositionY: position } : p) }));
+  },
+
   replaceImage: (id, file) => {
     if (!canMutate() || !get().products.some((p) => p.id === id) || !file.type.startsWith('image/')) return ignored();
     return mutateCatalog(() => {
       const image = createImageResource(file);
-      set({ products: get().products.map((p) => p.id === id ? { ...p, image } : p) });
+      set({ products: get().products.map((p) => p.id === id ? { ...p, image, imagePositionY: 50 } : p) });
     });
   },
 

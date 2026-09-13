@@ -7,6 +7,7 @@ export interface Product {
   description: string;
   image: string;
   bgColor: string;
+  imagePositionY?: number;
 }
 
 export interface Colors {

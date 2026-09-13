@@ -1,5 +1,6 @@
 import type { Colors, Fonts, FontSizes, GridShape, Product, UITheme } from '../types';
 import { isPageItemCount } from '../utils/chunks';
+import { isImagePosition } from '../utils/image';
 
 export function dbLoadUITheme(): UITheme {
   try {
@@ -103,6 +104,7 @@ function readProducts(value: unknown): ProductMeta[] {
   const ids = new Set<string>();
   if (!Array.isArray(value) || !value.every((product: unknown) => {
     if (!isRecord(product) || !['id', 'name', 'price', 'description', 'bgColor'].every((key) => typeof product[key] === 'string')) return false;
+    if (product.imagePositionY !== undefined && !isImagePosition(product.imagePositionY)) return false;
     const id = product.id as string;
     if (!id || ids.has(id)) return false;
     ids.add(id);
