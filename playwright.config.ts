@@ -1,13 +1,20 @@
 import { defineConfig } from '@playwright/test';
 
+const isCI = !!process.env.CI;
+const outputDir = isCI ? 'test-results' : '/private/tmp/catalogmaker-priority1-results';
+
 export default defineConfig({
   testDir: './tests',
   timeout: 60000,
   expect: { timeout: 10000 },
   fullyParallel: false,
+  forbidOnly: isCI,
+  retries: 0,
   workers: 1,
-  outputDir: '/private/tmp/catalogmaker-priority1-results',
-  reporter: [['list'], ['json', { outputFile: '/private/tmp/catalogmaker-priority1-results/report.json' }]],
+  outputDir,
+  reporter: isCI
+    ? [['list'], ['json', { outputFile: `${outputDir}/report.json` }], ['html', { outputFolder: 'playwright-report', open: 'never' }]]
+    : [['list'], ['json', { outputFile: `${outputDir}/report.json` }]],
   use: {
     baseURL: 'http://127.0.0.1:5173',
     viewport: { width: 1440, height: 1000 },

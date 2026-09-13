@@ -60,7 +60,7 @@ Para verificar que funcionó, abrí una terminal y escribí:
 ```
 node --version
 ```
-Debería mostrar algo como `v20.x.x`.
+Debería mostrar algo como `v24.x.x`; CI usa Node.js 24 LTS.
 
 ### 2. Instalar las dependencias del proyecto
 
@@ -83,6 +83,15 @@ Todos se ejecutan desde la terminal, dentro de la carpeta del proyecto.
 | `npm run preview` | Previsualiza el build final antes de subir. |
 | `npm run verify` | Build y comprobaciones de espacios en los cambios Git. |
 | `npm run test` | Regresiones Playwright con datos y perfiles descartables. |
+
+## Checks antes de fusionar cambios
+
+GitHub Actions ejecuta el build y las pruebas de Chromium, Firefox y WebKit para los pull
+requests hacia `main` y `Agustin`. `main` es la rama de producción; `Agustin` no se despliega.
+La protección requiere activar además un ruleset en GitHub: el archivo de CI por sí solo
+no bloquea merges. Seguí el [tutorial de GitHub y Netlify](docs/ci-github-setup.md) para activar
+los cuatro checks obligatorios, impedir pushes directos y trabajar mediante pull requests.
+No se exige aprobación de otra persona.
 
 ---
 
@@ -164,7 +173,8 @@ Los tests de archivos exportados usan `swiftc`, PDFKit y Vision incluidos en el 
 no son dependencias de la aplicación. Si no están disponibles, esas comprobaciones quedan
 pendientes y deben ejecutarse en un entorno compatible. Los artefactos y reportes se escriben
 en `/private/tmp/catalogmaker-priority1-*`, fuera del código versionado. No se publica nada
-ni se usan datos personales. La suite necesita el puerto local 5173 libre.
+ni se usan datos personales. La suite necesita el puerto local 5173 libre. En CI, los reportes
+van a `test-results/` y `playwright-report/` y se pueden descargar desde GitHub durante siete días.
 
 Las pruebas con teléfonos reales y ambos padres se registran por separado con esta
 [guía](docs/priority1-device-checks.md). La emulación de pantallas pequeñas no prueba el teclado

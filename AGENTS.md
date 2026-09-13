@@ -18,11 +18,18 @@ and optional web publishing to Netlify. See the architecture note for the actual
 | `npm run build` | Run TypeScript checks and build into `dist/`. |
 | `npm run preview` | Serve the production build locally. |
 | `npm run verify` | Run the build plus unstaged and staged Git whitespace checks. |
+| `npm test` | Run the Playwright browser and export regression suite. |
 
 Run `npm run verify` after changes and report the result. Reuse a successful result
-when the reviewed files have not changed since it ran. There is no lint command or
-automated behavior-test suite. The build does not verify browser interactions or PDF output.
+when the reviewed files have not changed since it ran. There is no lint command.
+Playwright covers browser interactions and PDF/HTML output; the full suite requires macOS
+for its Swift/PDFKit/Vision checks. The build alone does not verify those behaviors.
 Git whitespace checks omit untracked files; inspect new files explicitly during review.
+
+GitHub Actions runs the build and all three browser projects for pull requests targeting
+`main` or `Agustin` and pushes to either branch. Merge blocking requires the separate
+GitHub ruleset described in [CI setup](docs/ci-github-setup.md). Work on feature branches
+and use pull requests into these protected branches; only `main` deploys to production.
 
 ## Code map
 
