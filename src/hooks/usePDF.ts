@@ -8,6 +8,7 @@ import { buildPDF } from '../utils/pdf';
 export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[]>) {
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const products = useProductStore((s) => s.products);
   const colors = useSettingsStore((s) => s.colors);
@@ -17,10 +18,11 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
 
   const exportToPDF = async () => {
     if (products.length === 0) {
-      alert('El catálogo está vacío.');
+      setError('El catálogo está vacío.');
       return;
     }
 
+    setError(null);
     const release = acquireExport();
     if (!release) return;
     setIsExporting(true);
@@ -48,7 +50,7 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
       console.error('PDF export error:', err);
-      alert('Error al generar el PDF. Intente de nuevo.');
+      setError('Error al generar el PDF. Intente de nuevo.');
     } finally {
       release();
       document.body.classList.remove('pdf-exporting');
@@ -57,5 +59,5 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
     }
   };
 
-  return { exportToPDF, isExporting, progress };
+  return { exportToPDF, isExporting, progress, error, clearError: () => setError(null) };
 }

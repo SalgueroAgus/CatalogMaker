@@ -11,9 +11,19 @@ Google Fonts, and web publishing use network services.
 
 [main.tsx](../src/main.tsx) initializes Netlify Identity, loads global CSS and renders
 React StrictMode. [App.tsx](../src/App.tsx) starts single-session hydration, owns page refs,
-mobile tab state and the tablet sidebar toggle. Editing UI is mounted only after a coherent
+mobile view, active tool section and desktop panel visibility. Editing UI is mounted only after a coherent
 load. A failed load remains visible with retry; existing records are never replaced with an
 empty catalog to hide a failure. Development still uses the existing login bypass.
+
+The editor uses Radix Themes for its own controls, dialogs and login screen. `EditorTheme`
+wraps the header, tool panel, mobile navigation and portalled UI, not the A4 pages. UI tokens
+are separate from the settings-store variables used by the catalog. The existing gradient
+picker retains its library and dark appearance. `EditorHeader` owns export actions, the
+single main save indicator and catalog/account menus. `ToolPanel` groups Articles, Pages
+and Design; all three contents remain mounted to retain editing context and scroll.
+Confirmation dialogs use existing store actions and disable confirmation during busy states.
+Select popups and color controls close when disabled; color controls also close when their
+section becomes inactive.
 
 ## State and persistence
 
@@ -98,8 +108,12 @@ cells have a transparent base, allowing the page background to show through the 
 color or gradient according to its opacity. The text area retains its separate page-color
 background, and new products start with an opaque white photo-area background. Description textareas resize on content, typography,
 available-width and font-loading changes through `useTextareaAutoHeight`.
-`usePageScale` sets `--page-scale` for tablet/mobile. Body classes select mobile tabs and toggle
-the tablet sidebar. Workspace visibility highlights sidebar items; “Ver catálogo” navigates
+`usePageScale` measures the actual workspace with ResizeObserver and sets `--page-scale`
+up to 1 at every viewport size. Pages retain their A4 dimensions; capture resets zoom to 1.
+A 360px tool panel (320px on tablets) sits beside the preview and can be collapsed. Below
+768px, bottom navigation selects one full-width view: Preview, Articles, Pages or Design.
+React state and shell data attributes control visibility; navigation no longer changes body
+classes. Export actions remain available through the header menu on smaller screens. Workspace visibility highlights sidebar items; “Ver catálogo” navigates
 to products. This is not bidirectional synchronized scrolling. Back-to-top buttons scroll and
 focus the active preview, product list or page-settings list; they remain outside captured A4 pages.
 
@@ -109,8 +123,8 @@ query changes or another article is activated. Product-tab content stays mounted
 when inactive, preserving search, expanded details and scroll position; its color popovers close.
 Filtering never changes product order or catalog page numbering.
 
-[ReorderProducts.tsx](../src/components/organisms/ReorderProducts.tsx) opens a modal photo grid
-with navigation-only page thumbnails on the right, or above the grid below 768px. Thumbnails
+[ReorderProducts.tsx](../src/components/organisms/ReorderProducts.tsx) opens a Radix dialog with a photo grid
+with navigation-only page thumbnails on the right, or above the grid below 768px. The dialog skips scale animation so its initial scroll calculations use final coordinates. Thumbnails
 reuse pagination, shape resolution and the shared `.grid-item` placement rules, without mounting
 editable product cards or `.page-a4` export targets. Pointer dragging uses dedicated handles,
 capture, cancellation and edge scrolling; keyboard/touch controls also support adjacent and
@@ -131,13 +145,14 @@ editor actions, preserves intentional opacity and replaces product/background UR
 base64. It cleans capture wrappers in `finally`. Extend transforms for new page elements. The export utilities have no React/store imports;
 they perform DOM work when called and remove temporary capture wrappers in `finally`.
 
+Export-hook errors are exposed as state and displayed in a shared Radix alert dialog.
 Both export hooks add `pdf-exporting` to the body and remove it in `finally`.
-The visibility override is in `globals.css`; it keeps the workspace measurable from mobile
+The visibility override is in `mobile.css`; it keeps the workspace measurable from mobile
 settings/products tabs. Check preview, captured output, and link coordinates when changing layout.
 
 [usePublish.ts](../src/hooks/usePublish.ts) shares those transforms through
 [htmlExport.ts](../src/utils/htmlExport.ts), which embeds page images and clickable link overlays
-in standalone HTML. A download handler exists, but the sidebar intentionally hides its button.
+in standalone HTML. A standalone HTML download handler exists, but the editor does not expose its button.
 [netlify.ts](../src/utils/netlify.ts) creates a deploy, uploads HTML when required, and polls its
 status. It currently falls back to a URL on polling timeout without proving the deploy is ready.
 

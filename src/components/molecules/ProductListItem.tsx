@@ -1,3 +1,7 @@
+import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
+import { TextArea } from '@radix-ui/themes';
+import { ConfirmAction } from './ConfirmAction';
 import { useRef } from 'react';
 import { ChevronDown, Eye, RefreshCw, Trash2 } from 'lucide-react';
 import { usePersistenceStore } from '../../store/usePersistenceStore';
@@ -50,28 +54,28 @@ export function ProductListItem({ product, index, total, isVisible, active, deta
         </div>
         <div className="rs-fields">
           <label className="rs-field-label" htmlFor={`name-${product.id}`}>Nombre</label>
-          <textarea id={`name-${product.id}`} ref={nameRef} rows={1} className="rs-input rs-input-name" value={product.name} disabled={busy} onChange={(e) => void updateField(product.id, 'name', e.target.value)} placeholder="Nombre" />
+          <TextArea id={`name-${product.id}`} ref={nameRef} rows={1} className="rs-input rs-input-name" value={product.name} disabled={busy} onChange={(e) => void updateField(product.id, 'name', e.target.value)} placeholder="Nombre" />
           <label className="rs-field-label" htmlFor={`price-${product.id}`}>Precio</label>
-          <input id={`price-${product.id}`} type="text" className="rs-input rs-input-price" value={product.price} disabled={busy} onChange={(e) => void updateField(product.id, 'price', e.target.value)} placeholder="$0.00" />
+          <Input id={`price-${product.id}`} type="text" className="rs-input rs-input-price" value={product.price} disabled={busy} onChange={(e) => void updateField(product.id, 'price', e.target.value)} placeholder="$0.00" />
         </div>
       </div>
       <div className="rs-summary-actions">
-        <button className="rs-action" onClick={onToggleDetails} aria-expanded={detailsOpen} aria-controls={`details-${product.id}`}>
+        <Button className="rs-action" onClick={onToggleDetails} aria-expanded={detailsOpen} aria-controls={`details-${product.id}`}>
           <ChevronDown size={16} className={detailsOpen ? 'rs-details-open' : ''} aria-hidden="true" /> Detalles
-        </button>
-        <button className="rs-action" onClick={() => onShowProduct(product.id)} aria-label={`Ver catálogo, artículo ${index + 1}`}>
+        </Button>
+        <Button className="rs-action" onClick={() => onShowProduct(product.id)} aria-label={`Ver catálogo, artículo ${index + 1}`}>
           <Eye size={16} aria-hidden="true" /> Ver catálogo
-        </button>
+        </Button>
       </div>
       <div className="rs-product-details" id={`details-${product.id}`} hidden={!detailsOpen}>
         <label className="rs-field-label" htmlFor={`description-${product.id}`}>Descripción</label>
-        <textarea id={`description-${product.id}`} aria-invalid={!!descriptionError} aria-describedby={descriptionError ? `description-error-${product.id}` : undefined} maxLength={DESCRIPTION_LIMIT} ref={descRef} className="rs-desc-textarea" rows={2} value={product.description} disabled={busy} onChange={(e) => void updateField(product.id, 'description', e.target.value)} placeholder="Descripción..." />
+        <TextArea id={`description-${product.id}`} aria-invalid={!!descriptionError} aria-describedby={descriptionError ? `description-error-${product.id}` : undefined} maxLength={DESCRIPTION_LIMIT} ref={descRef} className="rs-desc-textarea" rows={2} value={product.description} disabled={busy} onChange={(e) => void updateField(product.id, 'description', e.target.value)} placeholder="Descripción..." />
         {descriptionError && <p className="field-error" id={`description-error-${product.id}`} role="alert">{descriptionError}</p>}
         <span className={`rs-desc-counter${product.description.length >= DESCRIPTION_LIMIT ? ' rs-desc-counter-limit' : product.description.length >= 400 ? ' rs-desc-counter-warn' : ''}`}>
           {product.description.length} / {DESCRIPTION_LIMIT}
         </span>
         <div className="rs-product-actions">
-          <button className="rs-action" disabled={busy} onClick={() => photoInput.current?.click()}><RefreshCw size={16} aria-hidden="true" /> Cambiar foto</button>
+          <Button className="rs-action" disabled={busy} onClick={() => photoInput.current?.click()}><RefreshCw size={16} aria-hidden="true" /> Cambiar foto</Button>
           <input ref={photoInput} type="file" accept="image/*" hidden disabled={busy} onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) void replaceImage(product.id, file);
@@ -83,11 +87,11 @@ export function ProductListItem({ product, index, total, isVisible, active, deta
           </span>
         </div>
         <div className="rs-product-actions">
-          <button className="rs-action" disabled={busy || index === 0} data-move="up" onClick={(e) => move('up', e.currentTarget)}>Subir</button>
-          <button className="rs-action" disabled={busy || index === total - 1} data-move="down" onClick={(e) => move('down', e.currentTarget)}>Bajar</button>
-          <button className="rs-act-del" disabled={busy} onClick={() => {
-            if (confirm('¿Eliminar este producto del catálogo?')) void deleteProduct(product.id);
-          }} aria-label={`Eliminar producto ${index + 1}`}><Trash2 size={16} aria-hidden="true" /> Eliminar</button>
+          <Button className="rs-action" disabled={busy || index === 0} data-move="up" onClick={(e) => move('up', e.currentTarget)}>Subir</Button>
+          <Button className="rs-action" disabled={busy || index === total - 1} data-move="down" onClick={(e) => move('down', e.currentTarget)}>Bajar</Button>
+          <ConfirmAction title="Eliminar producto" description={`Se eliminará «${product.name || 'Sin nombre'}» y su foto del catálogo.`} onConfirm={() => deleteProduct(product.id)}>
+            <Button variant="danger" className="rs-act-del" disabled={busy} aria-label={`Eliminar producto ${index + 1}`}><Trash2 size={16} aria-hidden="true" /> Eliminar</Button>
+          </ConfirmAction>
         </div>
       </div>
     </article>

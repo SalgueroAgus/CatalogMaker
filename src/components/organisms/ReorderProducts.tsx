@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { Dialog } from '@radix-ui/themes';
+import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
 import { ArrowLeft, Grip, Undo2 } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -35,7 +37,7 @@ export function ReorderProducts({ initialId, onClose }: Props) {
   const [error, setError] = useState('');
   const [announcement, setAnnouncement] = useState('');
   const [lastMove, setLastMove] = useState<LastMove | null>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const opener = useRef(document.activeElement);
   const galleryRef = useRef<HTMLDivElement>(null);
   const pagesNavRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -131,17 +133,6 @@ export function ReorderProducts({ initialId, onClose }: Props) {
   }
 
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    const opener = document.activeElement;
-    dialog.showModal();
-    return () => {
-      dialog.close();
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true });
-    };
-  }, []);
-
-  useEffect(() => {
     setPosition(selectedIndex < 0 ? '' : String(selectedIndex + 1));
   }, [selected?.id, selectedIndex]);
 
@@ -153,37 +144,34 @@ export function ReorderProducts({ initialId, onClose }: Props) {
     if (initialId) reveal(initialId);
   }, [initialId]);
 
-  return createPortal(
-    <dialog ref={dialogRef} className="reorder-view" aria-labelledby={titleId} aria-describedby={helpId} onCancel={(event) => { event.preventDefault(); onClose(); }} onKeyDown={(event) => {
-      if (event.key === 'Tab') {
-        const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), [tabindex="0"]')).filter((element) => element.getClientRects().length > 0);
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-      }
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      if (drag.cancel()) event.preventDefault();
-    }}>
+  return <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog.Content className="editor-ui reorder-view" aria-labelledby={titleId} aria-describedby={helpId} onOpenAutoFocus={() => {
+      requestAnimationFrame(() => {
+        if (selectedPage !== undefined) revealInScrollContainer(pagesNavRef.current, pageRefs.current.get(selectedPage) ?? null);
+        if (selected) reveal(selected.id);
+      });
+    }} onCloseAutoFocus={(event) => {
+      event.preventDefault();
+      if (opener.current instanceof HTMLElement && opener.current.isConnected) opener.current.focus({ preventScroll: true });
+    }} onEscapeKeyDown={(event) => { if (drag.cancel()) event.preventDefault(); }}>
       <header className="reorder-header">
         <div className="reorder-title-row">
-          <h2 id={titleId}>Reordenar artículos</h2>
-          <button className="rs-action" onClick={onClose}><ArrowLeft size={18} aria-hidden="true" /> Volver al editor</button>
+          <Dialog.Title id={titleId}>Reordenar artículos</Dialog.Title>
+          <Button className="rs-action" onClick={onClose}><ArrowLeft size={18} aria-hidden="true" /> Volver al editor</Button>
         </div>
-        <p id={helpId}>Usá el agarre o seleccioná una foto para moverla. Los cambios se guardan automáticamente.</p>
+        <Dialog.Description id={helpId}>Usá el agarre o seleccioná una foto para moverla. Los cambios se guardan automáticamente.</Dialog.Description>
         <SaveStatus />
         <div className="reorder-search">
           <label htmlFor={searchId}>Buscar artículo</label>
-          <input ref={searchRef} id={searchId} type="search" className="rs-input" value={query} placeholder="Buscar sin ocultar los demás" onChange={(event) => changeSearch(event.target.value)} />
-          {query && <button className="rs-action" onClick={() => { changeSearch(''); searchRef.current?.focus(); }}>Limpiar</button>}
+          <Input ref={searchRef} id={searchId} type="search" className="rs-input" value={query} placeholder="Buscar sin ocultar los demás" onChange={(event) => changeSearch(event.target.value)} />
+          {query && <Button className="rs-action" onClick={() => { changeSearch(''); searchRef.current?.focus(); }}>Limpiar</Button>}
           {search && <div className="reorder-search-results">
             <span role="status">{matches.length === 0 ? 'Sin coincidencias' : `${matchIndex >= 0 ? `${matchIndex + 1} de ` : ''}${matches.length} coincidencias`}</span>
-            <button className="rs-action" disabled={!matches.length} onClick={() => nextMatch(-1)}>Anterior</button>
-            <button className="rs-action" disabled={!matches.length} onClick={() => nextMatch(1)}>Siguiente</button>
+            <Button className="rs-action" disabled={!matches.length} onClick={() => nextMatch(-1)}>Anterior</Button>
+            <Button className="rs-action" disabled={!matches.length} onClick={() => nextMatch(1)}>Siguiente</Button>
           </div>}
         </div>
-        <button className="rs-action reorder-skip" onClick={() => positionRef.current?.focus()}>Ir a controles de movimiento</button>
+        <Button className="rs-action reorder-skip" onClick={() => positionRef.current?.focus()}>Ir a controles de movimiento</Button>
       </header>
       <div className="reorder-content">
         <div ref={galleryRef} className="reorder-gallery" aria-label="Artículos en orden" tabIndex={-1}>
@@ -191,12 +179,12 @@ export function ReorderProducts({ initialId, onClose }: Props) {
             {products.map((product, index) => <div key={product.id} data-reorder-id={product.id} className={`reorder-card${selected?.id === product.id ? ' reorder-selected' : ''}${search && normalizeProductSearch(product.name).includes(search) ? ' reorder-match' : ''}${drag.draggingId === product.id ? ' reorder-dragging' : ''}${drag.target?.id === product.id ? drag.target.before ? ' reorder-before' : ' reorder-after' : ''}`}>
               <div className="reorder-card-header">
                 <span>#{index + 1} · Pág. {pageById.get(product.id)}</span>
-                <button className="reorder-grip" disabled={busy} aria-label={`Arrastrar artículo ${index + 1}`} onClick={() => setSelectedId(product.id)} onPointerDown={(event) => drag.start(event, product.id)} onPointerMove={drag.move} onPointerUp={drag.end} onPointerCancel={drag.cancel} onLostPointerCapture={drag.cancel}><Grip size={22} aria-hidden="true" /></button>
+                <Button variant="ghost" className="reorder-grip" disabled={busy} aria-label={`Arrastrar artículo ${index + 1}`} onClick={() => setSelectedId(product.id)} onPointerDown={(event) => drag.start(event, product.id)} onPointerMove={drag.move} onPointerUp={drag.end} onPointerCancel={drag.cancel} onLostPointerCapture={drag.cancel}><Grip size={22} aria-hidden="true" /></Button>
               </div>
-              <button ref={(node) => { if (node) cardRefs.current.set(product.id, node); else cardRefs.current.delete(product.id); }} className="reorder-select" aria-pressed={selected?.id === product.id} aria-label={`Seleccionar artículo ${index + 1}: ${product.name}`} onClick={() => select(product.id)}>
+              <Button ref={(node) => { if (node) cardRefs.current.set(product.id, node); else cardRefs.current.delete(product.id); }} variant="ghost" className="reorder-select" aria-pressed={selected?.id === product.id} aria-label={`Seleccionar artículo ${index + 1}: ${product.name}`} onClick={() => select(product.id)}>
                 <img src={product.image} alt="" loading="lazy" draggable={false} onError={(event) => { event.currentTarget.src = PLACEHOLDER_IMG; }} />
                 <span>{product.name || 'Sin nombre'}</span>
-              </button>
+              </Button>
             </div>)}
           </div>
         </div>
@@ -210,13 +198,13 @@ export function ReorderProducts({ initialId, onClose }: Props) {
       <footer className="reorder-controls">
         <p className="reorder-selection">{selected ? `Artículo ${selectedIndex + 1} de ${products.length} · Página ${selectedPage}: ${selected.name || 'Sin nombre'}` : 'No hay artículos para reordenar.'}</p>
         <div className="reorder-actions">
-          <button ref={upRef} className="rs-action" disabled={busy || selectedIndex <= 0} onClick={() => step(-1)}>Subir</button>
-          <button ref={downRef} className="rs-action" disabled={busy || selectedIndex < 0 || selectedIndex === products.length - 1} onClick={() => step(1)}>Bajar</button>
-          <button className="rs-action" disabled={busy || !canUndo} aria-label="Deshacer último movimiento" onClick={() => {
+          <Button ref={upRef} className="rs-action" disabled={busy || selectedIndex <= 0} onClick={() => step(-1)}>Subir</Button>
+          <Button ref={downRef} className="rs-action" disabled={busy || selectedIndex < 0 || selectedIndex === products.length - 1} onClick={() => step(1)}>Bajar</Button>
+          <Button className="rs-action" disabled={busy || !canUndo} aria-label="Deshacer último movimiento" onClick={() => {
             if (!lastMove) return;
             moveTo(lastMove.id, lastMove.from, false);
             positionRef.current?.focus({ preventScroll: true });
-          }}><Undo2 size={18} aria-hidden="true" /> Deshacer</button>
+          }}><Undo2 size={18} aria-hidden="true" /> Deshacer</Button>
           <form className="reorder-position" onSubmit={(event) => {
             event.preventDefault();
             const to = Number(position);
@@ -224,14 +212,14 @@ export function ReorderProducts({ initialId, onClose }: Props) {
             if (selected) moveTo(selected.id, to - 1);
           }} noValidate>
             <label htmlFor={positionId}>Mover a posición</label>
-            <input ref={positionRef} id={positionId} className="rs-input" type="number" inputMode="numeric" min={1} max={products.length} value={position} disabled={busy || !selected} aria-invalid={!!error} aria-describedby={error ? errorId : undefined} onChange={(event) => { setPosition(event.target.value); setError(''); }} />
-            <button className="rs-action" disabled={busy || !selected}>Mover</button>
+            <Input ref={positionRef} id={positionId} className="rs-input" type="number" inputMode="numeric" min={1} max={products.length} value={position} disabled={busy || !selected} aria-invalid={!!error} aria-describedby={error ? errorId : undefined} onChange={(event) => { setPosition(event.target.value); setError(''); }} />
+            <Button type="submit" className="rs-action" disabled={busy || !selected}>Mover</Button>
           </form>
         </div>
         {error && <p id={errorId} className="field-error" role="alert">{error}</p>}
         <p className="reorder-announcement" role="status">{announcement}</p>
       </footer>
       {dragging && <div ref={drag.ghostRef} className="reorder-drag-ghost" aria-hidden="true"><img src={dragging.image} alt="" />Moviendo</div>}
-    </dialog>, document.body,
-  );
+    </Dialog.Content>
+  </Dialog.Root>;
 }

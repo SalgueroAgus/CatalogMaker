@@ -1,11 +1,10 @@
 import { test, expect } from './fixtures';
-import { openApp } from './helpers';
+import { openApp, showSection } from './helpers';
 
 test('editor text, input borders, selection and primary targets meet scoped contrast and size', async ({ page }, testInfo) => {
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(1));
-  await page.getByRole('button', { name: 'Marca', exact: true }).click();
-  await page.getByRole('button', { name: 'Administración del catálogo' }).click();
+  await showSection(page, 'Diseño');
   const measured = await page.evaluate(() => {
     type RGB = [number, number, number];
     const parse = (color: string) => color.match(/[\d.]+/g)!.map(Number);
@@ -20,13 +19,14 @@ test('editor text, input borders, selection and primary targets meet scoped cont
     };
     const luminance = (rgb: RGB) => rgb.map((value) => value / 255).map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
     const ratio = (a: RGB, b: RGB) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
-    return Array.from(document.querySelectorAll<HTMLElement>('.sidebar-left input:not([type="file"]), .sidebar-right input:not([type="file"]), .rs-field-label, .sb-btn, .rs-action, .rs-index, .rs-act-del, .rs-tab-btn')).filter((element) => element.getClientRects().length && !(element as HTMLButtonElement).disabled).map((element) => {
+    return Array.from(document.querySelectorAll<HTMLElement>('.editor-ui .rt-TextFieldRoot, .editor-ui .rt-TextAreaRoot, .editor-ui .ui-button, .editor-ui .rs-field-label, .editor-ui .sb-label, .editor-ui .rt-TabsTrigger')).filter((element) => element.getClientRects().length && !(element as HTMLButtonElement).disabled).map((element) => {
       const style = getComputedStyle(element);
       const bg = background(element);
       const text = composite(parse(style.color), bg);
-      const border = composite(parse(style.borderTopColor), bg);
+      const shadowColor = style.boxShadow.match(/rgba?\([^)]+\)/)?.[0] ?? style.borderTopColor;
+      const border = composite(parse(shadowColor), bg);
       const rect = element.getBoundingClientRect();
-      return { name: element.textContent?.trim() || element.getAttribute('aria-label') || element.id, text: ratio(text, bg), border: ratio(border, bg), width: rect.width, height: rect.height, input: element.tagName === 'INPUT', button: element.tagName === 'BUTTON', gradient: style.backgroundImage };
+      return { name: element.textContent?.trim() || element.getAttribute('aria-label') || element.id, text: ratio(text, bg), border: ratio(border, bg), width: rect.width, height: rect.height, input: element.classList.contains('rt-TextFieldRoot') || element.classList.contains('rt-TextAreaRoot'), button: element.tagName === 'BUTTON', gradient: style.backgroundImage };
     });
   });
   await testInfo.attach('contrast-and-targets', { body: JSON.stringify(measured, null, 2), contentType: 'application/json' });

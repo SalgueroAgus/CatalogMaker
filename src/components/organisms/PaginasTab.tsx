@@ -1,3 +1,6 @@
+import { Button } from '../atoms/Button';
+import { Select } from '../atoms/Select';
+import { usePersistenceStore } from '../../store/usePersistenceStore';
 import { FileText } from 'lucide-react';
 import { useRef } from 'react';
 import { useProductStore } from '../../store/useProductStore';
@@ -9,6 +12,7 @@ import { getIndexPageCount, paginateProducts, resolveGridShape } from '../../uti
 const COUNTS = [1, 2, 3, 4, 5];
 
 export function PaginasTab() {
+  const busy = usePersistenceStore((s) => s.managing || s.exporting);
   const listRef = useRef<HTMLDivElement>(null);
   const products = useProductStore((s) => s.products);
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
@@ -27,7 +31,7 @@ export function PaginasTab() {
         <span className="paginas-global-label">Fotos por página: cantidad general</span>
         <div className="paginas-count-pills">
           {COUNTS.map((n) => (
-            <button
+            <Button
               key={n}
               className={`paginas-pill ${itemsPerPage === n ? 'active' : ''}`}
               aria-pressed={itemsPerPage === n}
@@ -35,7 +39,7 @@ export function PaginasTab() {
               onClick={() => setItemsPerPage(n)}
             >
               {n}
-            </button>
+            </Button>
           ))}
         </div>
         <p className="paginas-count-help">Se usa en las páginas que no tengan una cantidad propia.</p>
@@ -64,10 +68,7 @@ export function PaginasTab() {
                 </div>
                 <label className="paginas-page-count">
                   <span>Fotos en página {pageNum}</span>
-                  <select className="sb-select" value={pageItemCounts[i] ?? ''} onChange={(event) => setPageItemCount(i, event.target.value === '' ? null : Number(event.target.value))}>
-                    <option value="">General ({itemsPerPage})</option>
-                    {COUNTS.map((count) => <option key={count} value={count}>{count}</option>)}
-                  </select>
+                  <Select label={`Fotos en página ${pageNum}`} disabled={busy} value={String(pageItemCounts[i] ?? 'general')} onValueChange={(value) => setPageItemCount(i, value === 'general' ? null : Number(value))} options={[{ value: 'general', label: `General (${itemsPerPage})` }, ...COUNTS.map((count) => ({ value: String(count), label: String(count) }))]} />
                 </label>
                 <GridShapePicker
                   count={actualCount}

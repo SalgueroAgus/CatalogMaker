@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { openApp, readyAfterReload, saved } from './helpers';
+import { openApp, readyAfterReload, saved, showSection, chooseOption } from './helpers';
 
 test('description height follows typography and layout changes without editing its text', async ({ page }) => {
   await openApp(page);
@@ -42,7 +42,8 @@ test('background file selection preserves distinct product photos through replac
     const data = await h.dbLoadCatalog();
     return { products: data.products, images: await Promise.all([...data.images].map(async ([id, blob]) => [id, Array.from(new Uint8Array(await blob.arrayBuffer()))])) };
   });
-  await page.getByRole('button', { name: 'Página', exact: true }).first().click();
+  await showSection(page, 'Diseño');
+  await page.getByRole('button', { name: 'Fondo y colores', exact: true }).click();
   await page.getByRole('tab', { name: 'Imagen', exact: true }).click();
   for (const color of ['#2060b0', '#17a13a']) {
     const background = await page.evaluate(async (color) => Array.from(new Uint8Array(await (await window.catalogTest.photo('background.png', color)).arrayBuffer())), color);
@@ -88,18 +89,17 @@ for (const width of [390, 1000, 1440]) {
     await expect(workspace).toBeFocused();
     await expect(previewTop).toBeHidden();
     await page.screenshot({ path: testInfo.outputPath('preview-at-top.png') });
-    if (width < 768) await page.getByRole('button', { name: 'Productos', exact: true }).click();
-    else if (width < 1200) await page.locator('.sidebar-right-toggle').click();
-    const panel = page.getByRole('tabpanel', { name: /Artículos/ });
+    await showSection(page, 'Artículos');
+    const panel = page.locator('.articles-content');
     await panel.evaluate((element) => element.scrollTo(0, element.scrollHeight));
-    const productsTop = page.getByRole('button', { name: 'Volver arriba en Productos', exact: true });
+    const productsTop = page.getByRole('button', { name: 'Volver arriba en Artículos', exact: true });
     await expect(productsTop).toBeInViewport();
     await page.screenshot({ path: testInfo.outputPath('products-back-to-top.png') });
     await productsTop.click();
     await expect.poll(() => panel.evaluate((element) => element.scrollTop)).toBe(0);
     await expect(panel).toBeFocused();
     await expect(productsTop).toBeHidden();
-    await page.getByRole('tab', { name: 'Páginas', exact: true }).click();
+    await showSection(page, 'Páginas');
     await page.getByRole('button', { name: '1 fotos por página', exact: true }).click();
     const pages = page.getByRole('region', { name: 'Configuración de páginas', exact: true });
     await pages.evaluate((element) => element.scrollTo(0, element.scrollHeight));
@@ -116,16 +116,16 @@ test('per-page quantities reflow following products in order and survive reload'
   await page.evaluate(() => window.catalogTest.fixture(12));
   const ids = await page.evaluate(() => window.catalogTest.products.getState().products.map((product) => product.id));
   const occupancies = () => page.locator('.product-grid').evaluateAll((grids) => grids.map((grid) => grid.children.length));
-  await page.getByRole('tab', { name: 'Páginas', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Fotos en página 2', exact: true }).selectOption('1');
+  await showSection(page, 'Páginas');
+  await chooseOption(page, 'Fotos en página 2', '1');
   await expect.poll(occupancies).toEqual([1, 3, 3, 3, 2]);
-  await page.getByRole('combobox', { name: 'Fotos en página 3', exact: true }).selectOption('5');
+  await chooseOption(page, 'Fotos en página 3', '5');
   await expect.poll(occupancies).toEqual([1, 5, 3, 3]);
   expect(await page.locator('.idx-page').allTextContents()).toEqual(['02', '03', '03', '03', '03', '03', '04', '04', '04', '05', '05', '05']);
   await expect(page.locator('.paginas-page-label')).toHaveText(['Página 2', 'Página 3', 'Página 4', 'Página 5']);
-  await page.getByRole('combobox', { name: 'Fotos en página 2', exact: true }).selectOption('4');
+  await chooseOption(page, 'Fotos en página 2', '4');
   await expect.poll(occupancies).toEqual([4, 5, 3]);
-  await page.getByRole('combobox', { name: 'Fotos en página 2', exact: true }).selectOption('');
+  await chooseOption(page, 'Fotos en página 2', 'General (3)');
   await expect.poll(occupancies).toEqual([3, 5, 3, 1]);
   await page.getByRole('button', { name: '2 fotos por página', exact: true }).click();
   await expect.poll(occupancies).toEqual([2, 5, 2, 2, 1]);

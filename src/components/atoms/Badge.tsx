@@ -1,8 +1,5 @@
-interface Props {
-  children: React.ReactNode;
-  variant?: 'green';
-}
+import { Badge as RadixBadge } from '@radix-ui/themes';
 
-export function Badge({ children, variant = 'green' }: Props) {
-  return <span className={`badge badge-${variant}`}>{children}</span>;
+export function Badge({ children }: { children: React.ReactNode }) {
+  return <RadixBadge size="2" radius="full">{children}</RadixBadge>;
 }

@@ -1,4 +1,5 @@
 import { Button } from '../atoms/Button';
+import { ConfirmAction } from './ConfirmAction';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { usePersistenceStore } from '../../store/usePersistenceStore';
 import { manageCatalog } from '../../store/catalogSession';
@@ -11,15 +12,13 @@ const ACTIONS = [
 
 export function CatalogManagement() {
   const name = useSettingsStore((s) => s.storeName) || 'Catálogo actual';
-  const managing = usePersistenceStore((s) => s.managing);
-  return (
-    <div className="sb-accordion-body sb-stack-sm">
-      <p>Administrar «{name}»</p>
-      {ACTIONS.map(({ action, label, effect }) => (
-        <Button key={action} variant="danger" disabled={managing} onClick={async () => {
-          if (confirm(`${label} — «${name}»\n\n${effect}\n\n¿Continuar?`)) await manageCatalog(action);
-        }}>{label}</Button>
-      ))}
-    </div>
-  );
+  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  return <div className="management-actions">
+    {ACTIONS.map(({ action, label, effect }) => <div key={action}>
+      <p>{effect}</p>
+      <ConfirmAction title={`${label} — «${name}»`} description={effect} onConfirm={() => manageCatalog(action)}>
+        <Button variant="danger" disabled={busy}>{label}</Button>
+      </ConfirmAction>
+    </div>)}
+  </div>;
 }

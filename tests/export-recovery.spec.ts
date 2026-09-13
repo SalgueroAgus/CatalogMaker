@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { openApp, saved } from './helpers';
+import { openApp, saved, showSection, downloadPDF } from './helpers';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -101,11 +101,10 @@ test('actual mobile hook output follows reordered and shrinking page refs from b
     for (const id of ids.slice(3)) await h.products.getState().deleteProduct(id);
   });
   await expect(page.locator('.workspace .page-a4')).toHaveCount(4);
-  for (const tab of ['Productos', 'Ajustes']) {
-    await page.getByRole('button', { name: tab, exact: true }).click();
+  for (const tab of ['Artículos', 'Páginas', 'Diseño'] as const) {
+    await showSection(page, tab);
     const download = page.waitForEvent('download');
-    if (tab === 'Ajustes') await page.getByRole('button', { name: 'Descargar PDF', exact: true }).click();
-    else await page.locator('.sb-btn-export').evaluate((button) => (button as HTMLButtonElement).click());
+    await downloadPDF(page);
     const path = `${root}/${testInfo.project.name}-mobile-hook-${tab}.pdf`;
     await (await download).saveAs(path);
     const pdf = await inspectPDF(path);
@@ -116,5 +115,6 @@ test('actual mobile hook output follows reordered and shrinking page refs from b
   }
   await page.evaluate(() => window.catalogTest.manageCatalog('products'));
   await expect(page.locator('.workspace .page-a4')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Descargar PDF', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Exportar catálogo', exact: true }).click();
+  await expect(page.getByRole('menuitem', { name: 'Descargar PDF', exact: true })).toHaveAttribute('data-disabled', '');
 });
