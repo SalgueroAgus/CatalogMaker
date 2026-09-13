@@ -20,7 +20,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
   const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
 
   async function buildHtml(onProgress: (msg: string) => void): Promise<string> {
-    const ctx = await prepareExportContext(products, bgImage, bgImageOpacity, colors.bg || '#fafafa');
+    const ctx = await prepareExportContext(products, bgImage, bgImageOpacity, colors.bg || '#fafafa', useSettingsStore.getState());
     const pages = pagesRef.current.filter((p): p is HTMLDivElement => p !== null);
     const pageLinks = extractPageLinks(pages);
     const dataUrls = await capturePages(pages, ctx, (cur, tot) =>

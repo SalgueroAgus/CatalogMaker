@@ -1,3 +1,4 @@
+import { FooterTag } from '../molecules/FooterTag';
 import { forwardRef } from 'react';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { getProductPage } from '../../utils/chunks';
@@ -13,16 +14,16 @@ interface Props {
 
 export const IndexPage = forwardRef<HTMLDivElement, Props>(
   ({ products, globalStartIndex, pageNum, totalIndexPages }, ref) => {
-    const bgImage = useSettingsStore((s) => s.bgImage);
-    const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
+    const mode = useSettingsStore((s) => s.indexBackgroundMode);
+    const bgImage = useSettingsStore((s) => s.indexBackgroundMode === 'global' ? s.bgImage : s.indexBackgroundMode === 'image' ? s.indexBgImage : null);
+    const bgImageOpacity = useSettingsStore((s) => s.indexBackgroundMode === 'global' ? s.bgImageOpacity : s.indexBgImageOpacity);
     const storeName = useSettingsStore((s) => s.storeName);
     const footerContact = useSettingsStore((s) => s.footerContact);
-    const footerTag = useSettingsStore((s) => s.footerTag);
     const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
     const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
 
     return (
-      <div className="page-a4" ref={ref} id={`index-page-${pageNum}`}>
+      <div className="page-a4" data-page-kind="index" style={mode === 'global' ? undefined : { background: 'var(--index-bg)' }} ref={ref} id={`index-page-${pageNum}`}>
         {bgImage && <div className="page-bg-image" style={{ backgroundImage: `url(${bgImage})`, opacity: bgImageOpacity }} />}
         <div className="page-hdr">
           <span className="store-name">{storeName}</span>
@@ -61,7 +62,7 @@ export const IndexPage = forwardRef<HTMLDivElement, Props>(
 
         <div className="page-ftr">
           <span className="footer-contact">{footerContact}</span>
-          {footerTag.trim() && <span className="footer-tag">{footerTag}</span>}
+          <FooterTag />
         </div>
       </div>
     );

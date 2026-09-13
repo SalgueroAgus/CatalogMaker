@@ -1,3 +1,4 @@
+import { normalizePrice, normalizeLegacyPrice } from '../utils/price';
 import { create } from 'zustand';
 import type { Product } from '../types';
 import { isImagePosition, PLACEHOLDER_IMG } from '../utils/image';
@@ -27,7 +28,7 @@ function blankProduct(): Product {
   return {
     id: crypto.randomUUID(),
     name: 'NUEVO ARTÍCULO',
-    price: '$0.00',
+    price: '$ 0',
     description: 'Descripción del producto.',
     image: PLACEHOLDER_IMG,
     bgColor: 'rgba(255,255,255,1)',
@@ -37,7 +38,7 @@ function blankProduct(): Product {
 
 export const useProductStore = create<ProductState>((set, get) => ({
   products: [],
-  hydrateProducts: (products) => set({ products }),
+  hydrateProducts: (products) => set({ products: products.map((p) => ({ ...p, price: normalizeLegacyPrice(p.price) })) }),
 
   addProducts: (files) => {
     const images = files.filter((file) => file.type.startsWith('image/'));
@@ -82,6 +83,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   updateField: (id, field, value) => {
     const error = validateProductField(field, value);
     if (error) return Promise.resolve({ status: 'invalid', error });
+    if (field === 'price') value = normalizePrice(value) ?? value;
     const product = get().products.find((p) => p.id === id);
     if (!product || product[field] === value) return ignored();
     return mutateCatalog(() => set({ products: get().products.map((p) => p.id === id ? { ...p, [field]: value } : p) }));
@@ -112,7 +114,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
     return mutateCatalog(() => {
       const added = rows.map((row) => {
         const file = fileMap.get(row.name.trim().toLowerCase());
-        return { ...blankProduct(), ...row, image: file ? createImageResource(file) : PLACEHOLDER_IMG };
+        return { ...blankProduct(), ...row, price: normalizePrice(row.price) ?? row.price, image: file ? createImageResource(file) : PLACEHOLDER_IMG };
       });
       set({ products: [...get().products, ...added] });
     });

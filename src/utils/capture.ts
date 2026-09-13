@@ -6,8 +6,16 @@ export const A4_PX = { w: 793.7, h: 1122.5 } as const;
 export const A4_MM = { w: 210, h: 297 } as const;
 export const CAPTURE = { scale: 2, jpegQuality: 0.92 } as const;
 
+export interface IndexExportBackground {
+  indexBackgroundMode: 'global' | 'image' | 'color';
+  indexBgImage: string | null;
+  indexBgColor: string;
+  indexBgImageOpacity: number;
+}
+
 export interface ExportContext {
   imageMap: Map<string, string>;
+  indexBackground?: { backgroundImage: string | null; bgColor: string; bgImageOpacity: number };
   bgImageOpacity: number;
   backgroundImage: string | null;
   bgColor: string;
@@ -22,7 +30,7 @@ function freezeAnimations(clone: HTMLDivElement): void {
 }
 
 function removeHoverOverlays(clone: HTMLDivElement): void {
-  clone.querySelectorAll('.cell-img-overlay, .cell-img-hint, input[type="file"]').forEach((el) => el.remove());
+  clone.querySelectorAll('.cell-img-overlay, .cell-img-hint, .price-error, input[type="file"]').forEach((el) => el.remove());
 }
 
 function restoreBgImageOpacity(clone: HTMLDivElement, ctx: ExportContext): void {
@@ -37,7 +45,7 @@ function replaceFormElements(clone: HTMLDivElement): void {
     const input = el as HTMLInputElement;
     const div = document.createElement('div');
     div.className = input.className;
-    div.textContent = input.value;
+    div.textContent = input.dataset.exportPrice ?? input.value;
     div.style.cssText = 'border:none;outline:none;background:transparent;white-space:nowrap;overflow:hidden;';
     input.parentNode!.replaceChild(div, input);
   });
@@ -68,19 +76,25 @@ export const PAGE_TRANSFORMS: PageTransform[] = [
   patchProductImages,
 ];
 
-export async function prepareExportContext(products: Product[], background: string | null, bgImageOpacity: number, bgColor: string): Promise<ExportContext> {
+export async function prepareExportContext(products: Product[], background: string | null, bgImageOpacity: number, bgColor: string, index?: IndexExportBackground): Promise<ExportContext> {
   const imageMap = new Map<string, string>();
   await document.fonts.ready;
   await Promise.all(products.map(async (product) => {
     imageMap.set(product.id, product.image.startsWith('data:') ? product.image : await blobUrlToBase64(product.image));
   }));
   const backgroundImage = background ? await blobUrlToBase64(background) : null;
-  return { imageMap, backgroundImage, bgImageOpacity, bgColor };
+  const indexBackground = index && index.indexBackgroundMode !== 'global' ? {
+    backgroundImage: index.indexBackgroundMode === 'image' && index.indexBgImage ? await blobUrlToBase64(index.indexBgImage) : null,
+    bgColor: index.indexBgColor,
+    bgImageOpacity: index.indexBgImageOpacity,
+  } : undefined;
+  return { imageMap, backgroundImage, bgImageOpacity, bgColor, indexBackground };
 }
 
 export async function capturePage(page: HTMLDivElement, ctx: ExportContext, transforms: PageTransform[] = PAGE_TRANSFORMS): Promise<HTMLCanvasElement> {
   let wrap: HTMLDivElement | null = null;
   try {
+    if (page.dataset.pageKind === 'index' && ctx.indexBackground) ctx = { ...ctx, ...ctx.indexBackground };
     const clone = page.cloneNode(true) as HTMLDivElement;
     const originals = page.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea');
     clone.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((input, index) => {
@@ -93,6 +107,7 @@ export async function capturePage(page: HTMLDivElement, ctx: ExportContext, tran
       'zoom:1', 'transform:none',
       'animation:none', 'transition:none', 'opacity:1',
     ].join(';');
+    clone.style.background = ctx.bgColor;
     for (const transform of transforms) transform(clone, ctx);
     wrap = document.createElement('div');
     wrap.className = 'catalog-capture';

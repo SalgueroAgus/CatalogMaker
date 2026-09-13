@@ -1,3 +1,4 @@
+import { usePriceField } from '../../hooks/usePriceField';
 import { useRef } from 'react';
 import { MoveVertical, RefreshCw, Undo2 } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
@@ -16,6 +17,7 @@ export function ProductCard({ product }: Props) {
   const updateField = useProductStore((s) => s.updateField);
   const replaceImage = useProductStore((s) => s.replaceImage);
   const photoInput = useRef<HTMLInputElement>(null);
+  const { error: priceError, ...priceField } = usePriceField(product.price, (value) => updateField(product.id, 'price', value));
   const descriptionError = validateProductField('description', product.description);
   const fontFamily = useSettingsStore((s) => s.fonts.body);
   const fontSize = useSettingsStore((s) => s.fontSizes.body);
@@ -92,12 +94,14 @@ export function ProductCard({ product }: Props) {
           <input
             type="text"
             className="cell-price"
+            data-export-price={product.price}
+            size={Math.max(5, priceField.value.length)}
             aria-label={`Precio de ${product.name}`}
-            value={product.price}
-            onChange={(e) => updateField(product.id, 'price', e.target.value)}
+            {...priceField}
             placeholder="$0"
           />
         </div>
+        {priceError && <span className="price-error" data-html2canvas-ignore="true" role="alert">{priceError}</span>}
         <textarea
           ref={descRef}
           className="cell-desc"

@@ -31,6 +31,8 @@ function activeUrls(): Set<string> {
   const urls = new Set(useProductStore.getState().products.map((p) => p.image));
   const bg = useSettingsStore.getState().bgImage;
   if (bg) urls.add(bg);
+  const indexBg = useSettingsStore.getState().indexBgImage;
+  if (indexBg) urls.add(indexBg);
   return urls;
 }
 
@@ -50,7 +52,7 @@ function collectResources() {
 
 function captureState(): SessionSnapshot {
   const products = useProductStore.getState().products;
-  const { storeName, footerContact, footerTag, colors, fonts, fontSizes, bgImage, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts } = useSettingsStore.getState();
+  const { storeName, footerContact, footerTag, footerTagUrl, indexBackgroundMode, indexBgColor, indexBgImageOpacity, colors, fonts, fontSizes, bgImage, indexBgImage, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts } = useSettingsStore.getState();
   const images = new Map<string, Blob>();
   for (const product of products) {
     const blob = resources.get(product.image);
@@ -60,8 +62,9 @@ function captureState(): SessionSnapshot {
     urls: activeUrls(),
     data: {
       products: products.map(({ image: _image, ...meta }) => meta),
-      settings: { storeName, footerContact, footerTag, colors, fonts, fontSizes, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts },
+      settings: { storeName, footerContact, footerTag, footerTagUrl, indexBackgroundMode, indexBgColor, indexBgImageOpacity, colors, fonts, fontSizes, bgImageOpacity, itemsPerPage, pageLayouts, pageItemCounts },
       images,
+      indexBackground: indexBgImage ? resources.get(indexBgImage) ?? null : null,
       background: bgImage ? resources.get(bgImage) ?? null : null,
     },
   };
@@ -87,7 +90,7 @@ export function hydrateCatalog(): Promise<void> {
       };
       const products = data.products.map((p) => ({ ...p, image: data.images.has(p.id) ? adopt(data.images.get(p.id)!) : PLACEHOLDER_IMG }));
       const background = data.background ? adopt(data.background) : null;
-      useSettingsStore.getState().hydrateSettings(data.settings ?? DEFAULT_STATE, background);
+      useSettingsStore.getState().hydrateSettings(data.settings ?? DEFAULT_STATE, background, data.indexBackground ? adopt(data.indexBackground) : null);
       useProductStore.getState().hydrateProducts(products);
       durable = { data, urls: new Set(allocated) };
       usePersistenceStore.setState({ loading: 'ready', saving: 'saved', error: null });

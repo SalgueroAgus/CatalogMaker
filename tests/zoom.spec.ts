@@ -83,7 +83,7 @@ test(`200% actual desktop browser zoom through Chromium native settings in ${the
     await writeFile(testInfo.outputPath('zoom-200-pdf.json'), inspected.stdout);
     const pdf: { count: number; pages: { footerText: string[] }[] } = JSON.parse(inspected.stdout);
     expect(pdf.count).toBe(2);
-    expect(pdf.pages[1].footerText.join(' ')).toContain('$123456');
+    expect(pdf.pages[1].footerText.join(' ')).toContain('$ 123.456');
     await showSection(page, 'Artículos');
     await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('VALOR LEGIBLE CON ZOOM');
     await expect(page.getByRole('button', { name: 'Artículos', exact: true })).toHaveAttribute('aria-current', 'page');
@@ -94,7 +94,7 @@ test(`200% actual desktop browser zoom through Chromium native settings in ${the
     await cdp.detach();
     await saved(page);
     await readyAfterReload(page);
-    expect(await page.evaluate(() => window.catalogTest.products.getState().products[0].price)).toBe('$123456');
+    expect(await page.evaluate(() => window.catalogTest.products.getState().products[0].price)).toBe('$ 123.456');
   } finally {
     await context.close();
     await rm(profile, { recursive: true, force: true });

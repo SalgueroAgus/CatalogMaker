@@ -25,6 +25,10 @@ export type PersistedSettings = {
   storeName: string;
   footerContact: string;
   footerTag?: string;
+  footerTagUrl?: string;
+  indexBackgroundMode?: 'global' | 'image' | 'color';
+  indexBgColor?: string;
+  indexBgImageOpacity?: number;
   colors: Colors;
   fonts: Fonts;
   fontSizes: FontSizes;
@@ -39,6 +43,7 @@ export interface StoredCatalog {
   settings: PersistedSettings | null;
   images: Map<string, Blob>;
   background: Blob | null;
+  indexBackground?: Blob | null;
 }
 
 function transaction<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore, result: (value: T) => void) => void): Promise<T> {
@@ -116,6 +121,10 @@ function readProducts(value: unknown): ProductMeta[] {
 function readSettings(value: unknown): PersistedSettings | null {
   if (value === undefined) return null;
   if (!isRecord(value) || typeof value.storeName !== 'string' || typeof value.footerContact !== 'string'
+    || (value.footerTagUrl !== undefined && typeof value.footerTagUrl !== 'string')
+    || (value.indexBackgroundMode !== undefined && (typeof value.indexBackgroundMode !== 'string' || !['global', 'image', 'color'].includes(value.indexBackgroundMode)))
+    || (value.indexBgColor !== undefined && typeof value.indexBgColor !== 'string')
+    || (value.indexBgImageOpacity !== undefined && (typeof value.indexBgImageOpacity !== 'number' || !Number.isFinite(value.indexBgImageOpacity) || value.indexBgImageOpacity < 0 || value.indexBgImageOpacity > 1))
     || (value.footerTag !== undefined && typeof value.footerTag !== 'string')
     || !isRecord(value.colors) || !isRecord(value.fonts) || !isRecord(value.fontSizes) || !isRecord(value.pageLayouts)
     || !isPageItemCount(value.itemsPerPage)
@@ -152,6 +161,8 @@ export async function dbLoadCatalog(): Promise<StoredCatalog> {
       images.set(key.slice(7), value);
     }
   }
+  const indexBackground = records.get('cm:index-bg');
+  if (indexBackground !== undefined && !(indexBackground instanceof Blob)) throw new Error('El fondo del índice no se puede leer.');
   const background = records.get('cm:bg');
   if (background !== undefined && !(background instanceof Blob)) throw new Error('El fondo guardado no se puede leer. No se modificaron los datos.');
   return {
@@ -159,6 +170,7 @@ export async function dbLoadCatalog(): Promise<StoredCatalog> {
     settings: readSettings(records.get('cm:settings')),
     images,
     background: background ?? null,
+    indexBackground: indexBackground ?? null,
   };
 }
 
@@ -175,6 +187,10 @@ export function dbSaveCatalog(next: StoredCatalog, durable: StoredCatalog): Prom
     if (next.background !== durable.background) {
       if (next.background) store.put(next.background, 'cm:bg');
       else store.delete('cm:bg');
+    }
+    if (next.indexBackground !== durable.indexBackground) {
+      if (next.indexBackground) store.put(next.indexBackground, 'cm:index-bg');
+      else store.delete('cm:index-bg');
     }
     result(undefined);
   });

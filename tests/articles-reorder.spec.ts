@@ -56,7 +56,7 @@ for (const width of [320, 390, 768, 1000, 1440]) {
     await expect(page.getByLabel('Descripción', { exact: true })).toHaveValue('ÚLTIMO EDITADO');
     await saved(page);
     await readyAfterReload(page);
-    expect(await page.evaluate(() => window.catalogTest.products.getState().products.slice(0, 5).map((product) => product.price))).toEqual(['$1000', '$1001', '$1002', '$1003', '$1004']);
+    expect(await page.evaluate(() => window.catalogTest.products.getState().products.slice(0, 5).map((product) => product.price))).toEqual(['$ 1.000', '$ 1.001', '$ 1.002', '$ 1.003', '$ 1.004']);
   });
 }
 
@@ -83,7 +83,7 @@ test('search keeps a renamed article editable, then releases it and preserves th
   await page.getByRole('button', { name: 'Mostrar todos', exact: true }).click();
   await expect(page.locator('.rs-card')).toHaveCount(50);
   expect(await page.evaluate(() => window.catalogTest.products.getState().products.map((product) => product.id))).toEqual(ids);
-  await expect(page.locator('.rs-card').first().getByLabel('Precio', { exact: true })).toHaveValue('$999');
+  await expect(page.locator('.rs-card').first().getByLabel('Precio', { exact: true })).toHaveValue('$ 999');
 });
 
 test('long moves, undo, invalid destinations and failed saves retain article identity', async ({ page }) => {

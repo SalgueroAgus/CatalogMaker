@@ -55,6 +55,7 @@ by the earlier idb-keyval implementation:
 | `cm:products` | Ordered metadata: id, name, price, description, bgColor, optional imagePositionY (0–100). |
 | `cm:img:<id>` | Product image Blob. |
 | `cm:bg` | Background image Blob. |
+| `cm:index-bg` | Optional independent index background Blob. |
 | `cm:settings` | Branding, colors, fonts, sizes, opacity, item count and layouts. |
 
 Hydration reads one transaction, validates records, then creates URLs. Valid legacy IDs and
@@ -109,11 +110,10 @@ compatible partial-page default. Zero products means zero index/product pages; a
 uses ceil(productCount / 30) index pages.
 
 Theme mappings live in the settings store; global styles and `grid-1.css` through `grid-5.css`
-define the A4 layouts. Index and product pages share the configured background image and opacity behind their content.
+define the A4 layouts. Index pages default to the global background, with optional image/color overrides shared across all index pages. The index image has its own opacity and blob ownership; switching modes retains it, while removal selects color-only mode.
 Background Color/Image tabs only change the shown controls; removal is explicit. Product
 cells have a transparent base, allowing the page background to show through the photo area's
-color or gradient according to its opacity. The text area retains its separate page-color
-background, and new products start with an opaque white photo-area background. Description textareas resize on content, typography,
+color or gradient according to its opacity. The text area uses the independent `productInfoBg` color (initialized from the page color for legacy catalogs), and new products start with an opaque white photo-area background. Description textareas resize on content, typography,
 available-width and font-loading changes through `useTextareaAutoHeight`.
 `usePageScale` measures the actual workspace with ResizeObserver and sets `--page-scale`
 up to 1 at every viewport size. Pages retain their A4 dimensions; capture resets zoom to 1.
@@ -121,8 +121,10 @@ A 360px tool panel (320px on tablets) sits beside the preview and can be collaps
 768px, bottom navigation selects one full-width view: Preview, Articles, Pages or Design.
 React state and shell data attributes control visibility; navigation no longer changes body
 classes. Export actions remain available through the header menu on smaller screens. Workspace visibility highlights sidebar items; “Ver catálogo” navigates
-to products. This is not bidirectional synchronized scrolling. Back-to-top buttons scroll and
+to products. On desktop with Articles and preview visible, scrolling either panel reveals the matching article in the other without moving focus. Synchronization respects search filters and pauses during export, management and reordering; mobile and the other tabs retain independent scroll. Back-to-top buttons scroll and
 focus the active preview, product list or page-settings list; they remain outside captured A4 pages.
+
+Prices use integer Argentine pesos (`$ 1.234`) in both editors and Excel imports. Editing validates locally and commits on blur or Enter; invalid drafts never enter exports. Hydration rounds unambiguous legacy decimal prices, preserves nonnumeric or ambiguous text and does not write until a subsequent save.
 
 The product editor keeps 96px photos beside labeled name/price fields, with secondary actions
 under Details. Name search ignores accents/case and retains a renamed active article until the
@@ -152,7 +154,7 @@ See [article verification](articles-verification.md) for automated checks and de
 
 [usePDF.ts](../src/hooks/usePDF.ts) orchestrates image conversion, progress, errors, and file
 download or mobile file sharing. [pdf.ts](../src/utils/pdf.ts) builds jsPDF output and link
-annotations; it re-exports capture constants and types for existing callers.
+annotations. Footer labels accept an optional HTTP/HTTPS URL. Preview and exported HTML open external links in a new tab; PDF navigation is controlled by the viewer. The module re-exports capture constants and types for existing callers.
 
 [capture.ts](../src/utils/capture.ts) shares preparation, clone transforms, image/font readiness
 and canvas capture between PDF and HTML. It copies current field values into clones, removes
@@ -193,3 +195,6 @@ for page dimensions, links, raster text and background checks. See
 [priority1-verification.md](priority1-verification.md) for current evidence and limitations and
 [priority1-device-checks.md](priority1-device-checks.md) for required actual-device/parent tasks.
 Build and emulation results do not establish real mobile keyboard/share behavior or family usability.
+
+For an occupied development port, set `CATALOG_TEST_PORT` when running tests.
+`CATALOG_TEST_CHROME=1` uses an already installed Google Chrome for the Chromium project.

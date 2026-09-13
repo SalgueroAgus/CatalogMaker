@@ -12,6 +12,7 @@ export interface Product {
 
 export interface Colors {
   bg: string;
+  productInfoBg: string;
   // Página
   company: string;
   pageNum: string;

@@ -7,7 +7,7 @@ test('fixed clock mixed intake creates unique identities and invalid mutations d
     const h = window.catalogTest;
     Date.now = () => 123456789;
     const photo = await h.photo();
-    const operations = Array.from({ length: 12 }, (_, i) => i % 3 === 0 ? h.products.getState().addBlankProduct() : i % 3 === 1 ? h.products.getState().addProducts([photo]) : h.products.getState().importProducts([{ name: 'IMPORT', price: 'SIN FORMATO', description: '' }], [photo]));
+    const operations = Array.from({ length: 12 }, (_, i) => i % 3 === 0 ? h.products.getState().addBlankProduct() : i % 3 === 1 ? h.products.getState().addProducts([photo]) : h.products.getState().importProducts([{ name: 'IMPORT', price: '100', description: '' }], [photo]));
     await Promise.all(operations);
     const products = h.products.getState().products;
     const before = JSON.stringify(products);
@@ -30,14 +30,14 @@ test('fixed clock mixed intake creates unique identities and invalid mutations d
   expect(result).toEqual({ count: 12, unique: 12, unchanged: true, extraWrites: 0, extraURLs: 0 });
 });
 
-test('central limits reject import before append, preserve stored text and allow arbitrary name/price', async ({ page }) => {
+test('central limits reject import before append, preserve stored text and allow long names with integer prices', async ({ page }) => {
   await openApp(page);
   const result = await page.evaluate(async () => {
     const h = window.catalogTest;
-    const invalid = await h.products.getState().importProducts([{ name: 'NAME', price: 'price', description: 'x'.repeat(501) }], [await h.photo('NAME.png')]);
+    const invalid = await h.products.getState().importProducts([{ name: 'NAME', price: '100', description: 'x'.repeat(501) }], [await h.photo('NAME.png')]);
     const count = h.products.getState().products.length;
     const allocations = window.faults.created.length;
-    await h.products.getState().importProducts([{ name: 'n'.repeat(1000), price: 'p'.repeat(1000), description: 'd'.repeat(500) }], []);
+    await h.products.getState().importProducts([{ name: 'n'.repeat(1000), price: '1234567', description: 'd'.repeat(500) }], []);
     const id = h.products.getState().products[0].id;
     const edit = await h.products.getState().updateField(id, 'description', 'z'.repeat(501));
     return { invalid: invalid.status, count, allocations, edit: edit.status, length: h.products.getState().products[0].description.length };
@@ -46,7 +46,7 @@ test('central limits reject import before append, preserve stored text and allow
   await saved(page);
   await readyAfterReload(page);
   await expect(page.locator('.rs-input-name textarea')).toHaveValue('n'.repeat(1000));
-  await expect(page.locator('.rs-input-price input')).toHaveValue('p'.repeat(1000));
+  await expect(page.locator('.rs-input-price input')).toHaveValue('$ 1.234.567');
   await page.getByRole('button', { name: 'Detalles', exact: true }).click();
   await expect(page.locator('.rs-desc-textarea textarea')).toHaveAttribute('maxlength', '500');
   await expect(page.locator('.cell-desc')).toHaveAttribute('maxlength', '500');

@@ -39,7 +39,7 @@ export const harness = {
     try {
       const products = useProductStore.getState().products;
       const settings = useSettingsStore.getState();
-      const ctx = await prepareExportContext(products, settings.bgImage, settings.bgImageOpacity, settings.colors.bg);
+      const ctx = await prepareExportContext(products, settings.bgImage, settings.bgImageOpacity, settings.colors.bg, settings);
       const pages = Array.from(document.querySelectorAll<HTMLDivElement>('.workspace .page-a4'));
       if (format === 'pdf') {
         const pdf = await buildPDF(pages, ctx, () => {});

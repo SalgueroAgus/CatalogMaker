@@ -23,7 +23,7 @@ export async function parseExcelFile(file: File): Promise<ExcelRow[]> {
     .map((r) => ({
       name: String(r['Nombre'] ?? '').trim().toUpperCase(),
       description: String(r['Descripción'] ?? '').trim(),
-      price: String(r['Precio'] ?? '').trim() || '$0.00',
+      price: String(r['Precio'] ?? '').trim() || '$ 0',
     }));
 }
 

@@ -1,3 +1,5 @@
+import { IndexBackgroundControls } from '../molecules/IndexBackgroundControls';
+import { normalizeFooterUrl } from '../../utils/links';
 import { useRef } from 'react';
 import * as Accordion from '@radix-ui/react-accordion';
 import { Tabs } from '@radix-ui/themes';
@@ -13,6 +15,9 @@ export function DesignPanel() {
   const bgFileInputRef = useRef<HTMLInputElement>(null);
   const storeName = useSettingsStore((s) => s.storeName);
   const footerContact = useSettingsStore((s) => s.footerContact);
+  const footerTagUrl = useSettingsStore((s) => s.footerTagUrl);
+  const updateFooterTagUrl = useSettingsStore((s) => s.updateFooterTagUrl);
+  const footerUrlError = normalizeFooterUrl(footerTagUrl) === null;
   const footerTag = useSettingsStore((s) => s.footerTag);
   const bgImage = useSettingsStore((s) => s.bgImage);
   const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
@@ -48,6 +53,10 @@ export function DesignPanel() {
             onChange={(e) => updateFooterTag(e.target.value)}
             placeholder="Dejar vacío para ocultar"
           />
+        </FormField>
+        <FormField label="Enlace del pie (opcional)">
+          <Input aria-label="Enlace del pie (opcional)" value={footerTagUrl} onChange={(event) => void updateFooterTagUrl(event.target.value)} onBlur={() => { const url = normalizeFooterUrl(footerTagUrl); if (url !== null && url !== footerTagUrl) void updateFooterTagUrl(url); }} aria-invalid={footerUrlError} placeholder="https://tutienda.com" />
+          {footerUrlError && <span className="field-error" role="alert">Ingresá un enlace HTTP o HTTPS válido.</span>}
         </FormField>
       </div>
     </Accordion.Content>
@@ -148,6 +157,7 @@ export function DesignPanel() {
           </Tabs.Content>
         </Tabs.Root>
 
+        <IndexBackgroundControls />
         <div className="sb-subsection-label">Colores</div>
 
         <Accordion.Root
@@ -180,6 +190,7 @@ export function DesignPanel() {
                 <ColorGroup label="Nombre" colorKey="name" solidOnly />
                 <ColorGroup label="Precio" colorKey="price" solidOnly />
                 <ColorGroup label="Descripción" colorKey="desc" solidOnly />
+                <ColorGroup label="Fondo de caja de texto" colorKey="productInfoBg" solidOnly />
               </div>
             </Accordion.Content>
           </Accordion.Item>

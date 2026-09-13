@@ -110,7 +110,7 @@ test('overlapping edits and pending reload preserve a complete durable catalog',
   });
   expect([0, 1]).toContain(state.count);
   expect(state.images).toBe(state.count);
-  if (state.count) expect(state.price).toBe('$7');
+  if (state.count) expect(state.price).toBe('$ 7');
 });
 
 for (const action of ['products', 'settings', 'everything'] as const) {
