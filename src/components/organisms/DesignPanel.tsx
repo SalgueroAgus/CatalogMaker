@@ -13,10 +13,12 @@ export function DesignPanel() {
   const bgFileInputRef = useRef<HTMLInputElement>(null);
   const storeName = useSettingsStore((s) => s.storeName);
   const footerContact = useSettingsStore((s) => s.footerContact);
+  const footerTag = useSettingsStore((s) => s.footerTag);
   const bgImage = useSettingsStore((s) => s.bgImage);
   const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
   const updateStoreName = useSettingsStore((s) => s.updateStoreName);
   const updateContact = useSettingsStore((s) => s.updateContact);
+  const updateFooterTag = useSettingsStore((s) => s.updateFooterTag);
   const setBgImage = useSettingsStore((s) => s.setBgImage);
   const setBgImageOpacity = useSettingsStore((s) => s.setBgImageOpacity);
   return <Accordion.Root type="multiple" defaultValue={['marca']} className="design-panel sb-stack">
@@ -38,6 +40,13 @@ export function DesignPanel() {
           <Input
             value={footerContact}
             onChange={(e) => updateContact(e.target.value)}
+          />
+        </FormField>
+        <FormField label="Etiqueta del pie">
+          <Input
+            value={footerTag}
+            onChange={(e) => updateFooterTag(e.target.value)}
+            placeholder="Dejar vacío para ocultar"
           />
         </FormField>
       </div>

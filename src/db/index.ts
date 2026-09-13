@@ -6,6 +6,7 @@ export type ProductMeta = Omit<Product, 'image'>;
 export type PersistedSettings = {
   storeName: string;
   footerContact: string;
+  footerTag?: string;
   colors: Colors;
   fonts: Fonts;
   fontSizes: FontSizes;
@@ -96,6 +97,7 @@ function readProducts(value: unknown): ProductMeta[] {
 function readSettings(value: unknown): PersistedSettings | null {
   if (value === undefined) return null;
   if (!isRecord(value) || typeof value.storeName !== 'string' || typeof value.footerContact !== 'string'
+    || (value.footerTag !== undefined && typeof value.footerTag !== 'string')
     || !isRecord(value.colors) || !isRecord(value.fonts) || !isRecord(value.fontSizes) || !isRecord(value.pageLayouts)
     || !isPageItemCount(value.itemsPerPage)
     || (value.pageItemCounts !== undefined && (!isRecord(value.pageItemCounts)

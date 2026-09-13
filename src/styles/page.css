@@ -24,8 +24,9 @@
 
 .page-ftr {
   display: flex; justify-content: space-between; align-items: center;
+  column-gap: 8px;
   margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--color-divider);
   opacity: 0.6; flex-shrink: 0;
 }
 .page-ftr .footer-contact { font-family: var(--font-small); font-size: var(--font-size-small); color: var(--color-footer); }
-.page-ftr .footer-tag { font-family: var(--font-small); font-size: var(--font-size-small); color: var(--color-footer); text-transform: uppercase; letter-spacing: 2px; }
+.page-ftr .footer-tag { min-width: 0; max-width: 50%; overflow-wrap: anywhere; text-align: right; font-family: var(--font-small); font-size: var(--font-size-small); color: var(--color-footer); text-transform: uppercase; letter-spacing: 2px; }

@@ -14,6 +14,7 @@ export const ProductPage = forwardRef<HTMLDivElement, Props>(
   ({ products, pageIndex, pageNum }, ref) => {
     const storeName = useSettingsStore((s) => s.storeName);
     const footerContact = useSettingsStore((s) => s.footerContact);
+    const footerTag = useSettingsStore((s) => s.footerTag);
     const bgImage = useSettingsStore((s) => s.bgImage);
     const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
     const pageLayouts = useSettingsStore((s) => s.pageLayouts);
@@ -46,7 +47,7 @@ export const ProductPage = forwardRef<HTMLDivElement, Props>(
 
         <div className="page-ftr">
           <span className="footer-contact">{footerContact}</span>
-          <span className="footer-tag">Exclusivo</span>
+          {footerTag.trim() && <span className="footer-tag">{footerTag}</span>}
         </div>
       </div>
     );

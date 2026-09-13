@@ -70,6 +70,7 @@ export function applyFontSizes(fontSizes: FontSizes) {
 interface SettingsState {
   storeName: string;
   footerContact: string;
+  footerTag: string;
   colors: Colors;
   fonts: Fonts;
   fontSizes: FontSizes;
@@ -80,6 +81,7 @@ interface SettingsState {
   pageItemCounts: Record<number, number>;
   updateStoreName: (v: string) => Promise<MutationResult>;
   updateContact: (v: string) => Promise<MutationResult>;
+  updateFooterTag: (v: string) => Promise<MutationResult>;
   updateColor: (type: keyof Colors, value: string) => Promise<MutationResult>;
   updateFont: (type: keyof Fonts, value: string) => Promise<MutationResult>;
   updateFontSize: (type: keyof FontSizes, value: number) => Promise<MutationResult>;
@@ -135,6 +137,7 @@ export const DEFAULT_COLORS: Colors = {
 export const DEFAULT_STATE = {
   storeName:      'CATÁLOGO HOGAR & DECO',
   footerContact:  'Contacto: ventas@tutienda.com | WhatsApp: +54 9 11 2345-6789',
+  footerTag:      'Exclusivo',
   colors:         DEFAULT_COLORS,
   fonts:          DEFAULT_FONTS,
   fontSizes:      DEFAULT_FONT_SIZES,
@@ -150,6 +153,7 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
 
   updateStoreName: (v) => mutateCatalog(() => set({ storeName: v.toUpperCase() })),
   updateContact: (v) => mutateCatalog(() => set({ footerContact: v })),
+  updateFooterTag: (v) => mutateCatalog(() => set({ footerTag: v })),
 
   updateColor: (type, value) => mutateCatalog(() => {
     setCSSVar(COLOR_VAR_MAP[type], value);
@@ -193,7 +197,7 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
     applyFonts(fonts);
     applyFontSizes(fontSizes);
     loadStoredGoogleFonts(fonts as unknown as Record<string, string>);
-    set({ ...s, colors, fonts, fontSizes, pageItemCounts: s.pageItemCounts ?? {}, bgImage: bgImageUrl });
+    set({ ...s, footerTag: s.footerTag ?? DEFAULT_STATE.footerTag, colors, fonts, fontSizes, pageItemCounts: s.pageItemCounts ?? {}, bgImage: bgImageUrl });
   },
 
   resetSettings: () => manageCatalog('settings'),
