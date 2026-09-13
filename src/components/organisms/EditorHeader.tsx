@@ -7,6 +7,8 @@ import { Button } from '../atoms/Button';
 import { EditorTheme } from '../atoms/EditorTheme';
 import { SaveStatus } from '../molecules/SaveStatus';
 import { CatalogManagement } from '../molecules/CatalogManagement';
+import { ThemeSwitch } from '../molecules/ThemeSwitch';
+import { useUIThemeStore } from '../../store/useUIThemeStore';
 
 interface Props {
   panelOpen: boolean;
@@ -28,13 +30,17 @@ export function EditorHeader(props: Props) {
   const busy = usePersistenceStore((s) => s.managing || s.exporting);
   const count = useProductStore((s) => s.products.length);
   const disabled = busy || count === 0;
+  const themeError = useUIThemeStore((s) => s.persistenceError);
   return <EditorTheme className="header-region">
     <header className="editor-header">
       <Button className="panel-toggle" disabled={busy} aria-label={props.panelOpen ? 'Ocultar herramientas' : 'Mostrar herramientas'} aria-expanded={props.panelOpen} aria-controls="editor-tools" onClick={props.onTogglePanel}>
         {props.panelOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
       </Button>
       <h1 className="editor-brand"><BookOpen size={24} /><span>CatalogMaker</span></h1>
-      <div className="header-save"><SaveStatus compact /></div>
+      <div className="header-preferences">
+        <div className="header-save"><SaveStatus compact /></div>
+        <ThemeSwitch />
+      </div>
       <div className="header-exports">
         {props.lastPublishUrl && <a className="published-link" href={props.lastPublishUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} />Ver publicado</a>}
         <Button onClick={props.onPublish} disabled={disabled}><Globe size={18} />{props.isPublishing ? props.publishProgress : 'Publicar en Web'}</Button>
@@ -58,6 +64,7 @@ export function EditorHeader(props: Props) {
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     </header>
+    {themeError && <p className="theme-notice" role="status">No se pudo recordar el modo elegido. Se mantendrá mientras esta página esté abierta.</p>}
     <SaveStatus errorsOnly />
     {(props.isExporting || props.isPublishing) && <p className="operation-progress" role="status">{props.isExporting ? props.exportProgress : props.publishProgress}</p>}
     <Dialog.Root open={managementOpen} onOpenChange={setManagementOpen}>

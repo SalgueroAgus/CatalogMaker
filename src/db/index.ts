@@ -1,5 +1,22 @@
-import type { Colors, Fonts, FontSizes, GridShape, Product } from '../types';
+import type { Colors, Fonts, FontSizes, GridShape, Product, UITheme } from '../types';
 import { isPageItemCount } from '../utils/chunks';
+
+export function dbLoadUITheme(): UITheme {
+  try {
+    return localStorage.getItem('cm:ui-theme') === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+export function dbSaveUITheme(theme: UITheme): boolean {
+  try {
+    localStorage.setItem('cm:ui-theme', theme);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export type ProductMeta = Omit<Product, 'image'>;
 

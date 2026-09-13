@@ -17,8 +17,15 @@ empty catalog to hide a failure. Development still uses the existing login bypas
 
 The editor uses Radix Themes for its own controls, dialogs and login screen. `EditorTheme`
 wraps the header, tool panel, mobile navigation and portalled UI, not the A4 pages. UI tokens
-are separate from the settings-store variables used by the catalog. The existing gradient
-picker retains its library and dark appearance. `EditorHeader` owns export actions, the
+are separate from the settings-store variables used by the catalog. `useUIThemeStore` owns
+the light/dark preference, initialized before React mounts and saved through `db/index.ts`
+to the separate localStorage key `cm:ui-theme`. Missing or unreadable preferences start light;
+write failures retain the session choice with a header notice. Catalog resets and saves do not
+change this preference. The labeled header switch changes the editor and workspace background,
+including portals, while A4 pages and capture clones retain their catalog colors and light
+browser-control styling. Dark UI uses black main surfaces and a high-contrast mint palette.
+The existing gradient picker retains its library and dark appearance, with matching high-contrast
+controls in dark mode. `EditorHeader` owns export actions, the
 single main save indicator and catalog/account menus. `ToolPanel` groups Articles, Pages
 and Design; all three contents remain mounted to retain editing context and scroll.
 Confirmation dialogs use existing store actions and disable confirmation during busy states.

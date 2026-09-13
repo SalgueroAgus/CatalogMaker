@@ -1,0 +1,121 @@
+:root[data-ui-theme="dark"] {
+  --ui-surface: #000000;
+  --ui-subtle: #121614;
+  --ui-hover: #242824;
+  --ui-border: #84958d;
+  --ui-input-border: var(--ui-border);
+  --ui-text: #f5f5f5;
+  --ui-muted: #c7d0cc;
+  --ui-accent: #8de8c3;
+  --ui-accent-hover: #aef2d6;
+  --ui-on-accent: #06271c;
+  --ui-accent-soft: #15372c;
+  --ui-warning: #ffd680;
+  --ui-warning-soft: #382b10;
+  --ui-danger: #ffb4be;
+  --ui-danger-soft: #3b1920;
+  --ui-shadow: #00000080;
+  --ws-bg: #000000;
+}
+
+:root[data-ui-theme="dark"] body { background: var(--ui-surface); color: var(--ui-text); }
+.page-a4, .catalog-capture { color-scheme: only light; }
+
+:root[data-ui-theme="dark"] .editor-ui {
+  --color-background: var(--ui-surface);
+  --color-panel-solid: var(--ui-subtle);
+  --color-panel-translucent: var(--ui-subtle);
+  --color-surface: var(--ui-subtle);
+  --color-overlay: #000000b3;
+  --gray-1: var(--ui-surface);
+  --gray-2: var(--ui-subtle);
+  --gray-3: var(--ui-subtle);
+  --gray-4: var(--ui-hover);
+  --gray-5: var(--ui-hover);
+  --gray-6: var(--ui-border);
+  --gray-7: var(--ui-border);
+  --gray-8: var(--ui-border);
+  --gray-9: var(--ui-muted);
+  --gray-10: var(--ui-muted);
+  --gray-11: var(--ui-muted);
+  --gray-12: var(--ui-text);
+  --gray-a1: var(--gray-1);
+  --gray-a2: var(--gray-2);
+  --gray-a3: var(--gray-3);
+  --gray-a4: var(--gray-4);
+  --gray-a5: var(--gray-5);
+  --gray-a6: var(--gray-6);
+  --gray-a7: var(--gray-7);
+  --gray-a8: var(--gray-8);
+  --gray-a9: var(--gray-9);
+  --gray-a10: var(--gray-10);
+  --gray-a11: var(--gray-11);
+  --gray-a12: var(--gray-12);
+  --accent-1: var(--ui-surface);
+  --accent-2: var(--ui-subtle);
+  --accent-3: var(--ui-accent-soft);
+  --accent-4: var(--ui-accent-soft);
+  --accent-5: var(--ui-accent-soft);
+  --accent-6: var(--ui-border);
+  --accent-7: var(--ui-accent);
+  --accent-8: var(--ui-accent);
+  --accent-9: var(--ui-accent);
+  --accent-10: var(--ui-accent-hover);
+  --accent-11: var(--ui-accent);
+  --accent-12: var(--ui-accent);
+  --accent-a1: var(--accent-1);
+  --accent-a2: var(--accent-2);
+  --accent-a3: var(--accent-3);
+  --accent-a4: var(--accent-4);
+  --accent-a5: var(--accent-5);
+  --accent-a6: var(--accent-6);
+  --accent-a7: var(--accent-7);
+  --accent-a8: var(--accent-8);
+  --accent-a9: var(--accent-9);
+  --accent-a10: var(--accent-10);
+  --accent-a11: var(--accent-11);
+  --accent-a12: var(--accent-12);
+  --accent-contrast: var(--ui-on-accent);
+  --accent-track: var(--ui-accent);
+  --focus-8: var(--ui-accent);
+  --red-3: var(--ui-danger-soft);
+  --red-4: var(--ui-danger-soft);
+  --red-9: var(--ui-danger);
+  --red-10: var(--ui-danger);
+  --red-11: var(--ui-danger);
+  --red-12: var(--ui-danger);
+  --red-a3: var(--ui-danger-soft);
+  --red-a4: var(--ui-danger-soft);
+  --red-a11: var(--ui-danger);
+  --red-a12: var(--ui-danger);
+  --red-contrast: var(--ui-danger-soft);
+  --editor-on-accent: var(--ui-on-accent);
+  color-scheme: dark;
+}
+
+:root[data-ui-theme="dark"] .editor-ui :focus-visible { outline-offset: 2px; }
+:root[data-ui-theme="dark"] .editor-ui :is(.rt-SelectItem, .rt-DropdownMenuItem):focus-visible { outline-offset: -2px; outline-color: var(--ui-on-accent); }
+:root[data-ui-theme="dark"] .editor-ui:is(.rt-DialogContent, .rt-AlertDialogContent, .rt-DropdownMenuContent, .rt-SelectContent) { border: 1px solid var(--ui-border); background: var(--ui-subtle); }
+:root[data-ui-theme="dark"] .editor-ui :is(button, input, textarea):disabled { opacity: 1; color: var(--ui-muted); }
+:root[data-ui-theme="dark"] .editor-ui :is(.ui-button, .rt-TextFieldRoot, .rt-TextAreaRoot, .ui-select):is(:disabled, [data-disabled]) { background: var(--ui-subtle); color: var(--ui-muted); box-shadow: inset 0 0 0 1px var(--ui-border); }
+:root[data-ui-theme="dark"] .editor-ui :is(.rt-DropdownMenuItem, .rt-SelectItem)[data-disabled] { color: var(--ui-muted); }
+:root[data-ui-theme="dark"] .editor-ui :is(.rt-TextFieldInput, .rt-TextAreaInput)::selection { background: var(--ui-accent); color: var(--ui-on-accent); }
+:root[data-ui-theme="dark"] .workspace { color: var(--ui-text); color-scheme: dark; }
+:root[data-ui-theme="dark"] .workspace:focus-visible { outline-color: var(--ui-accent); }
+:root[data-ui-theme="dark"] .back-to-top:focus-visible { outline-color: var(--ui-accent); }
+:root[data-ui-theme="dark"] .drop-zone:focus-visible { outline-color: var(--ui-accent); }
+
+:root[data-ui-theme="dark"] .gpp-popover {
+  --sb-bg: var(--ui-subtle);
+  --sb-text: var(--ui-text);
+  --sb-input-bg: var(--ui-subtle);
+  --sb-input-border: var(--ui-border);
+  border-color: var(--ui-border);
+  color-scheme: dark;
+}
+:root[data-ui-theme="dark"] .gpp-popover input { border: 1px solid var(--ui-border) !important; }
+:root[data-ui-theme="dark"] .gpp-popover :focus-visible { outline: 2px solid var(--ui-accent) !important; outline-offset: 2px; }
+
+@media print {
+  :root[data-ui-theme="dark"] body, :root[data-ui-theme="dark"] .workspace { background: white; color-scheme: only light; }
+}
