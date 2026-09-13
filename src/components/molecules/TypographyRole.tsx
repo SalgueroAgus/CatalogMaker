@@ -36,7 +36,7 @@ export function TypographyRole({
   sizeOnly = false,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
 
   const font = useSettingsStore((s) => (fontKey ? s.fonts[fontKey] : ''));
   const size = useSettingsStore((s) => s.fontSizes[sizeKey]);

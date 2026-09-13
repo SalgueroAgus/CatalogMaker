@@ -145,7 +145,7 @@ test('failed per-page changes retain their draft and retry without changing prod
     const h = window.catalogTest;
     await h.fixture(8);
     await h.settings.getState().setPageItemCount(0, 1);
-    window.faults.failKey = 'cm:settings';
+    window.faults.failKey = `cm:catalog:${window.catalogTest.catalogs.getState().activeId}:settings`;
     await h.settings.getState().setPageItemCount(1, 5);
   });
   expect(await page.evaluate(() => window.catalogTest.settings.getState().pageItemCounts)).toEqual({ 0: 1, 1: 5 });
@@ -212,7 +212,7 @@ test('legacy quantity settings load and invalid per-page data is preserved with 
     const request = indexedDB.open('keyval-store');
     const db = await new Promise<IDBDatabase>((resolve) => { request.onsuccess = () => resolve(request.result); });
     const tx = db.transaction('keyval', 'readwrite');
-    tx.objectStore('keyval').put(data.settings, 'cm:settings');
+    tx.objectStore('keyval').put(data.settings, `cm:catalog:${window.catalogTest.catalogs.getState().activeId}:settings`);
     await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });
     db.close();
   });
@@ -224,7 +224,7 @@ test('legacy quantity settings load and invalid per-page data is preserved with 
     const request = indexedDB.open('keyval-store');
     const db = await new Promise<IDBDatabase>((resolve) => { request.onsuccess = () => resolve(request.result); });
     const tx = db.transaction('keyval', 'readwrite');
-    tx.objectStore('keyval').put({ ...data.settings, pageItemCounts: { 0: 6 } }, 'cm:settings');
+    tx.objectStore('keyval').put({ ...data.settings, pageItemCounts: { 0: 6 } }, `cm:catalog:${window.catalogTest.catalogs.getState().activeId}:settings`);
     await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });
     db.close();
   });

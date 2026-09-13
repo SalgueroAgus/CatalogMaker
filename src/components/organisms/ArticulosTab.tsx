@@ -25,7 +25,7 @@ export function ArticulosTab({ active, visibleIds, onShowProduct }: Props) {
   const addBlankProduct = useProductStore((s) => s.addBlankProduct);
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
   const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   const [query, setQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());

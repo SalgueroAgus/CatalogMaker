@@ -44,23 +44,44 @@ error, revision and busy states. There is no settings subscription writing durin
 updates the displayed draft synchronously and queues a captured state. Writes run serially;
 only the latest revision can announce saved. A later edit includes failed earlier changes,
 so retry and continued editing cannot hide unsaved metadata or images. Actions return an
-awaitable result (saved, ignored, invalid or failed); all database rejections reach this path.
+awaitable result (saved, ignored, invalid, failed or conflict); all database rejections reach this path.
 
-All storage access remains in [db/index.ts](../src/db/index.ts). It uses native IndexedDB
-transactions against the same `keyval-store` database / `keyval` object store and keys used
-by the earlier idb-keyval implementation:
+All storage access remains in [db/index.ts](../src/db/index.ts). Native IndexedDB transactions
+use the existing `keyval-store` database and `keyval` object store. The application storage
+format is versioned independently of the native database version.
 
 | Key | Stored value |
 |---|---|
-| `cm:products` | Ordered metadata: id, name, price, description, bgColor, optional imagePositionY (0–100). |
-| `cm:img:<id>` | Product image Blob. |
-| `cm:bg` | Background image Blob. |
-| `cm:index-bg` | Optional independent index background Blob. |
-| `cm:settings` | Branding, colors, fonts, sizes, opacity, item count and layouts. |
+| `cm:catalogs` | Format version, Principal ID, last-opened ID and migration phase. |
+| `cm:catalog-meta:<catalogId>` | ID, internal name, creation/save dates, persisted revision, product count and optional deletion date. |
+| `cm:catalog:<catalogId>:products` | Ordered product metadata, including photo positions. |
+| `cm:catalog:<catalogId>:settings` | Branding, colors, fonts, sizes, opacity, quantities and layouts. |
+| `cm:catalog:<catalogId>:img:<productId>` | Product image Blob. |
+| `cm:catalog:<catalogId>:bg` | Page background Blob. |
+| `cm:catalog:<catalogId>:index-bg` | Independent index background Blob. |
 
-Hydration reads one transaction, validates records, then creates URLs. Valid legacy IDs and
-text are preserved, including descriptions longer than the new-edit limit. Missing photos
-use the placeholder. Invalid records produce a load error without writing or clearing them.
+Migration validates the former global `cm:products`, `cm:settings`, `cm:img:*`, `cm:bg`
+and `cm:index-bg` records. It atomically writes one Principal candidate and a pending marker,
+reads the candidate back, then marks the registry ready. Interrupted attempts resume the
+same candidate; concurrent startup cannot create another Principal. Original global keys
+remain intact and are no longer read after migration. Invalid records retain a visible load
+error and retry; migration does not substitute empty data for an unreadable catalog.
+
+Hydration loads list metadata and only the selected catalog's content. Valid legacy IDs and
+long descriptions are preserved; missing photos use the placeholder. URLs are allocated after
+validation. `useCatalogStore` owns the list, active/main references, session epoch and management
+errors. Each tab owns its active selection; the shared last-opened reference is used on startup.
+Opening a catalog commits valid price drafts and waits for pending writes. Failed saving or an
+invalid price prevents switching. Destination URLs are prepared before changing the selection.
+The editor and preview have distinct keys per session epoch, which resets forms, search, scroll,
+page refs and transient dialogs without retaining old panels.
+
+Persistent revisions are separate from the session's local queue revisions. Every content or
+metadata write checks its expected revision in the same read/write transaction. Stale writes
+cannot overwrite newer content or resurrect deleted catalogs. BroadcastChannel and focus/visibility
+checks refresh metadata without switching another tab's selection. Conflicts retain the local
+draft and offer reloading durable content or saving an independent copy; PDF and backup export
+remain available.
 
 Each save writes metadata/settings and any changed blobs/deletions in one transaction. Blob
 identity is compared with the last committed state so unchanged images are not rewritten on
@@ -84,7 +105,8 @@ one in-flight load across StrictMode effects, and cleans allocations if adoption
 
 Export acquires a session lease before asynchronous preparation, blocks concurrent mutations,
 and releases it in `finally`. Temporary base64 maps include product photos and background and
-never enter stores. No session history, cross-catalog ownership or persistent recovery was added.
+never enter stores. Catalog copies use independently owned blob records. Deleted catalogs retain those records until
+explicit permanent deletion; there is no expiration or general editing history.
 
 [ExcelImportPanel.tsx](../src/components/molecules/ExcelImportPanel.tsx) accepts `.xlsx`/`.xls`,
 shows parsing errors or confirmation, and optionally accepts separate image files.
@@ -93,6 +115,26 @@ columns and skips blank names. Import rejects descriptions above the shared 500-
 appending; the panel retains invalid rows for correction. Accepted imports append products; filenames match trimmed product names
 case-insensitively after removing the file extension. The downloadable template contains headers
 only. There is no full-session Excel backup/restore.
+
+## Catalog management and portable backups
+
+`CatalogManager` opens from the named header selector. Principal is listed first and remains
+protected against deletion or reassignment; its internal name can change independently of the
+printed business name. Blank catalogs use application defaults. Copies preserve products, order,
+original photos, branding, both backgrounds, image positions and page layouts. Creation and restore
+open the destination only after successful storage; deletion of the active secondary catalog
+returns to Principal. Eliminados retains complete catalogs, supports recovery with a nonconflicting
+name, and requires confirmation for permanent deletion. Existing product/settings resets still
+apply only to the active catalog; D4 product undo and snapshots are not implemented.
+
+`catalogBackup.ts` encodes a versioned `.catalogmaker.json` file with metadata, ordered products,
+settings and original image bytes. Base64 exists only during file export/parsing and never enters
+Zustand or IndexedDB; restored images become blobs. Backup captures the current draft under an
+export lease, including unsaved changes when saving failed. Parsing validates the version,
+metadata, products, layouts, image references and decodability before any database writes.
+The confirmation previews name/count, and restoration always creates a new secondary catalog.
+UI theme, login and publication credentials are not included. Copies and Eliminados are local
+browser storage; only the downloaded file is a portable external backup.
 
 ## Pages, styling, and navigation
 
@@ -153,7 +195,8 @@ See [article verification](articles-verification.md) for automated checks and de
 ## Export and publishing
 
 [usePDF.ts](../src/hooks/usePDF.ts) orchestrates image conversion, progress, errors, and file
-download or mobile file sharing. [pdf.ts](../src/utils/pdf.ts) builds jsPDF output and link
+download or mobile file sharing. Filenames and share titles use the active catalog name;
+the printed business name remains a design setting. [pdf.ts](../src/utils/pdf.ts) builds jsPDF output and link
 annotations. Footer labels accept an optional HTTP/HTTPS URL. Preview and exported HTML open external links in a new tab; PDF navigation is controlled by the viewer. The module re-exports capture constants and types for existing callers.
 
 [capture.ts](../src/utils/capture.ts) shares preparation, clone transforms, image/font readiness
@@ -177,6 +220,8 @@ status. It currently falls back to a URL on polling timeout without proving the 
 
 [useIdentity.ts](../src/hooks/useIdentity.ts) listens for initialization, login, and logout.
 `App.tsx` gates production UI on identity state; Vite development mode bypasses that gate.
+Only Principal can invoke publishing; copies, blanks and restored catalogs are blocked in the
+header and action. The session publication link belongs to its originating catalog.
 Publishing uses `VITE_NETLIFY_PAT` and `VITE_NETLIFY_SITE_ID` from the browser build, independently
 of the Identity user's credentials. Treat the client-side publishing credential as exposed;
 the login screen is not server-side authorization for that token. Do not print credential values

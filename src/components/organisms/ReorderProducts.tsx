@@ -30,7 +30,7 @@ export function ReorderProducts({ initialId, onClose }: Props) {
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
   const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
   const pageLayouts = useSettingsStore((s) => s.pageLayouts);
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   const [selectedId, setSelectedId] = useState(initialId ?? products[0]?.id);
   const [query, setQuery] = useState('');
   const [position, setPosition] = useState('');

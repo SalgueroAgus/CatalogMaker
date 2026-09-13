@@ -18,7 +18,7 @@ const TABS: { id: MobileView; Icon: LucideIcon; label: string }[] = [
 ];
 
 export function MobileNav({ activeTab, onTabChange }: Props) {
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   return <EditorTheme className="mobile-nav-region">
     <nav className="mobile-nav" aria-label="Navegación principal">
       {TABS.map(({ id, Icon, label }) => <button key={id} className="mnav-tab" disabled={busy} onClick={() => onTabChange(id)} aria-current={activeTab === id ? 'page' : undefined}>

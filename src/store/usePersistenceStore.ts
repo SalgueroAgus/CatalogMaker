@@ -2,11 +2,11 @@ import { create } from 'zustand';
 
 export type MutationResult =
   | { status: 'saved' | 'ignored' }
-  | { status: 'failed' | 'invalid'; error: string };
+  | { status: 'failed' | 'invalid' | 'conflict'; error: string };
 
 interface PersistenceState {
   loading: 'loading' | 'ready' | 'failed';
-  saving: 'saved' | 'saving' | 'failed';
+  saving: 'saved' | 'saving' | 'failed' | 'conflict';
   error: string | null;
   revision: number;
   savedRevision: number;

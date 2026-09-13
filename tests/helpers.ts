@@ -44,7 +44,8 @@ export async function installInstrumentation(page: Page, options: { delay?: numb
     const put = IDBObjectStore.prototype.put;
     const remove = IDBObjectStore.prototype.delete;
     function fail(store: IDBObjectStore, key: IDBValidKey | IDBKeyRange | undefined) {
-      if (window.faults.failKey && String(key).startsWith(window.faults.failKey)) {
+      const logicalKey = String(key).replace(/^cm:catalog:[^:]+:/, 'cm:');
+      if (window.faults.failKey && (String(key).startsWith(window.faults.failKey) || logicalKey.startsWith(window.faults.failKey))) {
         window.faults.failKey = null;
         if (window.faults.failure === 'abort') store.transaction.abort();
         throw new DOMException('Injected write failure', window.faults.failure === 'quota' ? 'QuotaExceededError' : 'AbortError');

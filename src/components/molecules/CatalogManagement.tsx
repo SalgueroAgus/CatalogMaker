@@ -1,6 +1,6 @@
 import { Button } from '../atoms/Button';
 import { ConfirmAction } from './ConfirmAction';
-import { useSettingsStore } from '../../store/useSettingsStore';
+import { useCatalogStore } from '../../store/useCatalogStore';
 import { usePersistenceStore } from '../../store/usePersistenceStore';
 import { manageCatalog } from '../../store/catalogSession';
 
@@ -11,8 +11,8 @@ const ACTIONS = [
 ] as const;
 
 export function CatalogManagement() {
-  const name = useSettingsStore((s) => s.storeName) || 'Catálogo actual';
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const name = useCatalogStore((s) => s.catalogs.find((item) => item.id === s.activeId)?.name) || 'Catálogo actual';
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   return <div className="management-actions">
     {ACTIONS.map(({ action, label, effect }) => <div key={action}>
       <p>{effect}</p>

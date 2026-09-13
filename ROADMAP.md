@@ -1,8 +1,8 @@
 # CatalogMaker — Roadmap
 
-**Updated against the working-tree source on September 12, 2026**, including the current uncommitted editor/reorder changes. Implemented means present in this checkout; it does not imply deployed or validated on every device.
+**Updated against the working-tree source on September 13, 2026**, including C1/A1/D3 catalog management and backups. Implemented means present in this checkout; it does not imply deployed or validated on every device.
 
-> **Where things stand:** the saving and editor foundations are implemented. The main remaining work is smoother daily use, independent catalogs with backups/recovery, and the requested appearance controls. Actual-device and parent checks remain open.
+> **Where things stand:** the saving and editor foundations are implemented. Independent catalogs and portable backups are now implemented. The main remaining work is smoother daily use, broader recovery, and the requested appearance controls. Actual-device and parent checks remain open.
 
 - [Delivery order](#delivery-order) — what to tackle next.
 - [Completed implementation](#completed-implementation) — finished work, grouped by area.
@@ -20,7 +20,7 @@ A friendly catalog tool for a family business, primarily used by two parents in 
 
 - **Confirmed:** one clearly marked **Principal**, plus named independent catalogs under **Mis catálogos**, with **Hacer una copia** and **Crear catálogo vacío**.
 - **Confirmed:** transfer complete catalogs between devices using backup files. Automatic sync is deferred; the current login does not sync catalog data.
-- **To refine:** opening the last-used catalog with its name/save status visible and an obvious route back to Principal. This is the recommended entry flow, not a finalized screen design.
+- **Implemented:** open the last-used catalog with its name/save status visible and a header selector for Mis catálogos; Principal is listed first. Validate this entry flow with the family.
 - **To decide:** whether the family uses web publishing and who manages it. PDF sharing is a complete core workflow; retaining one-click publishing requires the S1/S2 decisions.
 
 Keep React, Zustand, IndexedDB, global CSS, and the browser-only app. Prioritize understandable saving, mistake recovery, and trustworthy output. Performance work should address problems observed with the family's actual catalog or devices.
@@ -63,7 +63,7 @@ Most direct product-editing interactions already exist. Finish the surrounding w
 
 ### Downloading and publishing
 
-- [ ] **E1 · Finish the Download/Share experience.** Provide clear download/share choices and completion feedback, including file location guidance. Store-name filenames, supported mobile sharing, unsupported-share download fallback, cancellation handling, and capture protection already exist. Add active-catalog naming and protection against switches with C1/C2; finish actual-device sharing checks.
+- [ ] **E1 · Finish the Download/Share experience.** Provide clear download/share choices and completion feedback, including file location guidance. Store-name filenames, supported mobile sharing, unsupported-share download fallback, cancellation handling, and capture protection already exist. Active-catalog filenames and protection against switching during export are now implemented with C1/A1; finish actual-device sharing checks.
 - [ ] **S2 · Make the public version explicit — conditional on retaining publishing.** Confirm the destination and catalog before publishing, distinguish polling timeout from confirmed success, and give understandable retry/errors. With catalog management, protect the public version from experimental copies and record successful publication per catalog. All current publishes target one configured site; timeout still returns a URL without confirming readiness.
 
 
@@ -76,19 +76,19 @@ The specific E2 opacity/capture fixes are [implemented](#pages-appearance-and-ou
 
 ## Priority 3 — Main catalog, copies, blank catalogs, and portable backups
 
-**Not implemented.** The app still stores one global catalog. Design A1 and D3 together, and provide backup/recovery before enabling destructive catalog-management actions.
+**A1, C1 and D3 implementation delivered in this checkout.** Independent catalogs, migration, portable backups and recoverable catalog deletion are implemented. D4 general recovery and the remaining C2/S2 decisions stay open; cross-engine and family/device acceptance remain pending.
 
 ### A1 · Versioned catalog storage and migration
 
-- [ ] Introduce stable catalog IDs, names/timestamps, active/main references, and catalog-scoped products, settings, backgrounds, images, and layouts through the existing database module and Zustand stores.
-- [ ] Migrate the global keys to Principal once; preserve original records until the new catalog is fully written and verified. Handle interrupted migration and switching during pending writes. A failed copy/restore must leave the original and active selection intact.
-- [ ] Extend **A3 image ownership** across catalogs and recovery snapshots. Prefer independent image copies initially; delete blobs only after all owners release them.
+- [x] Introduce stable catalog IDs, names/timestamps, active/main references, and catalog-scoped products, settings, backgrounds, images, and layouts through the existing database module and Zustand stores.
+- [x] Migrate the global keys to Principal once; preserve original records until the new catalog is fully written and verified. Handle interrupted migration and switching during pending writes. A failed copy/restore must leave the original and active selection intact.
+- [x] Extend **A3 image ownership** across independent catalogs and recoverable catalog deletion. Copies have independent blob records; Eliminados retains them until explicit permanent deletion. Ownership for D4 snapshots remains part of D4.
 
 ### D3 · Portable full backup and restore
 
-- [ ] Export one versioned catalog file containing metadata, photos, background, settings, and layouts, without transient blob URLs. Clearly distinguish it from PDF and Excel.
-- [ ] Validate the entire file before applying it, preview its name/count, and restore as a new catalog by default. Invalid files and failed writes must preserve existing catalogs.
-- [ ] Verify a complete round trip in another browser without a network dependency for catalog data.
+- [x] Export one versioned catalog file containing metadata, photos, background, settings, and layouts, without transient blob URLs. Clearly distinguish it from PDF and Excel.
+- [x] Validate the entire file before applying it, preview its name/count, and restore exclusively as a new secondary catalog. Invalid files and failed writes must preserve existing catalogs.
+- [ ] Finish cross-engine/device round-trip acceptance. Automated round trips use separate Chrome browser profiles with external requests blocked and compare metadata plus original image bytes; WebKit remains unavailable locally.
 
 ### D4 · Recovery before broad undo
 
@@ -99,18 +99,18 @@ The current reorder modal can undo its latest move during that session. It does 
 
 ### C1 · Mis catálogos: Principal, copies, and blank catalogs
 
-- [ ] Create blank, duplicate, rename, open, and delete independent catalogs. Show name, Principal badge, product count, and last successful save; give copies useful editable names.
-- [ ] Include photos, order, branding, background, and layouts in a copy. Switching/reloading must preserve each catalog independently. Keep the list simple, without folders/tags or an arbitrary hard limit.
+- [x] Create blank, duplicate, rename, open, and delete independent catalogs. Show name, Principal badge, product count, and last successful save; give copies useful editable names.
+- [x] Include photos, order, branding, background, and layouts in a copy. Switching/reloading must preserve each catalog independently. Keep the list simple, without folders/tags or an arbitrary hard limit.
 
-Depends on A1 and the implemented D1 persistence foundation.
+Built on A1 and the implemented D1 persistence foundation. The last-used catalog opens at startup; Mis catálogos is available from the header. Blank catalogs use app defaults, and deleted secondary catalogs remain recoverable in Eliminados without automatic expiration. Principal can be renamed but cannot be deleted or reassigned in this delivery.
 
 ### C2 · Make experiments safe
 
-- [ ] Show the active catalog name during editing and export; copies remain independent with no automatic merge back.
+- [x] Show the active catalog name during editing and export; copies remain independent with no automatic merge back.
 - [ ] Refine the proposed “Usar como principal” action so changing the designation retains the old main catalog. Deleting Principal needs a replacement or recovery path and a confirmation naming the affected catalog.
-- [ ] Resolve publication from copies through S2 before enabling that workflow.
+- [ ] Resolve publication from copies through S2 before enabling that workflow. Publishing currently remains available only from Principal, enforced in both UI and action.
 
-**Acceptance checks:** interrupted migration; copy/restore/delete isolation; pending writes during switching; and simultaneous edits in two tabs. Detect stale edits and offer reload or retaining a copy instead of silently overwriting newer work. Automatic cross-device sync remains deferred.
+**Automated scenarios (see [catalog verification](docs/catalogs-verification.md)):** interrupted migration; copy/restore/delete isolation; pending writes during switching; and simultaneous edits in two tabs. Detect stale edits and offer reload or retaining a copy instead of silently overwriting newer work. Automatic cross-device sync remains deferred.
 
 ## Priority 4 — Requested appearance refinements
 

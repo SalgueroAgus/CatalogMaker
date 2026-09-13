@@ -8,7 +8,7 @@ import { FormField } from './FormField';
 
 export function IndexBackgroundControls() {
   const settings = useSettingsStore();
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   const fileRef = useRef<HTMLInputElement>(null);
   return <div className="sb-stack-sm">
     <FormField label="Fondo del índice">

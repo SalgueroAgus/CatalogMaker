@@ -1,3 +1,4 @@
+import { useCatalogStore } from '../../store/useCatalogStore';
 import { useCallback, useEffect, useRef } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { EditorTheme } from '../atoms/EditorTheme';
@@ -92,12 +93,14 @@ export function Workspace({
   }
 
   function openFilePicker() {
+    const epoch = useCatalogStore.getState().epoch;
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
     input.accept = 'image/*';
-    input.onchange = (e) =>
-      addProducts(Array.from((e.target as HTMLInputElement).files ?? []));
+    input.onchange = (e) => {
+      if (useCatalogStore.getState().epoch === epoch) void addProducts(Array.from((e.target as HTMLInputElement).files ?? []));
+    };
     input.click();
   }
 

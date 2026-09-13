@@ -18,7 +18,7 @@ test('StrictMode hydration gates mutations and allocates each image once', async
     await window.catalogTest.settings.getState().updateContact('SHOULD NOT SAVE');
     await Promise.all([window.catalogTest.hydrateCatalog(), window.catalogTest.hydrateCatalog()]);
   });
-  expect(await page.evaluate(() => ({ count: window.catalogTest.products.getState().products.length, urls: window.faults.created.length, writes: window.faults.writes, reads: window.faults.reads }))).toEqual({ count: 1, urls: 2, writes: 0, reads: 1 });
+  expect(await page.evaluate(() => ({ count: window.catalogTest.products.getState().products.length, urls: window.faults.created.length, writes: window.faults.writes, reads: window.faults.reads }))).toEqual({ count: 1, urls: 2, writes: 0, reads: 2 });
 });
 
 test('failed load stays distinct from empty and retry reads original data', async ({ page }) => {
@@ -27,7 +27,7 @@ test('failed load stays distinct from empty and retry reads original data', asyn
   expect(await page.evaluate(async () => (await window.catalogTest.products.getState().addBlankProduct()).status)).toBe('ignored');
   await page.getByRole('button', { name: 'Reintentar carga' }).click();
   await expect(page.getByRole('button', { name: 'Agregar producto', exact: true })).toBeVisible();
-  expect(await page.evaluate(() => window.faults.writes)).toBe(0);
+  expect(await page.evaluate(() => window.faults.writes)).toBe(2);
 });
 
 for (const failure of ['quota', 'abort'] as const) {
@@ -159,7 +159,7 @@ test('all management confirmations name catalog and cancellation changes nothing
     await page.getByRole('alertdialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
   }
   expect(messages).toHaveLength(3);
-  expect(messages.every((message) => message.includes('CATÁLOGO HOGAR & DECO'))).toBe(true);
+  expect(messages.every((message) => message.includes('Principal'))).toBe(true);
   expect(await page.evaluate(() => window.faults.writes)).toBe(writes);
   expect(await page.evaluate(() => window.catalogTest.products.getState().products.length)).toBe(2);
 });
