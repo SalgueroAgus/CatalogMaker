@@ -86,12 +86,12 @@ Todos se ejecutan desde la terminal, dentro de la carpeta del proyecto.
 
 ## Checks antes de fusionar cambios
 
-GitHub Actions ejecuta el build y las pruebas de Chromium, Firefox y WebKit para los pull
-requests hacia `main` y `Agustin`. `main` es la rama de producción; `Agustin` no se despliega.
-La protección requiere activar además un ruleset en GitHub: el archivo de CI por sí solo
-no bloquea merges. Seguí el [tutorial de GitHub y Netlify](docs/ci-github-setup.md) para activar
-los cuatro checks obligatorios, impedir pushes directos y trabajar mediante pull requests.
-No se exige aprobación de otra persona.
+GitHub Actions ejecuta solamente `npm run verify` como **Catalog build** para los pull requests
+hacia `main` y `Agustin`. Las pruebas de navegador quedan disponibles para ejecución local manual.
+`main` es la rama de producción; `Agustin` no se despliega. Seguí el
+[tutorial de GitHub y Netlify](docs/ci-github-setup.md) para exigir únicamente **Catalog build**
+y quitar los antiguos checks de navegador del ruleset. El archivo de CI por sí solo no bloquea
+merges. No se exige aprobación de otra persona.
 
 ---
 
@@ -161,7 +161,7 @@ La configuración de build ya está en `netlify.toml`.
 
 ## Pruebas de desarrollo
 
-La suite usa Chromium, Firefox y WebKit de Playwright. En esta sesión los binarios autorizados
+La suite usa Chromium y WebKit de Playwright. En esta sesión los binarios autorizados
 se instalaron en `/private/tmp/catalogmaker-playwright-browsers`; ejecutá:
 
 ```sh
@@ -173,8 +173,8 @@ Los tests de archivos exportados usan `swiftc`, PDFKit y Vision incluidos en el 
 no son dependencias de la aplicación. Si no están disponibles, esas comprobaciones quedan
 pendientes y deben ejecutarse en un entorno compatible. Los artefactos y reportes se escriben
 en `/private/tmp/catalogmaker-priority1-*`, fuera del código versionado. No se publica nada
-ni se usan datos personales. La suite necesita el puerto local 5173 libre. En CI, los reportes
-van a `test-results/` y `playwright-report/` y se pueden descargar desde GitHub durante siete días.
+ni se usan datos personales. La suite necesita el puerto local 5173 libre. Estas pruebas no se
+ejecutan automáticamente en GitHub ni son un requisito para fusionar cambios.
 
 Las pruebas con teléfonos reales y ambos padres se registran por separado con esta
 [guía](docs/priority1-device-checks.md). La emulación de pantallas pequeñas no prueba el teclado

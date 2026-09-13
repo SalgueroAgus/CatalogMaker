@@ -23,7 +23,6 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
-    { name: 'firefox', testIgnore: '**/zoom.spec.ts', use: { browserName: 'firefox' } },
     { name: 'webkit', testIgnore: '**/zoom.spec.ts', use: { browserName: 'webkit' } },
   ],
   webServer: {

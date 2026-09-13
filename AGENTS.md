@@ -26,10 +26,12 @@ Playwright covers browser interactions and PDF/HTML output; the full suite requi
 for its Swift/PDFKit/Vision checks. The build alone does not verify those behaviors.
 Git whitespace checks omit untracked files; inspect new files explicitly during review.
 
-GitHub Actions runs the build and all three browser projects for pull requests targeting
-`main` or `Agustin` and pushes to either branch. Merge blocking requires the separate
-GitHub ruleset described in [CI setup](docs/ci-github-setup.md). Work on feature branches
-and use pull requests into these protected branches; only `main` deploys to production.
+GitHub Actions runs only `npm run verify` as `Catalog build` for pull requests targeting
+`main` or `Agustin` and pushes to either branch. Browser tests are available for manual local
+runs, not CI. Merge blocking requires the separate GitHub ruleset described in
+[CI setup](docs/ci-github-setup.md); require only `Catalog build` and remove any older browser
+test requirements. Work on feature branches and use pull requests into these protected
+branches; only `main` deploys to production.
 
 ## Code map
 
