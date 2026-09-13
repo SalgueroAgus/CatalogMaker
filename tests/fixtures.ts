@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export const test = base.extend({
-  context: async ({ playwright, browserName, baseURL, viewport }, use) => {
+  context: async ({ playwright, browserName, baseURL, viewport, launchOptions }, use) => {
     const profile = await mkdtemp(join(tmpdir(), 'catalogmaker-test-'));
-    const context = await playwright[browserName].launchPersistentContext(profile, { headless: true, baseURL, viewport });
+    const context = await playwright[browserName].launchPersistentContext(profile, { ...launchOptions, headless: true, baseURL, viewport });
     try {
       await use(context);
     } finally {

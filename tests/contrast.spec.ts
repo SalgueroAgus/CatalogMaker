@@ -38,6 +38,7 @@ test('editor text, input borders, selection and primary targets meet scoped cont
 test('color control is named and can open/close by keyboard with focus restored', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(1));
+  await page.getByRole('button', { name: 'Detalles', exact: true }).click();
   const swatch = page.getByRole('button', { name: 'Editar Fondo del producto' });
   await swatch.focus();
   await page.keyboard.press('Enter');

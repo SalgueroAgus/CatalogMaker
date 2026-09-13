@@ -22,6 +22,7 @@ import './styles/print.css';
 import './styles/mobile.css';
 import './styles/login.css';
 import './styles/editor.css';
+import './styles/articles.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

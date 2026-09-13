@@ -24,7 +24,8 @@ for (const viewport of viewports) {
     const first = page.locator('.rs-card').first();
     await expect(first.getByLabel('Nombre', { exact: true })).toBeVisible();
     await expect(first.getByLabel('Precio', { exact: true })).toBeVisible();
-    await expect(first.getByRole('button', { name: 'Cambiar foto', exact: true })).toBeVisible();
+    await expect(first.getByRole('button', { name: 'Detalles', exact: true })).toBeVisible();
+    await expect(first.getByRole('button', { name: 'Cambiar foto', exact: true })).toBeHidden();
     await expect(first.locator('.rs-desc-textarea')).toBeHidden();
     const measures = await page.locator('.sidebar-right').evaluate((sidebar) => ({
       inputs: Array.from(sidebar.querySelectorAll<HTMLInputElement>('input:not([type="file"])')).filter((input) => input.getClientRects().length).map((input) => Number.parseFloat(getComputedStyle(input).fontSize)),
@@ -34,7 +35,7 @@ for (const viewport of viewports) {
     expect(measures.buttons.filter((button) => button.width < 44 || button.height < 44)).toEqual([]);
     const last = page.locator('.rs-card').last();
     await last.getByLabel('Precio', { exact: true }).fill('$98765');
-    await last.getByRole('button', { name: 'Descripción', exact: true }).click();
+    await last.getByRole('button', { name: 'Detalles', exact: true }).click();
     await last.getByLabel('Descripción', { exact: true }).fill('ÚLTIMO PRODUCTO');
     await last.getByRole('button', { name: 'Subir', exact: true }).focus();
     await page.keyboard.press('Enter');
@@ -42,6 +43,7 @@ for (const viewport of viewports) {
     await expect(page.locator('.rs-card').nth(10)).toBeInViewport();
     await page.screenshot({ path: testInfo.outputPath('products.png'), fullPage: true });
     await page.setViewportSize({ width: viewport.width, height: Math.max(320, viewport.height - 250) });
+    await page.locator('.rs-card').last().getByRole('button', { name: 'Detalles', exact: true }).click();
     await page.locator('.rs-card').last().getByRole('button', { name: 'Eliminar producto 12' }).scrollIntoViewIfNeeded();
     await expect(page.locator('.rs-card').last().getByRole('button', { name: 'Eliminar producto 12' })).toBeInViewport();
     if (viewport.width >= 768 && viewport.width < 1200) {

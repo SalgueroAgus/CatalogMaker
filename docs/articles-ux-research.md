@@ -2,6 +2,11 @@
 
 Fecha: 12 de septiembre de 2026. Investigación de fuentes primarias, inspección del código y evaluación del flujo actual. Las recomendaciones son hipótesis de diseño para CatalogMaker; todavía no son resultados de pruebas con sus usuarios.
 
+El diseño se acordó después de esta investigación y se implementó con edición siempre visible,
+búsqueda y un modo amplio de reordenamiento. Las secciones de diagnóstico y alternativas
+conservan el razonamiento inicial. El alcance final y la evidencia están en
+[verificación del listado](articles-verification.md); falta validarlo con los padres en sus dispositivos.
+
 ## Necesidades confirmadas
 
 - Catálogos de 50 a 200 artículos.
@@ -9,11 +14,11 @@ Fecha: 12 de septiembre de 2026. Investigación de fuentes primarias, inspecció
 - Los padres del propietario son los usuarios principales. Usan más PC, pero mobile y desktop tienen igual prioridad de diseño.
 - Reconocen los artículos principalmente por la foto. Leer letras pequeñas les cuesta; reducir la tipografía perjudicaría el objetivo.
 
-## Diagnóstico del editor actual
+## Diagnóstico anterior al refactor
 
-El listado muestra un formulario completo por artículo: número, eliminar, foto, nombre, precio, fondo, cambiar foto, subir/bajar y descripción plegada. No tiene buscador. Importar Excel y descargar plantilla aparecen antes de los artículos.
+El listado mostraba un formulario completo por artículo: número, eliminar, foto, nombre, precio, fondo, cambiar foto, subir/bajar y descripción plegada. No tenía buscador. Importar Excel y descargar plantilla aparecían antes de los artículos.
 
-En [ProductListItem](../src/components/molecules/ProductListItem.tsx) se repiten esos controles para cada producto. [editor.css](../src/styles/editor.css) apila foto y campos verticalmente, fija la foto en 96 px y mantiene campos de 16 px y controles de al menos 44 px. La columna mide 340 px en desktop y 300 px en tablet; en mobile ocupa el ancho de pantalla. Esto limita también las opciones de diseño en PC.
+En la versión inicial de [ProductListItem](../src/components/molecules/ProductListItem.tsx) se repetían esos controles para cada producto. [editor.css](../src/styles/editor.css) apilaba foto y campos verticalmente, con foto de 96 px, campos de 16 px y controles de al menos 44 px. La columna mide 340 px en desktop y 300 px en tablet; en mobile ocupa el ancho de pantalla. Esto limita también las opciones de diseño en PC.
 
 La altura viene de la composición y de cuántas funciones se muestran simultáneamente. La solución debe conservar legibilidad, reconocimiento visual y acceso a las tareas frecuentes. Las páginas del catálogo y su orden tienen significado: filtrar el editor no debe cambiar el PDF ni renumerar los resultados como si fueran otro catálogo.
 
@@ -98,8 +103,9 @@ Ejercitar guardado y recarga, reemplazo de foto, descripción, mover primer/últ
 
 Con cada padre, comprobar en PC y teléfono: encontrar por foto, cambiar cinco precios seguidos, cambiar una descripción/foto, mover un artículo y localizarlo en el catálogo. Registrar tiempo, errores y ayuda requerida, comparando con la interfaz actual. La prueba de navegador no reemplaza esa validación ni acredita comodidad con teclado móvil real.
 
-## Decisiones pendientes
+## Decisiones confirmadas e implementadas
 
-- Nombre/precio siempre editables o resumen con editor al abrir.
-- Necesidad de mover directamente a una posición lejana.
-- Ajuste final del tamaño de foto y densidad después de observar la propuesta con datos representativos.
+- Foto de 96 px junto al nombre y precio siempre editables; detalles secundarios plegados.
+- Reordenamiento amplio, de un artículo por vez, con guardado automático, destino numérico y deshacer el último movimiento de esa sesión.
+- Miniaturas con fotos y distribución real de las páginas: lateral en PC y tira horizontal visible en celular. Sirven para orientar y navegar, sin recibir arrastres.
+- La comodidad de fotos, densidad y controles sigue pendiente de observación con los padres.

@@ -7,6 +7,7 @@ for (const kind of ['product', 'page'] as const) {
     await page.evaluate(() => window.catalogTest.fixture(2));
     const label = kind === 'product' ? 'Fondo del producto' : 'Fondo páginas';
     if (kind === 'page') await page.getByRole('button', { name: 'Página', exact: true }).first().click();
+    if (kind === 'product') await page.locator('.rs-card').first().getByRole('button', { name: 'Detalles', exact: true }).click();
     const swatch = page.getByRole('button', { name: `Editar ${label}`, exact: true }).first();
     await swatch.click();
     await expect(page.getByRole('dialog', { name: label })).toBeVisible();

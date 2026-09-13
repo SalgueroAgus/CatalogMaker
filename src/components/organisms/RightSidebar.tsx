@@ -1,6 +1,6 @@
 import { SaveStatus } from '../molecules/SaveStatus';
 import { BackToTop } from '../molecules/BackToTop';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useProductStore } from '../../store/useProductStore';
 import { ArticulosTab } from './ArticulosTab';
@@ -15,9 +15,10 @@ interface Props {
 export function RightSidebar({ visibleIds, onClose, onShowProduct }: Props) {
   const count = useProductStore((s) => s.products.length);
   const productsRef = useRef<HTMLDivElement>(null);
+  const [tab, setTab] = useState('articulos');
 
   return (
-    <Tabs.Root defaultValue="articulos" asChild>
+    <Tabs.Root value={tab} onValueChange={setTab} asChild>
       <aside className="sidebar-right" id="products-sidebar">
         <button className="drawer-close rs-action" data-drawer-close onClick={onClose}>Cerrar productos</button>
         <SaveStatus />
@@ -30,8 +31,8 @@ export function RightSidebar({ visibleIds, onClose, onShowProduct }: Props) {
             Páginas
           </Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content value="articulos" className="rs-tab-panel" ref={productsRef}>
-          <ArticulosTab visibleIds={visibleIds} onShowProduct={onShowProduct} />
+        <Tabs.Content value="articulos" forceMount hidden={tab !== 'articulos'} className="rs-tab-panel" ref={productsRef}>
+          <ArticulosTab active={tab === 'articulos'} visibleIds={visibleIds} onShowProduct={onShowProduct} />
           <BackToTop target={productsRef} label="Volver arriba en Productos" />
         </Tabs.Content>
         <Tabs.Content value="paginas" className="rs-tab-panel">
