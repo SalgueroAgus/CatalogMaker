@@ -1,18 +1,12 @@
 import { test, expect } from './fixtures';
-import { openApp, readyAfterReload, saved } from './helpers';
-import type { Page } from '@playwright/test';
-
-async function showProducts(page: Page, width: number) {
-  if (width < 768) await page.getByRole('button', { name: 'Productos', exact: true }).click();
-  else if (width < 1200) await page.locator('.sidebar-right-toggle').click();
-}
+import { openApp, readyAfterReload, saved, showSection, openManagement } from './helpers';
 
 for (const width of [320, 390, 768, 1000, 1440]) {
   test(`compact editing and page navigation with 200 articles at ${width}px`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 844 });
     await openApp(page);
     await page.evaluate(() => window.catalogTest.fixture(200));
-    await showProducts(page, width);
+    await showSection(page, 'Artículos');
     const card = page.locator('.rs-card').first();
     const measures = await card.evaluate((element) => ({
       height: element.getBoundingClientRect().height,
@@ -21,7 +15,7 @@ for (const width of [320, 390, 768, 1000, 1440]) {
       targets: Array.from(element.querySelectorAll('button')).filter((button) => button.getClientRects().length).map((button) => ({ width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height })),
     }));
     expect(measures.height).toBeLessThanOrEqual(260);
-    expect(measures.photo).toBeCloseTo(96, 1);
+    expect(measures.photo).toBeCloseTo(112, 1);
     expect(measures.font).toBe('16px');
     expect(measures.targets.every((target) => target.width >= 44 && target.height >= 44)).toBe(true);
     for (let index = 0; index < 5; index++) await page.locator('.rs-card').nth(index).getByLabel('Precio', { exact: true }).fill(`$${1000 + index}`);
@@ -31,8 +25,8 @@ for (const width of [320, 390, 768, 1000, 1440]) {
     await expect(page.locator('.rs-page-sep')).toHaveText('Página 74');
     await page.getByRole('button', { name: 'Detalles', exact: true }).click();
     await page.getByLabel('Descripción', { exact: true }).fill('ÚLTIMO EDITADO');
-    await page.getByRole('tab', { name: 'Páginas', exact: true }).click();
-    await page.getByRole('tab', { name: /Artículos/ }).click();
+    await showSection(page, 'Páginas');
+    await showSection(page, 'Artículos');
     await expect(page.getByLabel('Buscar artículos', { exact: true })).toHaveValue('200');
     await expect(page.getByLabel('Descripción', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Reordenar', exact: true }).click();
@@ -174,7 +168,7 @@ test('touch drag moves an article and the photo area still permits scrolling', a
   await page.setViewportSize({ width: 390, height: 844 });
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(50));
-  await showProducts(page, 390);
+  await showSection(page, 'Artículos');
   await page.getByRole('button', { name: 'Reordenar', exact: true }).click();
   const source = page.locator('.reorder-card').nth(1);
   const sourceId = await source.getAttribute('data-reorder-id');
@@ -236,20 +230,20 @@ test('editing context survives mobile preview and page tabs, and hidden panels c
   await page.setViewportSize({ width: 390, height: 844 });
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(50));
-  await showProducts(page, 390);
+  await showSection(page, 'Artículos');
   const card = page.locator('.rs-card').nth(10);
   await card.getByRole('button', { name: 'Detalles', exact: true }).click();
-  const panel = page.getByRole('tabpanel', { name: /Artículos/ });
+  const panel = page.locator('.articles-content');
   const original = await panel.evaluate((element) => element.scrollTop);
-  await page.getByRole('tab', { name: 'Páginas', exact: true }).click();
-  await page.getByRole('tab', { name: /Artículos/ }).click();
+  await showSection(page, 'Páginas');
+  await showSection(page, 'Artículos');
   await expect.poll(() => panel.evaluate((element) => element.scrollTop)).toBe(original);
   await expect(card.getByLabel('Descripción', { exact: true })).toBeVisible();
   await card.getByRole('button', { name: 'Ver catálogo, artículo 11', exact: true }).click();
-  await showProducts(page, 390);
+  await showSection(page, 'Artículos');
   await expect(card.getByLabel('Descripción', { exact: true })).toBeVisible();
   await card.getByRole('button', { name: 'Editar Fondo del producto', exact: true }).click();
-  await page.getByRole('tab', { name: 'Páginas', exact: true }).focus();
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Páginas', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog', { name: 'Fondo del producto', exact: true })).toHaveCount(0);
 });
@@ -258,7 +252,7 @@ test('short viewports keep movement controls reachable without moving the outer 
   await page.setViewportSize({ width: 390, height: 844 });
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(50));
-  await showProducts(page, 390);
+  await showSection(page, 'Artículos');
   await page.getByRole('button', { name: 'Reordenar', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Reordenar artículos', exact: true });
   const skip = dialog.getByRole('button', { name: 'Ir a controles de movimiento', exact: true });
@@ -303,9 +297,10 @@ test('emptying a filtered catalog allows starting a visible new article', async 
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(50));
   await page.getByLabel('Buscar artículos', { exact: true }).fill('050');
-  await page.getByRole('button', { name: 'Administración del catálogo', exact: true }).click();
-  page.once('dialog', (dialog) => dialog.accept());
+  await openManagement(page);
   await page.getByRole('button', { name: 'Vaciar catálogo', exact: true }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Confirmar', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Administración del catálogo' }).getByRole('button', { name: 'Cerrar', exact: true }).click();
   await saved(page);
   await page.getByRole('button', { name: 'Agregar artículo', exact: true }).click();
   await expect(page.locator('.rs-card')).toHaveCount(1);

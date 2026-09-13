@@ -1,3 +1,5 @@
+import { Button } from '../atoms/Button';
+import { TextArea } from '@radix-ui/themes';
 import { useRef, useState } from 'react';
 import { Download, Upload, AlertTriangle, X, ImagePlus, Check } from 'lucide-react';
 import { downloadExcelTemplate, parseExcelFile, countImageMatches, type ExcelRow } from '../../utils/excel';
@@ -80,14 +82,14 @@ export function ExcelImportPanel() {
   return (
     <div className="excel-panel-wrap">
       <div className="excel-toolbar">
-        <button className="excel-btn" onClick={downloadExcelTemplate}>
+        <Button className="excel-btn" onClick={downloadExcelTemplate}>
           <Download size={13} />
           Descargar plantilla
-        </button>
-        <button className="excel-btn excel-btn-accent" onClick={() => xlsxInputRef.current?.click()}>
+        </Button>
+        <Button className="excel-btn excel-btn-accent" onClick={() => xlsxInputRef.current?.click()}>
           <Upload size={13} />
           Importar Excel
-        </button>
+        </Button>
       </div>
 
       <input
@@ -112,10 +114,10 @@ export function ExcelImportPanel() {
             <AlertTriangle size={15} className="excel-warning-icon" />
             <p className="excel-warning-text">{errorMsg}</p>
           </div>
-          <button className="excel-btn" onClick={handleCancel} disabled={importing}>
+          <Button className="excel-btn" onClick={handleCancel} disabled={importing}>
             <X size={13} />
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 
@@ -135,10 +137,10 @@ export function ExcelImportPanel() {
           </div>
 
           <div className="excel-img-section">
-            <button className="excel-btn excel-btn-full" onClick={() => imgInputRef.current?.click()}>
+            <Button className="excel-btn excel-btn-full" onClick={() => imgInputRef.current?.click()}>
               <ImagePlus size={13} />
               {imageFiles.length === 0 ? 'Seleccionar imágenes (opcional)' : `${imageFiles.length} imagen${imageFiles.length !== 1 ? 'es' : ''} seleccionada${imageFiles.length !== 1 ? 's' : ''}`}
-            </button>
+            </Button>
             {imageFiles.length > 0 && (
               <p className="excel-match-label">
                 {matchCount > 0
@@ -153,7 +155,7 @@ export function ExcelImportPanel() {
           {parsedRows.map((row, index) => correctionRows.has(index) && (
             <label key={index} className="rs-field-label">
               Corregir descripción, fila {index + 2}: {row.name}
-              <textarea className="rs-desc-textarea" value={row.description} aria-invalid={row.description.length > DESCRIPTION_LIMIT} onChange={(e) => {
+              <TextArea className="rs-desc-textarea" value={row.description} aria-invalid={row.description.length > DESCRIPTION_LIMIT} onChange={(e) => {
                 const description = e.target.value;
                 setParsedRows((rows) => rows.map((value, i) => i === index ? { ...value, description } : value));
                 setErrorMsg('');
@@ -161,14 +163,14 @@ export function ExcelImportPanel() {
             </label>
           ))}
           <div className="excel-actions">
-            <button className="excel-btn" onClick={handleCancel} disabled={importing}>
+            <Button className="excel-btn" onClick={handleCancel} disabled={importing}>
               <X size={13} />
               Cancelar
-            </button>
-            <button className="excel-btn excel-btn-accent" onClick={handleConfirm} disabled={importing}>
+            </Button>
+            <Button className="excel-btn excel-btn-accent" onClick={handleConfirm} disabled={importing}>
               <Check size={13} />
               Importar {parsedRows.length} artículo{parsedRows.length !== 1 ? 's' : ''}
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { FolderOpen, LayoutList, X } from 'lucide-react';
-import { SaveStatus } from '../molecules/SaveStatus';
+import { FolderOpen } from 'lucide-react';
+import { EditorTheme } from '../atoms/EditorTheme';
+import { usePageScale } from '../../hooks/usePageScale';
 import { BackToTop } from '../molecules/BackToTop';
 import { Badge } from '../atoms/Badge';
 import { IndexPage } from './IndexPage';
@@ -13,13 +14,10 @@ import { scrollToLastPage } from '../../utils/scroll';
 interface Props {
   pagesRef: React.MutableRefObject<(HTMLDivElement | null)[]>;
   onVisibleChange: (ids: Set<string>) => void;
-  sidebarRightOpen: boolean;
-  onToggleRightSidebar: () => void;
 }
 
 export function Workspace({
   pagesRef, onVisibleChange,
-  sidebarRightOpen, onToggleRightSidebar,
 }: Props) {
   const allProducts = useProductStore((s) => s.products);
   const addProducts = useProductStore((s) => s.addProducts);
@@ -27,6 +25,7 @@ export function Workspace({
   const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
 
   const workspaceRef = useRef<HTMLElement>(null);
+  usePageScale(workspaceRef);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const prevLengthRef = useRef(allProducts.length);
   const visibleRef = useRef(new Set<string>());
@@ -110,26 +109,17 @@ export function Workspace({
 
   return (
     <main className="workspace" ref={workspaceRef} tabIndex={-1} aria-label="Vista previa del catálogo">
-      <div className="preview-save-status"><SaveStatus /></div>
-      <div className="info-bar">
+      <EditorTheme className="info-bar">
         <div>
           <h2>Vista Previa (A4)</h2>
           <p>{productChunks.some((page) => page.capacity !== itemsPerPage) ? 'Cantidad de fotos personalizada por página' : `${itemsPerPage} foto${itemsPerPage !== 1 ? 's' : ''} por página`}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <button
-            className="sidebar-right-toggle"
-            aria-expanded={sidebarRightOpen}
-            aria-controls="products-sidebar"
-            onClick={onToggleRightSidebar}
-          >
-            {sidebarRightOpen ? <><X size={14} /> Cerrar</> : <><LayoutList size={14} /> Productos</>}
-          </button>
           <Badge>
             {totalPages} Página{totalPages !== 1 ? 's' : ''}
           </Badge>
         </div>
-      </div>
+      </EditorTheme>
 
       {allProducts.length === 0 && (
         <button

@@ -1,22 +1,23 @@
 import { usePersistenceStore } from '../../store/usePersistenceStore';
+import type { MobileView } from '../organisms/MobileNav';
 
 interface Props {
-  left: React.ReactNode;
+  header: React.ReactNode;
+  tools: React.ReactNode;
   center: React.ReactNode;
-  right: React.ReactNode;
   nav: React.ReactNode;
+  mobileView: MobileView;
+  panelOpen: boolean;
 }
 
-export function AppLayout({ left, center, right, nav }: Props) {
+export function AppLayout({ header, tools, center, nav, mobileView, panelOpen }: Props) {
   const busy = usePersistenceStore((s) => s.managing || s.exporting);
-  return (
-    <>
-      <fieldset className="app-layout" disabled={busy} aria-label="Editor de catálogo" aria-busy={busy}>
-        {left}
-        {center}
-        {right}
-      </fieldset>
-      {nav}
-    </>
-  );
+  return <div className="editor-shell" data-view={mobileView} data-panel-open={panelOpen} data-html2canvas-ignore>
+    {header}
+    <fieldset className="app-layout" disabled={busy} aria-label="Editor de catálogo" aria-busy={busy}>
+      {tools}
+      {center}
+    </fieldset>
+    {nav}
+  </div>;
 }

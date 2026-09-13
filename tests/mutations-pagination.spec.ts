@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { openApp, readyAfterReload, saved } from './helpers';
+import { openApp, readyAfterReload, saved, showSection } from './helpers';
 
 test('fixed clock mixed intake creates unique identities and invalid mutations do not write or allocate', async ({ page }) => {
   await openApp(page);
@@ -45,15 +45,15 @@ test('central limits reject import before append, preserve stored text and allow
   expect(result).toEqual({ invalid: 'invalid', count: 0, allocations: 0, edit: 'invalid', length: 500 });
   await saved(page);
   await readyAfterReload(page);
-  await expect(page.locator('.rs-input-name')).toHaveValue('n'.repeat(1000));
-  await expect(page.locator('.rs-input-price')).toHaveValue('p'.repeat(1000));
+  await expect(page.locator('.rs-input-name textarea')).toHaveValue('n'.repeat(1000));
+  await expect(page.locator('.rs-input-price input')).toHaveValue('p'.repeat(1000));
   await page.getByRole('button', { name: 'Detalles', exact: true }).click();
-  await expect(page.locator('.rs-desc-textarea')).toHaveAttribute('maxlength', '500');
+  await expect(page.locator('.rs-desc-textarea textarea')).toHaveAttribute('maxlength', '500');
   await expect(page.locator('.cell-desc')).toHaveAttribute('maxlength', '500');
-  await page.locator('.rs-desc-textarea').fill('LISTA');
+  await page.locator('.rs-desc-textarea textarea').fill('LISTA');
   await expect(page.locator('.cell-desc')).toHaveValue('LISTA');
   await page.locator('.cell-desc').fill('VISTA');
-  await expect(page.locator('.rs-desc-textarea')).toHaveValue('VISTA');
+  await expect(page.locator('.rs-desc-textarea textarea')).toHaveValue('VISTA');
 });
 
 test('keyboard moves keep focus and persist order across list, index and preview', async ({ page }) => {
@@ -73,7 +73,7 @@ test('keyboard moves keep focus and persist order across list, index and preview
   await expect(page.locator('.rs-card').last()).toHaveAttribute('data-id', id!);
   await saved(page);
   await readyAfterReload(page);
-  const names = await page.locator('.rs-input-name').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+  const names = await page.locator('.rs-input-name textarea').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
   expect(await page.locator('.cell-name').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value))).toEqual(names);
   expect(await page.locator('.idx-name').allTextContents()).toEqual(names);
   await page.evaluate(() => window.catalogTest.fixture(1));
@@ -94,7 +94,7 @@ for (const count of [0, 1, 30, 31, 60, 61]) {
       expect(await page.locator('.idx-page').allTextContents()).toEqual(Array.from({ length: count }, (_, i) => String(Math.floor(i / perPage) + indexes + 1).padStart(2, '0')));
       const separators = await page.locator('.rs-page-sep').allTextContents();
       expect(separators.map((text) => text.trim())).toEqual(Array.from({ length: Math.ceil(count / perPage) }, (_, i) => `Página ${i + indexes + 1}`));
-      await page.getByRole('tab', { name: 'Páginas', exact: true }).click();
+      await showSection(page, 'Páginas');
       expect(await page.locator('.paginas-page-label').allTextContents()).toEqual(Array.from({ length: Math.ceil(count / perPage) }, (_, i) => `Página ${i + indexes + 1}`));
       if (!count) await expect(page.getByRole('button', { name: 'Descargar PDF', exact: true })).toBeDisabled();
     });

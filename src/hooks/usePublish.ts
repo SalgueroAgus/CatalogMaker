@@ -10,6 +10,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
 
   const products = useProductStore((s) => s.products);
@@ -33,14 +34,15 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
     const siteId = import.meta.env.VITE_NETLIFY_SITE_ID;
 
     if (!pat || !siteId) {
-      alert('Faltan las variables de entorno VITE_NETLIFY_PAT y VITE_NETLIFY_SITE_ID.');
+      setError('La publicación web no está configurada. Contactá a quien administra CatalogMaker.');
       return;
     }
     if (products.length === 0) {
-      alert('El catálogo está vacío.');
+      setError('El catálogo está vacío.');
       return;
     }
 
+    setError(null);
     const release = acquireExport();
     if (!release) return;
     setIsPublishing(true);
@@ -53,7 +55,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
       setLastUrl(url);
     } catch (err: unknown) {
       console.error('Publish error:', err);
-      alert(`Error al publicar: ${(err as Error).message || 'intenta de nuevo'}`);
+      setError(`Error al publicar: ${(err as Error).message || 'intenta de nuevo'}`);
     } finally {
       release();
       document.body.classList.remove('pdf-exporting');
@@ -64,10 +66,11 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
 
   const downloadHTML = async () => {
     if (products.length === 0) {
-      alert('El catálogo está vacío.');
+      setError('El catálogo está vacío.');
       return;
     }
 
+    setError(null);
     const release = acquireExport();
     if (!release) return;
     setIsDownloading(true);
@@ -85,7 +88,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
       URL.revokeObjectURL(blobUrl);
     } catch (err: unknown) {
       console.error('HTML download error:', err);
-      alert(`Error al generar el HTML: ${(err as Error).message || 'intenta de nuevo'}`);
+      setError(`Error al generar el HTML: ${(err as Error).message || 'intenta de nuevo'}`);
     } finally {
       release();
       document.body.classList.remove('pdf-exporting');
@@ -94,5 +97,5 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
     }
   };
 
-  return { publish, downloadHTML, isPublishing, isDownloading, progress, lastUrl };
+  return { publish, downloadHTML, isPublishing, isDownloading, progress, lastUrl, error, clearError: () => setError(null) };
 }

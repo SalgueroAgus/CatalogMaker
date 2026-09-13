@@ -1,13 +1,14 @@
 import { test, expect } from './fixtures';
-import { openApp } from './helpers';
+import { openApp, showSection } from './helpers';
 
 test('secondary controls expose selection and meet text, state and target measurements', async ({ page }, testInfo) => {
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(5, 3));
-  await page.getByRole('button', { name: 'Página', exact: true }).first().click();
+  await showSection(page, 'Diseño');
+  await page.getByRole('button', { name: 'Fondo y colores', exact: true }).click();
   await page.getByRole('tab', { name: 'Imagen', exact: true }).click();
   await expect(page.getByRole('tab', { name: 'Imagen', exact: true })).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('tab', { name: 'Páginas', exact: true }).click();
+  await showSection(page, 'Páginas');
   await expect(page.locator('.paginas-pill.active')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.gsp-btn.active').first()).toHaveAttribute('aria-pressed', 'true');
   await expect.poll(() => page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running' && animation.effect?.getComputedTiming().iterations !== Infinity).length)).toBe(0);
@@ -42,7 +43,7 @@ test('open color controls remain reachable after viewport height changes', async
   await page.setViewportSize({ width: 390, height: 844 });
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(3));
-  await page.getByRole('button', { name: 'Productos', exact: true }).click();
+  await showSection(page, 'Artículos');
   await page.locator('.rs-card').last().getByRole('button', { name: 'Detalles', exact: true }).click();
   await page.getByRole('button', { name: 'Editar Fondo del producto' }).last().click();
   await expect(page.getByRole('dialog')).toBeVisible();

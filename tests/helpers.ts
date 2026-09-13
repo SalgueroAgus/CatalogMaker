@@ -83,3 +83,25 @@ export async function readyAfterReload(page: Page) {
 export async function saved(page: Page) {
   await expect.poll(() => page.evaluate(() => window.catalogTest.persistence.getState().saving)).toBe('saved');
 }
+
+export async function showSection(page: Page, label: 'Artículos' | 'Páginas' | 'Diseño') {
+  if (await page.evaluate(() => window.innerWidth < 768)) await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: label, exact: true }).click();
+  else await page.getByRole('tab', { name: label, exact: true }).click();
+}
+
+export async function openManagement(page: Page) {
+  await page.getByRole('button', { name: 'Menú del catálogo', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Administración del catálogo', exact: true }).click();
+}
+
+export async function downloadPDF(page: Page) {
+  if (await page.evaluate(() => window.innerWidth < 1024)) {
+    await page.getByRole('button', { name: 'Exportar catálogo', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Descargar PDF', exact: true }).click();
+  } else await page.getByRole('button', { name: 'Descargar PDF', exact: true }).click();
+}
+
+export async function chooseOption(page: Page, label: string, option: string) {
+  await page.getByRole('combobox', { name: label, exact: true }).click();
+  await page.getByRole('option', { name: option, exact: true }).click();
+}

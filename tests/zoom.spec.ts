@@ -8,11 +8,11 @@ const inspector = `/private/tmp/catalogmaker-inspect-zoom-${process.pid}`;
 test.beforeAll(async () => {
   await execute('swiftc', ['-module-cache-path', '/private/tmp/catalogmaker-swift-cache', 'tests/inspect-pdf.swift', '-o', inspector]);
 });
-import { openApp, readyAfterReload, saved } from './helpers';
+import { openApp, readyAfterReload, saved, showSection, openManagement, downloadPDF } from './helpers';
 
-test('200% actual desktop browser zoom through Chromium native settings', async ({ playwright, launchOptions }, testInfo) => {
+test('200% actual desktop browser zoom through Chromium native settings', async ({ playwright, launchOptions, baseURL }, testInfo) => {
   const profile = await mkdtemp('/private/tmp/catalogmaker-zoom-');
-  const context = await playwright.chromium.launchPersistentContext(profile, { ...launchOptions, channel: 'chromium', headless: true, viewport: null, args: ['--window-size=1440,1000'], baseURL: 'http://127.0.0.1:5173' });
+  const context = await playwright.chromium.launchPersistentContext(profile, { ...launchOptions, headless: true, viewport: null, args: ['--window-size=1440,1000'], baseURL });
   try {
     const page = context.pages()[0];
     await page.goto('chrome://settings/appearance');
@@ -24,9 +24,9 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     expect(dimensions.visualScale).toBe(1);
     expect(dimensions.cssZoom).toBe('1');
     await writeFile(testInfo.outputPath('actual-zoom.json'), JSON.stringify(dimensions, null, 2));
-    await page.getByRole('button', { name: 'Ajustes', exact: true }).click();
-    await page.getByRole('button', { name: 'Agregar Producto', exact: true }).click();
-    await page.getByRole('button', { name: 'Productos', exact: true }).click();
+    await showSection(page, 'Artículos');
+    await page.getByRole('button', { name: 'Agregar producto', exact: true }).click();
+    await showSection(page, 'Artículos');
     await page.getByLabel('Nombre', { exact: true }).fill('VALOR LEGIBLE CON ZOOM');
     await page.getByLabel('Precio', { exact: true }).fill('$123456');
     await page.getByRole('button', { name: 'Detalles', exact: true }).click();
@@ -38,9 +38,9 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     await page.getByRole('button', { name: 'Cambiar foto', exact: true }).click();
     await (await choose).setFiles({ name: 'zoom.png', mimeType: 'image/png', buffer: Buffer.from(photo) });
     await saved(page);
-    await page.getByRole('button', { name: 'Ajustes', exact: true }).click();
-    await page.getByRole('button', { name: 'Agregar Producto', exact: true }).click();
-    await page.getByRole('button', { name: 'Productos', exact: true }).click();
+    await showSection(page, 'Artículos');
+    await page.getByRole('button', { name: 'Agregar producto', exact: true }).click();
+    await showSection(page, 'Artículos');
     await page.locator('.rs-card').last().getByRole('button', { name: 'Detalles', exact: true }).click();
     await page.locator('.rs-card').last().getByRole('button', { name: 'Subir', exact: true }).focus();
     await page.keyboard.press('Enter');
@@ -56,24 +56,24 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     await expect(reorder.getByLabel('Mover a posición', { exact: true })).toBeFocused();
     await reorder.getByRole('button', { name: 'Volver al editor', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Reordenar', exact: true })).toBeFocused();
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Eliminar producto 1', exact: true }).click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Confirmar', exact: true }).click();
     await saved(page);
     await expect(page.locator('.rs-card')).toHaveCount(1);
     await page.getByRole('button', { name: 'Ver catálogo, artículo 1', exact: true }).click();
     await expect(page.locator('.product-cell')).toBeFocused();
-    await page.getByRole('button', { name: 'Ajustes', exact: true }).click();
-    await page.getByRole('button', { name: 'Marca', exact: true }).click();
+    await showSection(page, 'Diseño');
     await page.getByLabel('Empresa', { exact: true }).fill('CATÁLOGO ZOOM');
     await page.getByLabel('Contacto', { exact: true }).fill('CONTACTO CON ZOOM');
     await saved(page);
-    await page.getByRole('button', { name: 'Administración del catálogo', exact: true }).click();
-    page.on('dialog', (dialog) => dialog.dismiss());
+    await openManagement(page);
     for (const action of ['Vaciar catálogo', 'Restablecer ajustes', 'Restablecer todo']) {
       await page.getByRole('button', { name: action, exact: true }).click();
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
     }
+    await page.getByRole('dialog', { name: 'Administración del catálogo' }).getByRole('button', { name: 'Cerrar', exact: true }).click();
     const download = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Descargar PDF', exact: true }).click();
+    await downloadPDF(page);
     const output = testInfo.outputPath('zoom-200.pdf');
     await (await download).saveAs(output);
     const inspected = await execute(inspector, [output]);
@@ -81,9 +81,9 @@ test('200% actual desktop browser zoom through Chromium native settings', async 
     const pdf: { count: number; pages: { footerText: string[] }[] } = JSON.parse(inspected.stdout);
     expect(pdf.count).toBe(2);
     expect(pdf.pages[1].footerText.join(' ')).toContain('$123456');
-    await page.getByRole('button', { name: 'Productos', exact: true }).click();
+    await showSection(page, 'Artículos');
     await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('VALOR LEGIBLE CON ZOOM');
-    await expect(page.getByRole('button', { name: 'Productos', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('button', { name: 'Artículos', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect.poll(() => page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running' && animation.effect?.getComputedTiming().iterations !== Infinity).length)).toBe(0);
     const cdp = await context.newCDPSession(page);
     const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });

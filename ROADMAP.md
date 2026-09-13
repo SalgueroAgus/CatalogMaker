@@ -66,7 +66,6 @@ Most direct product-editing interactions already exist. Finish the surrounding w
 - [ ] **E1 · Finish the Download/Share experience.** Provide clear download/share choices and completion feedback, including file location guidance. Store-name filenames, supported mobile sharing, unsupported-share download fallback, cancellation handling, and capture protection already exist. Add active-catalog naming and protection against switches with C1/C2; finish actual-device sharing checks.
 - [ ] **S2 · Make the public version explicit — conditional on retaining publishing.** Confirm the destination and catalog before publishing, distinguish polling timeout from confirmed success, and give understandable retry/errors. With catalog management, protect the public version from experimental copies and record successful publication per catalog. All current publishes target one configured site; timeout still returns a URL without confirming readiness.
 
-Resolve the browser credential model through [S1 below](#conditional-technical-ideas) before retaining one-click publishing. Login does not authorize the separately configured publishing token. PDF sharing remains available independently.
 
 ### Design choices
 

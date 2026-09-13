@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { openApp, readyAfterReload, saved } from './helpers';
+import { openApp, readyAfterReload, saved, showSection, openManagement } from './helpers';
 
 test('StrictMode hydration gates mutations and allocates each image once', async ({ page }) => {
   await openApp(page);
@@ -26,7 +26,7 @@ test('failed load stays distinct from empty and retry reads original data', asyn
   await expect(page.getByRole('button', { name: 'Reintentar carga' })).toBeVisible();
   expect(await page.evaluate(async () => (await window.catalogTest.products.getState().addBlankProduct()).status)).toBe('ignored');
   await page.getByRole('button', { name: 'Reintentar carga' }).click();
-  await expect(page.getByRole('button', { name: 'Agregar Producto', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Agregar producto', exact: true })).toBeVisible();
   expect(await page.evaluate(() => window.faults.writes)).toBe(0);
 });
 
@@ -150,12 +150,13 @@ for (const action of ['products', 'settings', 'everything'] as const) {
 test('all management confirmations name catalog and cancellation changes nothing', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(2));
-  await page.getByRole('button', { name: 'Administración del catálogo' }).click();
+  await openManagement(page);
   const writes = await page.evaluate(() => window.faults.writes);
   const messages: string[] = [];
-  page.on('dialog', async (dialog) => { messages.push(dialog.message()); await dialog.dismiss(); });
   for (const name of ['Vaciar catálogo', 'Restablecer ajustes', 'Restablecer todo']) {
     await page.getByRole('button', { name, exact: true }).click();
+    messages.push(await page.getByRole('alertdialog').innerText());
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
   }
   expect(messages).toHaveLength(3);
   expect(messages.every((message) => message.includes('CATÁLOGO HOGAR & DECO'))).toBe(true);
@@ -169,7 +170,8 @@ test('background tabs retain image; replacements, explicit removal and reset rel
     const h = window.catalogTest;
     await h.settings.getState().setBgImage(await h.photo());
   });
-  await page.getByRole('button', { name: 'Página', exact: true }).click();
+  await showSection(page, 'Diseño');
+  await page.getByRole('button', { name: 'Fondo y colores', exact: true }).click();
   await page.getByRole('tab', { name: 'Color', exact: true }).click();
   await readyAfterReload(page);
   expect(await page.evaluate(() => !!window.catalogTest.settings.getState().bgImage)).toBe(true);

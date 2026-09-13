@@ -53,7 +53,7 @@ test('real Excel over-limit import retains correction rows and appends once afte
   await expect(correction).toBeFocused();
   await expect(correction).toHaveAttribute('aria-invalid', 'false');
   await page.getByRole('button', { name: 'Importar 1 artículo', exact: true }).click();
-  await expect(page.locator('.rs-input-name')).toHaveValue('EXCEL');
+  await expect(page.locator('.rs-input-name textarea')).toHaveValue('EXCEL');
   await saved(page);
   await readyAfterReload(page);
   expect(await page.evaluate(() => window.catalogTest.products.getState().products.map((p) => p.description))).toEqual(['CORREGIDO']);
@@ -88,11 +88,11 @@ test('invalid stored data is preserved; partial failed hydration allocates no UR
     db.close();
   });
   await page.getByRole('button', { name: 'Reintentar carga' }).click();
-  await expect(page.locator('.rs-input-name')).toHaveValue('LEGACY');
+  await expect(page.locator('.rs-input-name textarea')).toHaveValue('LEGACY');
   await page.getByRole('button', { name: 'Detalles', exact: true }).click();
-  await expect(page.locator('.rs-desc-textarea')).toHaveValue('l'.repeat(600));
-  await expect(page.locator('.rs-desc-textarea')).toHaveAttribute('aria-invalid', 'true');
-  await page.locator('.rs-desc-textarea').fill('CORREGIDO');
+  await expect(page.locator('.rs-desc-textarea textarea')).toHaveValue('l'.repeat(600));
+  await expect(page.locator('.rs-desc-textarea textarea')).toHaveAttribute('aria-invalid', 'true');
+  await page.locator('.rs-desc-textarea textarea').fill('CORREGIDO');
   await saved(page);
   await readyAfterReload(page);
   expect(await page.evaluate(() => window.catalogTest.products.getState().products[0].id)).toBe('valid-legacy-id');

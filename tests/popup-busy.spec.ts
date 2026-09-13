@@ -1,12 +1,15 @@
 import { test, expect } from './fixtures';
-import { openApp, saved } from './helpers';
+import { openApp, saved, showSection } from './helpers';
 
 for (const kind of ['product', 'page'] as const) {
   test(`${kind} color popup closes during keyboard-started export and later edits persist`, async ({ page }, testInfo) => {
     await openApp(page);
     await page.evaluate(() => window.catalogTest.fixture(2));
     const label = kind === 'product' ? 'Fondo del producto' : 'Fondo páginas';
-    if (kind === 'page') await page.getByRole('button', { name: 'Página', exact: true }).first().click();
+    if (kind === 'page') {
+      await showSection(page, 'Diseño');
+      await page.getByRole('button', { name: 'Fondo y colores', exact: true }).click();
+    }
     if (kind === 'product') await page.locator('.rs-card').first().getByRole('button', { name: 'Detalles', exact: true }).click();
     const swatch = page.getByRole('button', { name: `Editar ${label}`, exact: true }).first();
     await swatch.click();

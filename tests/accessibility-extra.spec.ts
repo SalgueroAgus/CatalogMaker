@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { openApp, saved, readyAfterReload } from './helpers';
+import { openApp, saved, readyAfterReload, showSection } from './helpers';
 
 for (const width of [360, 768, 1200]) {
   test(`preview photo actions retain a 44px target at width ${width}`, async ({ page }, testInfo) => {
@@ -19,11 +19,11 @@ test('mobile product preview action reveals the requested product', async ({ pag
   await page.setViewportSize({ width: 390, height: 844 });
   await openApp(page);
   await page.evaluate(() => window.catalogTest.fixture(12));
-  await page.getByRole('button', { name: 'Productos', exact: true }).click();
+  await showSection(page, 'Artículos');
   const card = page.locator('.rs-card').nth(5);
   const id = await card.getAttribute('data-id');
   await card.getByRole('button', { name: 'Ver catálogo, artículo 6', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Vista Previa', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('button', { name: 'Vista previa', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.locator(`[id="cell-${id}"]`)).toBeInViewport();
   await expect(page.locator(`[id="cell-${id}"]`)).toBeFocused();
 });
@@ -35,7 +35,7 @@ test('keyboard-only essential editor workflow keeps focus, actions, saving and e
     await button.focus();
     await page.keyboard.press('Enter');
   };
-  await activate('Agregar Producto');
+  await activate('Agregar producto');
   const name = page.getByLabel('Nombre', { exact: true }).first();
   await name.focus();
   await page.keyboard.press('ControlOrMeta+A');
@@ -53,7 +53,7 @@ test('keyboard-only essential editor workflow keeps focus, actions, saving and e
   const png = await page.evaluate(async () => Array.from(new Uint8Array(await (await window.catalogTest.photo()).arrayBuffer())));
   await (await choice).setFiles({ name: 'keyboard.png', mimeType: 'image/png', buffer: Buffer.from(png) });
   await saved(page);
-  await activate('Agregar Producto');
+  await activate('Agregar producto');
   await page.locator('.rs-card').last().getByRole('button', { name: 'Detalles', exact: true }).focus();
   await page.keyboard.press('Enter');
   await page.locator('.rs-card').last().getByRole('button', { name: 'Subir', exact: true }).focus();
@@ -68,9 +68,14 @@ test('keyboard-only essential editor workflow keeps focus, actions, saving and e
   });
   await activate('Reintentar guardado');
   await saved(page);
-  await activate('Administración del catálogo');
-  page.on('dialog', (dialog) => dialog.dismiss());
-  for (const action of ['Vaciar catálogo', 'Restablecer ajustes', 'Restablecer todo']) await activate(action);
+  await activate('Menú del catálogo');
+  await page.getByRole('menuitem', { name: 'Administración del catálogo' }).focus();
+  await page.keyboard.press('Enter');
+  for (const action of ['Vaciar catálogo', 'Restablecer ajustes', 'Restablecer todo']) {
+    await activate(action);
+    await activate('Cancelar');
+  }
+  await activate('Cerrar');
   expect(await page.evaluate(() => window.catalogTest.products.getState().products.length)).toBe(2);
   const download = page.waitForEvent('download');
   await activate('Descargar PDF');
