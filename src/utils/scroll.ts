@@ -1,6 +1,9 @@
 export function scrollToProduct(id: string): void {
-  const cell = document.querySelector<HTMLElement>(`[data-product-id="${id}"]`);
-  if (cell) cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const cell = document.getElementById(`cell-${id}`);
+  if (cell) {
+    cell.focus({ preventScroll: true });
+    cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 export function scrollToLastPage(workspaceEl: HTMLElement | null): void {

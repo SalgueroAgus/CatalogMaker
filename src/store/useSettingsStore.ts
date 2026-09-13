@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import type { Colors, Fonts, FontSizes, GridShape } from '../types';
 import { loadStoredGoogleFonts } from '../constants/fonts';
-import { dbSaveBgImage, dbClearAll, type PersistedSettings } from '../db';
+import type { PersistedSettings } from '../db';
+import { createImageResource, manageCatalog, mutateCatalog } from './catalogSession';
+import type { MutationResult } from './usePersistenceStore';
+import { isPageItemCount } from '../utils/chunks';
 
 const setCSSVar = (name: string, value: string) =>
   document.documentElement.style.setProperty(name, value);
@@ -74,17 +77,19 @@ interface SettingsState {
   bgImageOpacity: number;
   itemsPerPage: number;
   pageLayouts: Record<number, GridShape>;
-  updateStoreName: (v: string) => void;
-  updateContact: (v: string) => void;
-  updateColor: (type: keyof Colors, value: string) => void;
-  updateFont: (type: keyof Fonts, value: string) => void;
-  updateFontSize: (type: keyof FontSizes, value: number) => void;
-  setBgImage: (file: File | null) => void;
-  setBgImageOpacity: (v: number) => void;
-  setItemsPerPage: (n: number) => void;
-  setPageLayout: (pageIndex: number, shape: GridShape) => void;
+  pageItemCounts: Record<number, number>;
+  updateStoreName: (v: string) => Promise<MutationResult>;
+  updateContact: (v: string) => Promise<MutationResult>;
+  updateColor: (type: keyof Colors, value: string) => Promise<MutationResult>;
+  updateFont: (type: keyof Fonts, value: string) => Promise<MutationResult>;
+  updateFontSize: (type: keyof FontSizes, value: number) => Promise<MutationResult>;
+  setBgImage: (file: File | null) => Promise<MutationResult>;
+  setBgImageOpacity: (v: number) => Promise<MutationResult>;
+  setItemsPerPage: (n: number) => Promise<MutationResult>;
+  setPageLayout: (pageIndex: number, shape: GridShape) => Promise<MutationResult>;
+  setPageItemCount: (pageIndex: number, count: number | null) => Promise<MutationResult>;
   hydrateSettings: (s: PersistedSettings, bgImageUrl: string | null) => void;
-  resetSettings: () => void;
+  resetSettings: () => Promise<MutationResult>;
 }
 
 export const DEFAULT_FONTS: Fonts = {
@@ -127,7 +132,7 @@ export const DEFAULT_COLORS: Colors = {
   idxAccent: 'rgba(79,94,79,1)',
 };
 
-const DEFAULT_STATE = {
+export const DEFAULT_STATE = {
   storeName:      'CATÁLOGO HOGAR & DECO',
   footerContact:  'Contacto: ventas@tutienda.com | WhatsApp: +54 9 11 2345-6789',
   colors:         DEFAULT_COLORS,
@@ -137,60 +142,61 @@ const DEFAULT_STATE = {
   bgImageOpacity: 0.15,
   itemsPerPage:   3,
   pageLayouts:    {} as Record<number, GridShape>,
+  pageItemCounts: {} as Record<number, number>,
 };
 
 export const useSettingsStore = create<SettingsState>()((set) => ({
   ...DEFAULT_STATE,
 
-  updateStoreName: (v) => set({ storeName: v.toUpperCase() }),
-  updateContact:   (v) => set({ footerContact: v }),
+  updateStoreName: (v) => mutateCatalog(() => set({ storeName: v.toUpperCase() })),
+  updateContact: (v) => mutateCatalog(() => set({ footerContact: v })),
 
-  updateColor: (type, value) => {
+  updateColor: (type, value) => mutateCatalog(() => {
     setCSSVar(COLOR_VAR_MAP[type], value);
     set((s) => ({ colors: { ...s.colors, [type]: value } }));
-  },
+  }),
 
-  updateFont: (type, value) => {
+  updateFont: (type, value) => mutateCatalog(() => {
     setCSSVar(FONT_VAR_MAP[type], value);
     set((s) => ({ fonts: { ...s.fonts, [type]: value } }));
-  },
+  }),
 
-  updateFontSize: (type, value) => {
+  updateFontSize: (type, value) => mutateCatalog(() => {
     setCSSVar(SIZE_VAR_MAP[type], `${value}px`);
     set((s) => ({ fontSizes: { ...s.fontSizes, [type]: value } }));
+  }),
+
+  setBgImage: (file) => mutateCatalog(() => set({ bgImage: file ? createImageResource(file) : null })),
+  setBgImageOpacity: (v) => mutateCatalog(() => set({ bgImageOpacity: v })),
+  setItemsPerPage: (n) => {
+    if (!isPageItemCount(n)) return Promise.resolve({ status: 'ignored' });
+    return mutateCatalog(() => set({ itemsPerPage: n, pageLayouts: {} }));
   },
-
-  setBgImage: (file) =>
-    set((s) => {
-      if (s.bgImage) URL.revokeObjectURL(s.bgImage);
-      dbSaveBgImage(file);
-      return { bgImage: file ? URL.createObjectURL(file) : null };
-    }),
-
-  setBgImageOpacity: (v) => set({ bgImageOpacity: v }),
-
-  setItemsPerPage: (n) => set({ itemsPerPage: n, pageLayouts: {} }),
-
-  setPageLayout: (pageIndex, shape) =>
-    set((s) => ({ pageLayouts: { ...s.pageLayouts, [pageIndex]: shape } })),
+  setPageLayout: (pageIndex, shape) => mutateCatalog(() => set((s) => ({ pageLayouts: { ...s.pageLayouts, [pageIndex]: shape } }))),
+  setPageItemCount: (pageIndex, count) => {
+    if (!Number.isSafeInteger(pageIndex) || pageIndex < 0 || (count !== null && !isPageItemCount(count))) return Promise.resolve({ status: 'ignored' });
+    return mutateCatalog(() => set((s) => {
+      const pageItemCounts = { ...s.pageItemCounts };
+      const pageLayouts = { ...s.pageLayouts };
+      if (count === null) delete pageItemCounts[pageIndex];
+      else pageItemCounts[pageIndex] = count;
+      delete pageLayouts[pageIndex];
+      return { pageItemCounts, pageLayouts };
+    }));
+  },
 
   hydrateSettings: (s, bgImageUrl) => {
-    applyColors(s.colors);
-    applyFonts(s.fonts);
-    applyFontSizes(s.fontSizes);
-    loadStoredGoogleFonts(s.fonts as unknown as Record<string, string>);
-    set({ ...s, bgImage: bgImageUrl });
+    const colors = { ...DEFAULT_COLORS, ...s.colors };
+    const fonts = { ...DEFAULT_FONTS, ...s.fonts };
+    const fontSizes = { ...DEFAULT_FONT_SIZES, ...s.fontSizes };
+    applyColors(colors);
+    applyFonts(fonts);
+    applyFontSizes(fontSizes);
+    loadStoredGoogleFonts(fonts as unknown as Record<string, string>);
+    set({ ...s, colors, fonts, fontSizes, pageItemCounts: s.pageItemCounts ?? {}, bgImage: bgImageUrl });
   },
 
-  resetSettings: () =>
-    set((s) => {
-      if (s.bgImage) URL.revokeObjectURL(s.bgImage);
-      applyColors(DEFAULT_COLORS);
-      applyFonts(DEFAULT_FONTS);
-      applyFontSizes(DEFAULT_FONT_SIZES);
-      dbClearAll();
-      return { ...DEFAULT_STATE };
-    }),
+  resetSettings: () => manageCatalog('settings'),
 }));
 
 export type { PersistedSettings };

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useProductStore } from '../store/useProductStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { blobUrlToBase64 } from '../utils/image';
-import type { ExportContext } from '../utils/pdf';
+import { prepareExportContext } from '../utils/capture';
+import { acquireExport } from '../store/catalogSession';
 import { capturePages, buildCatalogHTML, extractPageLinks } from '../utils/htmlExport';
 import { deployToNetlify } from '../utils/netlify';
 
@@ -15,17 +15,11 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
   const products = useProductStore((s) => s.products);
   const colors = useSettingsStore((s) => s.colors);
   const storeName = useSettingsStore((s) => s.storeName);
+  const bgImage = useSettingsStore((s) => s.bgImage);
   const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
 
   async function buildHtml(onProgress: (msg: string) => void): Promise<string> {
-    const imageMap = new Map<string, string>();
-    await Promise.all(
-      products.map(async (p) => {
-        if (!p.image) return;
-        imageMap.set(p.id, p.image.startsWith('data:') ? p.image : await blobUrlToBase64(p.image));
-      }),
-    );
-    const ctx: ExportContext = { imageMap, bgImageOpacity, bgColor: colors.bg || '#fafafa' };
+    const ctx = await prepareExportContext(products, bgImage, bgImageOpacity, colors.bg || '#fafafa');
     const pages = pagesRef.current.filter((p): p is HTMLDivElement => p !== null);
     const pageLinks = extractPageLinks(pages);
     const dataUrls = await capturePages(pages, ctx, (cur, tot) =>
@@ -47,6 +41,8 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
       return;
     }
 
+    const release = acquireExport();
+    if (!release) return;
     setIsPublishing(true);
     setProgress('Preparando…');
     document.body.classList.add('pdf-exporting');
@@ -59,6 +55,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
       console.error('Publish error:', err);
       alert(`Error al publicar: ${(err as Error).message || 'intenta de nuevo'}`);
     } finally {
+      release();
       document.body.classList.remove('pdf-exporting');
       setIsPublishing(false);
       setProgress('');
@@ -71,6 +68,8 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
       return;
     }
 
+    const release = acquireExport();
+    if (!release) return;
     setIsDownloading(true);
     setProgress('Preparando…');
     document.body.classList.add('pdf-exporting');
@@ -88,6 +87,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
       console.error('HTML download error:', err);
       alert(`Error al generar el HTML: ${(err as Error).message || 'intenta de nuevo'}`);
     } finally {
+      release();
       document.body.classList.remove('pdf-exporting');
       setIsDownloading(false);
       setProgress('');

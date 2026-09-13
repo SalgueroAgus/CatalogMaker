@@ -9,9 +9,10 @@ import { usePDF } from './hooks/usePDF';
 import { usePublish } from './hooks/usePublish';
 import { usePageScale } from './hooks/usePageScale';
 import { useIdentity } from './hooks/useIdentity';
-import { useProductStore } from './store/useProductStore';
-import { useSettingsStore } from './store/useSettingsStore';
-import { dbLoadProducts, dbLoadBgImage, dbLoadSettings } from './db';
+import { hydrateCatalog } from './store/catalogSession';
+import { usePersistenceStore } from './store/usePersistenceStore';
+import { SaveStatus } from './components/molecules/SaveStatus';
+import { scrollToProduct } from './utils/scroll';
 
 type Tab = 'preview' | 'settings' | 'products';
 
@@ -24,18 +25,12 @@ export default function App() {
 
   const { exportToPDF, isExporting, progress } = usePDF(pagesRef);
   const { publish, downloadHTML, isPublishing, isDownloading, progress: publishProgress, lastUrl: lastPublishUrl } = usePublish(pagesRef);
-  const hydrateProducts  = useProductStore((s) => s.hydrateProducts);
-  const hydrateSettings  = useSettingsStore((s) => s.hydrateSettings);
+  const loadState = usePersistenceStore((s) => s.loading);
 
   usePageScale();
 
   useEffect(() => {
-    dbLoadProducts().then(hydrateProducts).catch(console.error);
-    Promise.all([dbLoadSettings(), dbLoadBgImage()])
-      .then(([settings, bgImageUrl]) => {
-        if (settings) hydrateSettings(settings, bgImageUrl);
-      })
-      .catch(console.error);
+    void hydrateCatalog();
   }, []);
 
   function switchTab(tab: Tab) {
@@ -44,12 +39,38 @@ export default function App() {
     setActiveTab(tab);
   }
 
-  function toggleRightSidebar() {
-    setSidebarRightOpen((prev) => {
-      document.body.classList.toggle('sidebar-right-open', !prev);
-      return !prev;
-    });
+  function showProduct(id: string) {
+    switchTab('preview');
+    document.body.classList.remove('sidebar-right-open');
+    setSidebarRightOpen(false);
+    requestAnimationFrame(() => scrollToProduct(id));
   }
+
+  function toggleRightSidebar() {
+    const next = !sidebarRightOpen;
+    document.body.classList.toggle('sidebar-right-open', next);
+    setSidebarRightOpen(next);
+    requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(next ? '[data-drawer-close]' : '.sidebar-right-toggle')?.focus());
+  }
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && sidebarRightOpen) toggleRightSidebar();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [sidebarRightOpen]);
+
+  useEffect(() => {
+    const onUnload = (event: BeforeUnloadEvent) => {
+      if (usePersistenceStore.getState().saving !== 'saved') {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', onUnload);
+    return () => window.removeEventListener('beforeunload', onUnload);
+  }, []);
 
   const handleVisibleChange = useCallback((ids: Set<string>) => {
     setVisibleIds(ids);
@@ -58,6 +79,8 @@ export default function App() {
   if (!import.meta.env.DEV && (loading || !user)) {
     return <LoginPage onLogin={openLogin} loading={loading} />;
   }
+
+  if (loadState !== 'ready') return <div className="startup-status"><SaveStatus /></div>;
 
   return (
     <AppLayout
@@ -84,7 +107,7 @@ export default function App() {
           onToggleRightSidebar={toggleRightSidebar}
         />
       }
-      right={<RightSidebar visibleIds={visibleIds} />}
+      right={<RightSidebar visibleIds={visibleIds} onClose={toggleRightSidebar} onShowProduct={showProduct} />}
       nav={<MobileNav activeTab={activeTab} onTabChange={switchTab} />}
     />
   );

@@ -4,8 +4,10 @@ import * as Tabs from '@radix-ui/react-tabs';
 import {
   ArrowRight, BookOpen, Check, ChevronRight,
   Download, FilePlus, FolderOpen, Globe,
-  Image as ImageIcon, ImagePlus, RotateCcw, Trash2, X,
+  Image as ImageIcon, ImagePlus, X,
 } from 'lucide-react';
+import { CatalogManagement } from '../molecules/CatalogManagement';
+import { SaveStatus } from '../molecules/SaveStatus';
 import { Button } from '../atoms/Button';
 import { ColorGroup } from '../molecules/ColorGroup';
 import { FormField } from '../molecules/FormField';
@@ -40,9 +42,7 @@ export function LeftSidebar({
 
   const addProducts     = useProductStore((s) => s.addProducts);
   const addBlankProduct = useProductStore((s) => s.addBlankProduct);
-  const resetCatalog    = useProductStore((s) => s.resetCatalog);
   const products        = useProductStore((s) => s.products);
-  const resetSettings   = useSettingsStore((s) => s.resetSettings);
 
   const storeName = useSettingsStore((s) => s.storeName);
   const footerContact = useSettingsStore((s) => s.footerContact);
@@ -52,10 +52,6 @@ export function LeftSidebar({
   const updateContact = useSettingsStore((s) => s.updateContact);
   const setBgImage = useSettingsStore((s) => s.setBgImage);
   const setBgImageOpacity = useSettingsStore((s) => s.setBgImageOpacity);
-
-  function handleFondoMode(mode: string) {
-    if (mode === 'color') setBgImage(null);
-  }
 
   return (
     <aside className="sidebar-left">
@@ -67,6 +63,8 @@ export function LeftSidebar({
             <button className="sb-logout-btn" onClick={onLogout}>Salir</button>
           </div>
         </div>
+
+        <SaveStatus />
 
         <Accordion.Root type="multiple" defaultValue={['catalogo']} className="sb-stack">
 
@@ -163,7 +161,6 @@ export function LeftSidebar({
 
                 <Tabs.Root
                   defaultValue={bgImage ? 'imagen' : 'color'}
-                  onValueChange={handleFondoMode}
                 >
                   <Tabs.List className="sb-fondo-tabs">
                     <Tabs.Trigger value="color" className="sb-fondo-tab">Color</Tabs.Trigger>
@@ -181,7 +178,7 @@ export function LeftSidebar({
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0] ?? null;
-                          setBgImage(file);
+                          if (file) setBgImage(file);
                           e.target.value = '';
                         }}
                       />
@@ -273,33 +270,18 @@ export function LeftSidebar({
             </Accordion.Content>
           </Accordion.Item>
 
+          <Accordion.Item value="management" className="sb-section">
+            <Accordion.Trigger className="sb-accordion-header">
+              <span>Administración del catálogo</span>
+              <ChevronRight className="sb-chevron" size={12} aria-hidden="true" />
+            </Accordion.Trigger>
+            <Accordion.Content><CatalogManagement /></Accordion.Content>
+          </Accordion.Item>
         </Accordion.Root>
       </div>
 
       <div className="sb-export-footer">
-        <div className="sb-footer-actions">
-          <Button
-            variant="danger"
-            disabled={products.length === 0}
-            onClick={() => {
-              if (confirm('Se eliminarán todos los productos. ¿Continuar?')) resetCatalog();
-            }}
-          >
-            <Trash2 size={14} aria-hidden="true" /> Vaciar Catálogo
-          </Button>
-          <Button
-            variant="reset"
-            onClick={() => {
-              if (confirm('Se eliminarán todos los productos y se restablecerá la configuración. ¿Continuar?')) {
-                resetCatalog();
-                resetSettings();
-              }
-            }}
-          >
-            <RotateCcw size={14} aria-hidden="true" /> Restablecer Todo
-          </Button>
-        </div>
-        <Button variant="publish" onClick={onPublish} disabled={isPublishing || isDownloading || isExporting}>
+        <Button variant="publish" onClick={onPublish} disabled={products.length === 0 || isPublishing || isDownloading || isExporting}>
           {isPublishing
             ? <><span className="spinner" aria-hidden="true" /> {publishProgress}</>
             : <><Globe size={14} aria-hidden="true" /> Publicar en Web</>}
@@ -314,7 +296,7 @@ export function LeftSidebar({
             <Check size={14} aria-hidden="true" /> Ver catálogo publicado <ArrowRight size={12} aria-hidden="true" />
           </a>
         )}
-        <Button variant="export" onClick={onExport} disabled={isExporting || isPublishing || isDownloading}>
+        <Button variant="export" onClick={onExport} disabled={products.length === 0 || isExporting || isPublishing || isDownloading}>
           {isExporting
             ? <><span className="spinner" aria-hidden="true" /> {exportProgress}</>
             : <><Download size={14} aria-hidden="true" /> Descargar PDF</>}

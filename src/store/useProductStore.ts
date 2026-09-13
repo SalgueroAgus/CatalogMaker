@@ -2,154 +2,112 @@ import { create } from 'zustand';
 import type { Product } from '../types';
 import { PLACEHOLDER_IMG } from '../utils/image';
 import type { ExcelRow } from '../utils/excel';
-import {
-  dbSaveProducts,
-  dbSaveImage,
-  dbDeleteImage,
-  dbClearProducts,
-  type ProductMeta,
-} from '../db';
-
-const toMeta = (p: Product): ProductMeta => ({
-  id: p.id,
-  name: p.name,
-  price: p.price,
-  description: p.description,
-  bgColor: p.bgColor,
-});
+import { validateProductField, validateProductFields, type EditableProductField } from '../utils/products';
+import { canMutate, createImageResource, manageCatalog, mutateCatalog } from './catalogSession';
+import type { MutationResult } from './usePersistenceStore';
 
 interface ProductState {
   products: Product[];
-  addProducts: (files: File[]) => void;
-  addBlankProduct: () => void;
-  deleteProduct: (id: string) => void;
-  moveProduct: (id: string, direction: 'up' | 'down') => void;
-  reorderProduct: (fromId: string, toId: string, above: boolean) => void;
-  updateField: (id: string, field: keyof Omit<Product, 'id'>, value: string) => void;
-  replaceImage: (id: string, file: File) => void;
-  importProducts: (rows: ExcelRow[], imageFiles: File[]) => void;
-  resetCatalog: () => void;
+  addProducts: (files: File[]) => Promise<MutationResult>;
+  addBlankProduct: () => Promise<MutationResult>;
+  deleteProduct: (id: string) => Promise<MutationResult>;
+  moveProduct: (id: string, direction: 'up' | 'down') => Promise<MutationResult>;
+  reorderProduct: (fromId: string, toId: string, above: boolean) => Promise<MutationResult>;
+  updateField: (id: string, field: EditableProductField, value: string) => Promise<MutationResult>;
+  replaceImage: (id: string, file: File) => Promise<MutationResult>;
+  importProducts: (rows: ExcelRow[], imageFiles: File[]) => Promise<MutationResult>;
+  resetCatalog: () => Promise<MutationResult>;
   hydrateProducts: (products: Product[]) => void;
 }
 
-export const useProductStore = create<ProductState>((set) => ({
-  products: [],
+const ignored = (): Promise<MutationResult> => Promise.resolve({ status: 'ignored' });
 
+function blankProduct(): Product {
+  return {
+    id: crypto.randomUUID(),
+    name: 'NUEVO ARTÍCULO',
+    price: '$0.00',
+    description: 'Descripción del producto.',
+    image: PLACEHOLDER_IMG,
+    bgColor: 'rgba(255,255,255,1)',
+  };
+}
+
+export const useProductStore = create<ProductState>((set, get) => ({
+  products: [],
   hydrateProducts: (products) => set({ products }),
 
   addProducts: (files) => {
-    const images = files.filter((f) => f.type.startsWith('image/'));
-    if (!images.length) return;
-    const newProducts: Product[] = images.map((file, i) => ({
-      id: String(Date.now() + i),
-      name: (file.name.substring(0, file.name.lastIndexOf('.')) || 'NUEVO PRODUCTO').toUpperCase(),
-      price: '$0.00',
-      description: 'Descripción del producto.',
-      image: URL.createObjectURL(file),
-      bgColor: 'rgba(255,255,255,1)',
-    }));
-    newProducts.forEach((p, i) => dbSaveImage(p.id, images[i]));
-    set((s) => {
-      const updated = [...s.products, ...newProducts];
-      dbSaveProducts(updated.map(toMeta));
-      return { products: updated };
+    const images = files.filter((file) => file.type.startsWith('image/'));
+    if (!canMutate() || !images.length) return ignored();
+    return mutateCatalog(() => {
+      const added = images.map((file) => ({
+        ...blankProduct(),
+        name: (file.name.replace(/\.[^.]+$/, '') || 'NUEVO PRODUCTO').toUpperCase(),
+        image: createImageResource(file),
+      }));
+      set({ products: [...get().products, ...added] });
     });
   },
 
-  addBlankProduct: () =>
-    set((s) => {
-      const blank: Product = {
-        id: String(Date.now()),
-        name: 'NUEVO ARTÍCULO',
-        price: '$0.00',
-        description: 'Descripción del producto.',
-        image: PLACEHOLDER_IMG,
-        bgColor: 'rgba(255,255,255,1)',
-      };
-      const updated = [...s.products, blank];
-      dbSaveProducts(updated.map(toMeta));
-      return { products: updated };
-    }),
+  addBlankProduct: () => mutateCatalog(() => set({ products: [...get().products, blankProduct()] })),
 
-  deleteProduct: (id) =>
-    set((s) => {
-      const updated = s.products.filter((p) => p.id !== id);
-      dbDeleteImage(id);
-      dbSaveProducts(updated.map(toMeta));
-      return { products: updated };
-    }),
+  deleteProduct: (id) => {
+    if (!get().products.some((p) => p.id === id)) return ignored();
+    return mutateCatalog(() => set({ products: get().products.filter((p) => p.id !== id) }));
+  },
 
-  moveProduct: (id, direction) =>
-    set((s) => {
-      const arr = [...s.products];
-      const idx = arr.findIndex((p) => p.id === id);
-      if (direction === 'up' && idx > 0)
-        [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]];
-      else if (direction === 'down' && idx < arr.length - 1)
-        [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
-      dbSaveProducts(arr.map(toMeta));
-      return { products: arr };
-    }),
+  moveProduct: (id, direction) => {
+    const products = [...get().products];
+    const from = products.findIndex((p) => p.id === id);
+    const to = direction === 'up' ? from - 1 : direction === 'down' ? from + 1 : -1;
+    if (from < 0 || to < 0 || to >= products.length) return ignored();
+    [products[from], products[to]] = [products[to], products[from]];
+    return mutateCatalog(() => set({ products }));
+  },
 
-  reorderProduct: (fromId, toId, above) =>
-    set((s) => {
-      const arr = [...s.products];
-      const fromIdx = arr.findIndex((p) => p.id === fromId);
-      const [moved] = arr.splice(fromIdx, 1);
-      let toIdx = arr.findIndex((p) => p.id === toId);
-      if (!above) toIdx++;
-      arr.splice(toIdx, 0, moved);
-      dbSaveProducts(arr.map(toMeta));
-      return { products: arr };
-    }),
+  reorderProduct: (fromId, toId, above) => {
+    const products = [...get().products];
+    const from = products.findIndex((p) => p.id === fromId);
+    if (fromId === toId || from < 0 || !products.some((p) => p.id === toId)) return ignored();
+    const [moved] = products.splice(from, 1);
+    const to = products.findIndex((p) => p.id === toId) + (above ? 0 : 1);
+    products.splice(to, 0, moved);
+    if (products.every((p, index) => p === get().products[index])) return ignored();
+    return mutateCatalog(() => set({ products }));
+  },
 
-  updateField: (id, field, value) =>
-    set((s) => {
-      const updated = s.products.map((p) => (p.id === id ? { ...p, [field]: value } : p));
-      dbSaveProducts(updated.map(toMeta));
-      return { products: updated };
-    }),
+  updateField: (id, field, value) => {
+    const error = validateProductField(field, value);
+    if (error) return Promise.resolve({ status: 'invalid', error });
+    const product = get().products.find((p) => p.id === id);
+    if (!product || product[field] === value) return ignored();
+    return mutateCatalog(() => set({ products: get().products.map((p) => p.id === id ? { ...p, [field]: value } : p) }));
+  },
 
   replaceImage: (id, file) => {
-    dbSaveImage(id, file);
-    set((s) => {
-      const old = s.products.find((p) => p.id === id);
-      if (old?.image && old.image !== PLACEHOLDER_IMG) URL.revokeObjectURL(old.image);
-      const url = URL.createObjectURL(file);
-      return {
-        products: s.products.map((p) => (p.id === id ? { ...p, image: url } : p)),
-      };
+    if (!canMutate() || !get().products.some((p) => p.id === id) || !file.type.startsWith('image/')) return ignored();
+    return mutateCatalog(() => {
+      const image = createImageResource(file);
+      set({ products: get().products.map((p) => p.id === id ? { ...p, image } : p) });
     });
   },
 
   importProducts: (rows, imageFiles) => {
-    const fileMap = new Map<string, File>();
-    imageFiles.forEach((f) => {
-      const key = f.name.replace(/\.[^.]+$/, '').trim().toLowerCase();
-      fileMap.set(key, f);
-    });
-    const newProducts: Product[] = rows.map((row, i) => {
-      const id = String(Date.now() + i);
-      const imageFile = fileMap.get(row.name.trim().toLowerCase());
-      if (imageFile) dbSaveImage(id, imageFile);
-      return {
-        id,
-        name: row.name,
-        price: row.price,
-        description: row.description || 'Descripción del producto.',
-        image: imageFile ? URL.createObjectURL(imageFile) : PLACEHOLDER_IMG,
-        bgColor: 'rgba(255,255,255,1)',
-      };
-    });
-    set((s) => {
-      const updated = [...s.products, ...newProducts];
-      dbSaveProducts(updated.map(toMeta));
-      return { products: updated };
+    if (!canMutate() || !rows.length) return ignored();
+    for (const [index, row] of rows.entries()) {
+      const error = validateProductFields(row);
+      if (error) return Promise.resolve({ status: 'invalid', error: `Fila ${index + 2}: ${error}` });
+    }
+    const fileMap = new Map(imageFiles.filter((f) => f.type.startsWith('image/')).map((f) => [f.name.replace(/\.[^.]+$/, '').trim().toLowerCase(), f]));
+    return mutateCatalog(() => {
+      const added = rows.map((row) => {
+        const file = fileMap.get(row.name.trim().toLowerCase());
+        return { ...blankProduct(), ...row, image: file ? createImageResource(file) : PLACEHOLDER_IMG };
+      });
+      set({ products: [...get().products, ...added] });
     });
   },
 
-  resetCatalog: () => {
-    dbClearProducts();
-    set({ products: [] });
-  },
+  resetCatalog: () => manageCatalog('products'),
 }));

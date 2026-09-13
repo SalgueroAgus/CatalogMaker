@@ -76,6 +76,7 @@ export function TypographyRole({
             <div className="select-wrap">
               <select
                 className="sb-select"
+                aria-label={`Tipografía: ${label}`}
                 value={font}
                 onChange={(e) => handleFontChange(e.target.value)}
               >
@@ -100,6 +101,7 @@ export function TypographyRole({
               <input
                 type="number"
                 className="typo-size-input"
+                aria-label={`Tamaño: ${label}`}
                 value={size}
                 min={sizeMin}
                 max={sizeMax}

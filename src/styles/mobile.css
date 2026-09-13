@@ -39,10 +39,10 @@
   .sidebar-left { width: 260px; }
   .sidebar-right {
     position: absolute; right: 0; top: 0; bottom: 0; width: 300px;
-    z-index: 30; transform: translateX(100%); transition: transform var(--tr-normal);
+    visibility: hidden; z-index: 30; transform: translateX(100%); transition: transform var(--tr-normal);
     box-shadow: -4px 0 24px rgba(0,0,0,0.35);
   }
-  body.sidebar-right-open .sidebar-right { transform: translateX(0); }
+  body.sidebar-right-open .sidebar-right { visibility: visible; transform: translateX(0); }
   .workspace { padding: 20px 20px; }
   .sidebar-right-toggle {
     display: flex; align-items: center; gap: 6px; padding: 7px 12px;
@@ -59,11 +59,11 @@
    ═══════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
   .mobile-nav { display: block; }
-  body { overflow: hidden; height: 100dvh; height: 100vh; }
+  body { overflow: hidden; height: 100vh; height: 100dvh; }
   .app-layout {
     position: relative;
+    height: calc(100vh - 60px - env(safe-area-inset-bottom, 0px));
     height: calc(100dvh - 60px - env(safe-area-inset-bottom, 0px));
-    height: calc(100vh - 60px);
     overflow: hidden; display: block;
   }
   .sidebar-left, .workspace, .sidebar-right {

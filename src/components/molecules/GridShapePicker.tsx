@@ -199,6 +199,7 @@ export function GridShapePicker({ count, value, onChange }: Props) {
           key={shape}
           className={`gsp-btn ${value === shape ? 'active' : ''}`}
           title={label}
+          aria-pressed={value === shape}
           onClick={() => onChange(shape)}
         >
           {icon}
