@@ -1,4 +1,3 @@
-import { mkdir } from 'node:fs/promises';
 import { test, expect } from './fixtures';
 import { openApp, showSection, openManagement, downloadPDF } from './helpers';
 
@@ -6,7 +5,6 @@ const screenshots = '/private/tmp/catalogmaker-ui-rework/screenshots';
 
 for (const width of [390, 800, 1440]) {
   test(`new editor sections and screenshots at ${width}px`, async ({ page }) => {
-    await mkdir(screenshots, { recursive: true });
     await page.setViewportSize({ width, height: 1000 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await openApp(page);
@@ -75,13 +73,16 @@ test('portalled selection and confirmations respect export locks', async ({ page
   await showSection(page, 'Páginas');
   await page.getByRole('combobox', { name: 'Fotos en página 2' }).click();
   const acquire = () => page.evaluate(async () => {
-    const { acquireExport } = await import('/src/store/catalogSession.ts');
-    const release = acquireExport();
+    const release = window.catalogTest.acquireExport();
     window.addEventListener('test-release-export', () => release?.(), { once: true });
   });
   await acquire();
   await expect(page.getByRole('listbox')).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Fotos en página 2' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Ocultar herramientas' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Menú del catálogo' })).toBeDisabled();
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const button of await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button').all()) await expect(button).toBeDisabled();
   await page.evaluate(() => window.dispatchEvent(new Event('test-release-export')));
   await openManagement(page);
   await page.getByRole('button', { name: 'Vaciar catálogo', exact: true }).click();
