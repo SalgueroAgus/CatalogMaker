@@ -52,7 +52,7 @@ by the earlier idb-keyval implementation:
 
 | Key | Stored value |
 |---|---|
-| `cm:products` | Ordered metadata: id, name, price, description, bgColor. |
+| `cm:products` | Ordered metadata: id, name, price, description, bgColor, optional imagePositionY (0–100). |
 | `cm:img:<id>` | Product image Blob. |
 | `cm:bg` | Background image Blob. |
 | `cm:settings` | Branding, colors, fonts, sizes, opacity, item count and layouts. |
@@ -129,6 +129,14 @@ under Details. Name search ignores accents/case and retains a renamed active art
 query changes or another article is activated. Product-tab content stays mounted but hidden
 when inactive, preserving search, expanded details and scroll position; its color popovers close.
 Filtering never changes product order or catalog page numbering.
+
+Product photos can be dragged vertically with a mouse in the desktop preview, within the
+available space and without cropping or resizing. The position belongs to the article and is
+saved on release; Escape, pointer cancellation and focus loss discard an unfinished drag.
+Focused photo controls also accept arrow keys and Home/End; a reset button centers the photo.
+Existing records default to centered, and replacing a photo centers its replacement. Touch
+gestures retain normal preview scrolling. Preview, printing, PDF/HTML capture and page thumbnails
+retain the saved position; capture ignores unfinished drag positions and editor controls.
 
 [ReorderProducts.tsx](../src/components/organisms/ReorderProducts.tsx) opens a Radix dialog with a photo grid
 with navigation-only page thumbnails on the right, or above the grid below 768px. The dialog skips scale animation so its initial scroll calculations use final coordinates. Thumbnails

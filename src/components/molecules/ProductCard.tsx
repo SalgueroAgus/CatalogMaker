@@ -1,10 +1,11 @@
 import { useRef } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { MoveVertical, RefreshCw, Undo2 } from 'lucide-react';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useTextareaAutoHeight } from '../../hooks/useTextareaAutoHeight';
+import { useImagePosition } from '../../hooks/useImagePosition';
 import { DESCRIPTION_LIMIT, validateProductField } from '../../utils/products';
-import { PLACEHOLDER_IMG } from '../../utils/image';
+import { imagePositionStyle, PLACEHOLDER_IMG } from '../../utils/image';
 import type { Product } from '../../types';
 
 interface Props {
@@ -19,6 +20,7 @@ export function ProductCard({ product }: Props) {
   const fontFamily = useSettingsStore((s) => s.fonts.body);
   const fontSize = useSettingsStore((s) => s.fontSizes.body);
   const descRef = useTextareaAutoHeight(product.description, fontFamily, fontSize);
+  const imagePosition = useImagePosition(product);
 
   return (
     <div
@@ -33,19 +35,42 @@ export function ProductCard({ product }: Props) {
         className="cell-img-area"
         style={{ background: product.bgColor || 'rgba(255,255,255,1)' }}
       >
-        <img
-          src={product.image}
-          alt={product.name}
-          data-product-id={product.id}
-          onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
-        />
-        <button className="cell-img-overlay" onClick={() => photoInput.current?.click()} aria-label={`Cambiar foto de ${product.name}`}>
+        <div
+          className={`cell-img-frame${imagePosition.enabled ? ' cell-img-movable' : ''}${imagePosition.dragging ? ' cell-img-dragging' : ''}`}
+          role="slider"
+          aria-label={`Posición vertical de la foto de ${product.name}`}
+          aria-orientation="vertical"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(imagePosition.position)}
+          aria-valuetext={imagePosition.position === 0 ? 'Arriba' : imagePosition.position === 100 ? 'Abajo' : imagePosition.position === 50 ? 'Centro' : `${Math.round(imagePosition.position)}% desde arriba`}
+          aria-disabled={!imagePosition.enabled}
+          tabIndex={imagePosition.enabled ? 0 : -1}
+          title="Arrastrá la foto hacia arriba o abajo. También podés usar las flechas del teclado."
+          {...imagePosition.handlers}
+        >
+          <img
+            src={product.image}
+            alt={product.name}
+            draggable={false}
+            data-product-id={product.id}
+            data-image-position-y={product.imagePositionY ?? 50}
+            style={imagePositionStyle(imagePosition.position)}
+            onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+          />
+        </div>
+        {imagePosition.enabled && <span className="cell-img-hint" data-html2canvas-ignore="true"><MoveVertical size={14} aria-hidden="true" /> Arrastrá la foto</span>}
+        {imagePosition.position !== 50 && <button className="cell-img-overlay cell-img-center" disabled={imagePosition.busy} onClick={imagePosition.center} aria-label={`Centrar foto de ${product.name}`} title="Centrar foto">
+          <Undo2 size={16} aria-hidden="true" />
+        </button>}
+        <button className="cell-img-overlay" disabled={imagePosition.busy} onClick={() => photoInput.current?.click()} aria-label={`Cambiar foto de ${product.name}`}>
           <RefreshCw size={14} aria-hidden="true" /> Cambiar foto
         </button>
           <input
             ref={photoInput}
             hidden
             type="file"
+            disabled={imagePosition.busy}
             accept="image/*"
             onChange={(e) => {
               const file = e.target.files?.[0];

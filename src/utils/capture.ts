@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
 import type { Product } from '../types';
-import { blobUrlToBase64 } from './image';
+import { blobUrlToBase64, imagePositionStyle } from './image';
 
 export const A4_PX = { w: 793.7, h: 1122.5 } as const;
 export const A4_MM = { w: 210, h: 297 } as const;
@@ -22,7 +22,7 @@ function freezeAnimations(clone: HTMLDivElement): void {
 }
 
 function removeHoverOverlays(clone: HTMLDivElement): void {
-  clone.querySelectorAll('.cell-img-overlay, input[type="file"]').forEach((el) => el.remove());
+  clone.querySelectorAll('.cell-img-overlay, .cell-img-hint, input[type="file"]').forEach((el) => el.remove());
 }
 
 function restoreBgImageOpacity(clone: HTMLDivElement, ctx: ExportContext): void {
@@ -56,6 +56,7 @@ function patchProductImages(clone: HTMLDivElement, ctx: ExportContext): void {
     const img = el as HTMLImageElement;
     const src = ctx.imageMap.get(img.dataset.productId!);
     if (src) img.src = src;
+    Object.assign(img.style, imagePositionStyle(Number(img.dataset.imagePositionY ?? 50)));
   });
 }
 
