@@ -42,7 +42,7 @@ test('failed photo and text draft exports actual updated PDF and HTML and remain
   await writeFile(`${prefix}.pdf`, Buffer.from(await page.evaluate(() => window.catalogTest.output('pdf')), 'base64'));
   const pdf = await inspectPDF(`${prefix}.pdf`);
   expect(pdf.count).toBe(2);
-  expect(pdf.pages[1].footerText.join(' ')).toContain('$79999');
+  expect(pdf.pages[1].footerText.join(' ')).toContain('$ 79.999');
   const html = await page.evaluate(() => window.catalogTest.output('html'));
   await writeFile(`${prefix}.html`, html);
   const images = [...html.matchAll(/class="pg" src="data:image\/jpeg;base64,([^"]+)"/g)];
@@ -50,7 +50,7 @@ test('failed photo and text draft exports actual updated PDF and HTML and remain
   await writeFile(`${prefix}.html-last.jpg`, Buffer.from(images[1][1], 'base64'));
   const ocr = await execute(inspector, ['--images', `${prefix}.html-last.jpg`]);
   await writeFile(`${prefix}.html-text.json`, ocr.stdout);
-  expect((JSON.parse(ocr.stdout) as { footerText: string[] }[])[0].footerText.join(' ')).toContain('$79999');
+  expect((JSON.parse(ocr.stdout) as { footerText: string[] }[])[0].footerText.join(' ')).toContain('$ 79.999');
   const output = await context.newPage();
   for (const image of [await readFile(`${prefix}.page-2.png`), Buffer.from(images[1][1], 'base64')]) {
     const bluePixels = await output.evaluate(async (data) => {

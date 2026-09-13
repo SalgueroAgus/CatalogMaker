@@ -1,3 +1,4 @@
+import { escapeHtmlAttribute } from './links';
 import { capturePage, type ExportContext } from './capture';
 
 export interface LinkOverlay {
@@ -80,7 +81,7 @@ export function buildCatalogHTML(
   const pages = pageDataUrls.map((url, i) => {
     const overlays = (pageLinks[i] ?? [])
       .map(({ href, xPct, yPct, wPct, hPct }) =>
-        `  <a class="pg-link" href="${href}" style="left:${xPct.toFixed(2)}%;top:${yPct.toFixed(2)}%;width:${wPct.toFixed(2)}%;height:${hPct.toFixed(2)}%"></a>`,
+        `  <a class="pg-link" href="${escapeHtmlAttribute(href)}"${href.startsWith('#') ? '' : ' target="_blank" rel="noopener noreferrer"'} style="left:${xPct.toFixed(2)}%;top:${yPct.toFixed(2)}%;width:${wPct.toFixed(2)}%;height:${hPct.toFixed(2)}%"></a>`,
       )
       .join('\n');
     return `<div class="pg-wrap">\n  <img id="page-${i}" class="pg" src="${url}" alt="">\n${overlays}\n</div>`;

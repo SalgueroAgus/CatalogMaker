@@ -1,3 +1,4 @@
+import { usePriceField } from '../../hooks/usePriceField';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { TextArea } from '@radix-ui/themes';
@@ -31,6 +32,7 @@ export function ProductListItem({ product, index, total, isVisible, active, deta
   const updateField = useProductStore((s) => s.updateField);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const replaceImage = useProductStore((s) => s.replaceImage);
+  const { error: priceError, ...priceField } = usePriceField(product.price, (value) => updateField(product.id, 'price', value));
   const descriptionError = validateProductField('description', product.description);
   const descRef = useTextareaAutoHeight(product.description);
   const nameRef = useTextareaAutoHeight(product.name);
@@ -56,7 +58,8 @@ export function ProductListItem({ product, index, total, isVisible, active, deta
           <label className="rs-field-label" htmlFor={`name-${product.id}`}>Nombre</label>
           <TextArea id={`name-${product.id}`} ref={nameRef} rows={1} className="rs-input rs-input-name" value={product.name} disabled={busy} onChange={(e) => void updateField(product.id, 'name', e.target.value)} placeholder="Nombre" />
           <label className="rs-field-label" htmlFor={`price-${product.id}`}>Precio</label>
-          <Input id={`price-${product.id}`} type="text" className="rs-input rs-input-price" value={product.price} disabled={busy} onChange={(e) => void updateField(product.id, 'price', e.target.value)} placeholder="$0.00" />
+          <Input id={`price-${product.id}`} type="text" className="rs-input rs-input-price" {...priceField} disabled={busy} placeholder="$ 0" />
+          {priceError && <span className="field-error" role="alert">{priceError}</span>}
         </div>
       </div>
       <div className="rs-summary-actions">

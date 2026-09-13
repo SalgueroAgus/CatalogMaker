@@ -23,7 +23,7 @@ for (const action of ['products', 'settings', 'everything'] as const) {
     expect(result.completed).toBe('saved');
     expect(result.count).toBe(action === 'settings' ? 2 : 0);
     expect(result.photoCount).toBe(action === 'settings' ? 1 : 0);
-    if (action === 'settings') expect(result.price).toBe('$666');
+    if (action === 'settings') expect(result.price).toBe('$ 666');
     if (action === 'products') expect(result.contact).toBe('KEEP CONTACT');
     await readyAfterReload(page);
     expect(await page.evaluate(() => window.catalogTest.products.getState().products.length)).toBe(result.count);

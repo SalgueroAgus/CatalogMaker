@@ -118,7 +118,7 @@ for (const opacity of [null, 0, 0.15, 1]) {
       await writeFile(`${prefix}.inspection.json`, inspection.stdout);
       const actual: PDFInspection = JSON.parse(inspection.stdout);
       expect(actual.count).toBe(2);
-      expect(actual.pages[1].text.join(' ')).toContain(`$${iteration}9999`);
+      expect(actual.pages[1].text.join(' ')).toContain(`$ ${iteration}9.999`);
       const alpha = opacity ?? 0;
       const expected = [32, 96, 176].map((color) => Math.round(250 * (1 - alpha) + color * alpha));
       for (const page of actual.pages) expect(page.corner.every((color, i) => Math.abs(color - expected[i]) <= 6)).toBe(true);
@@ -131,7 +131,7 @@ for (const opacity of [null, 0, 0.15, 1]) {
       const ocr = await execute(inspector, ['--images', ...images]);
       await writeFile(`${prefix}.html-text.json`, ocr.stdout);
       const text: ImageText[] = JSON.parse(ocr.stdout);
-      expect(text[1].footerText.join(' ')).toContain(`$${iteration}9999`);
+      expect(text[1].footerText.join(' ')).toContain(`$ ${iteration}9.999`);
       expect(text[0].headerText.join(' ')).toMatch(/P[áa]g[.,]? 01/);
       expect(text[1].headerText.join(' ')).toMatch(/P[áa]g[.,]? 02/);
       const viewer = await context.newPage();

@@ -41,7 +41,7 @@ for (const viewport of viewports) {
     await expect(page.locator('.rs-card').last().getByRole('button', { name: 'Eliminar producto 12' })).toBeInViewport();
     await saved(page);
     await readyAfterReload(page);
-    expect(await page.evaluate(() => window.catalogTest.products.getState().products.some((p) => p.price === '$98765' && p.description === 'ÚLTIMO PRODUCTO'))).toBe(true);
+    expect(await page.evaluate(() => window.catalogTest.products.getState().products.some((p) => p.price === '$ 98.765' && p.description === 'ÚLTIMO PRODUCTO'))).toBe(true);
   });
 }
 

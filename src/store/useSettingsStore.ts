@@ -11,6 +11,7 @@ const setCSSVar = (name: string, value: string) =>
 
 const COLOR_VAR_MAP: Record<keyof Colors, string> = {
   bg:        '--page-bg',
+  productInfoBg: '--product-info-bg',
   company:   '--color-company',
   pageNum:   '--color-page-num',
   divider:   '--color-divider',
@@ -71,6 +72,16 @@ interface SettingsState {
   storeName: string;
   footerContact: string;
   footerTag: string;
+  footerTagUrl: string;
+  indexBackgroundMode: 'global' | 'image' | 'color';
+  indexBgColor: string;
+  indexBgImage: string | null;
+  indexBgImageOpacity: number;
+  updateFooterTagUrl: (value: string) => Promise<MutationResult>;
+  setIndexBackgroundMode: (value: 'global' | 'image' | 'color') => Promise<MutationResult>;
+  setIndexBgColor: (value: string) => Promise<MutationResult>;
+  setIndexBgImage: (file: File | null) => Promise<MutationResult>;
+  setIndexBgImageOpacity: (value: number) => Promise<MutationResult>;
   colors: Colors;
   fonts: Fonts;
   fontSizes: FontSizes;
@@ -90,7 +101,7 @@ interface SettingsState {
   setItemsPerPage: (n: number) => Promise<MutationResult>;
   setPageLayout: (pageIndex: number, shape: GridShape) => Promise<MutationResult>;
   setPageItemCount: (pageIndex: number, count: number | null) => Promise<MutationResult>;
-  hydrateSettings: (s: PersistedSettings, bgImageUrl: string | null) => void;
+  hydrateSettings: (s: PersistedSettings, bgImageUrl: string | null, indexBgImageUrl?: string | null) => void;
   resetSettings: () => Promise<MutationResult>;
 }
 
@@ -122,6 +133,7 @@ export const DEFAULT_FONT_SIZES: FontSizes = {
 
 export const DEFAULT_COLORS: Colors = {
   bg:        'rgba(250,250,250,1)',
+  productInfoBg: 'rgba(250,250,250,1)',
   company:   'rgba(100,116,139,1)',
   pageNum:   'rgba(148,163,184,1)',
   divider:   'rgba(217,195,176,1)',
@@ -138,6 +150,11 @@ export const DEFAULT_STATE = {
   storeName:      'CATÁLOGO HOGAR & DECO',
   footerContact:  'Contacto: ventas@tutienda.com | WhatsApp: +54 9 11 2345-6789',
   footerTag:      'Exclusivo',
+  footerTagUrl: '',
+  indexBackgroundMode: 'global' as const,
+  indexBgColor: '#ffffff',
+  indexBgImage: null as string | null,
+  indexBgImageOpacity: 0.15,
   colors:         DEFAULT_COLORS,
   fonts:          DEFAULT_FONTS,
   fontSizes:      DEFAULT_FONT_SIZES,
@@ -151,6 +168,11 @@ export const DEFAULT_STATE = {
 export const useSettingsStore = create<SettingsState>()((set) => ({
   ...DEFAULT_STATE,
 
+  updateFooterTagUrl: (footerTagUrl) => mutateCatalog(() => set({ footerTagUrl })),
+  setIndexBackgroundMode: (indexBackgroundMode) => mutateCatalog(() => set({ indexBackgroundMode })),
+  setIndexBgColor: (indexBgColor) => mutateCatalog(() => { setCSSVar('--index-bg', indexBgColor); set({ indexBgColor }); }),
+  setIndexBgImageOpacity: (indexBgImageOpacity) => Number.isFinite(indexBgImageOpacity) && indexBgImageOpacity >= 0 && indexBgImageOpacity <= 1 ? mutateCatalog(() => set({ indexBgImageOpacity })) : Promise.resolve({ status: 'ignored' }),
+  setIndexBgImage: (file) => file && !file.type.startsWith('image/') ? Promise.resolve({ status: 'ignored' }) : mutateCatalog(() => set({ indexBgImage: file ? createImageResource(file) : null, indexBackgroundMode: file ? 'image' : 'color' })),
   updateStoreName: (v) => mutateCatalog(() => set({ storeName: v.toUpperCase() })),
   updateContact: (v) => mutateCatalog(() => set({ footerContact: v })),
   updateFooterTag: (v) => mutateCatalog(() => set({ footerTag: v })),
@@ -189,15 +211,16 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
     }));
   },
 
-  hydrateSettings: (s, bgImageUrl) => {
-    const colors = { ...DEFAULT_COLORS, ...s.colors };
+  hydrateSettings: (s, bgImageUrl, indexBgImageUrl = null) => {
+    const colors = { ...DEFAULT_COLORS, ...s.colors, productInfoBg: s.colors.productInfoBg ?? s.colors.bg ?? DEFAULT_COLORS.productInfoBg };
     const fonts = { ...DEFAULT_FONTS, ...s.fonts };
     const fontSizes = { ...DEFAULT_FONT_SIZES, ...s.fontSizes };
+    setCSSVar('--index-bg', s.indexBgColor ?? DEFAULT_STATE.indexBgColor);
     applyColors(colors);
     applyFonts(fonts);
     applyFontSizes(fontSizes);
     loadStoredGoogleFonts(fonts as unknown as Record<string, string>);
-    set({ ...s, footerTag: s.footerTag ?? DEFAULT_STATE.footerTag, colors, fonts, fontSizes, pageItemCounts: s.pageItemCounts ?? {}, bgImage: bgImageUrl });
+    set({ ...DEFAULT_STATE, ...s, indexBgImage: indexBgImageUrl, footerTag: s.footerTag ?? DEFAULT_STATE.footerTag, colors, fonts, fontSizes, pageItemCounts: s.pageItemCounts ?? {}, bgImage: bgImageUrl });
   },
 
   resetSettings: () => manageCatalog('settings'),

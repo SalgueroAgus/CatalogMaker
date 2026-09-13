@@ -30,7 +30,7 @@ export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[
     document.body.classList.add('pdf-exporting');
 
     try {
-      const ctx = await prepareExportContext(products, bgImage, bgImageOpacity, colors.bg || '#fafafa');
+      const ctx = await prepareExportContext(products, bgImage, bgImageOpacity, colors.bg || '#fafafa', useSettingsStore.getState());
 
       const pages = pagesRef.current.filter((p): p is HTMLDivElement => p !== null);
       const pdf = await buildPDF(pages, ctx, (current, total) => {

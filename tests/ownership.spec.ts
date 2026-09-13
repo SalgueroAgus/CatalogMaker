@@ -13,7 +13,7 @@ for (const action of ['add', 'import', 'replace', 'delete', 'reset'] as const) {
       const incoming = await h.photo('SECOND.png', '#3366bb');
       window.faults.failKey = 'cm:img:';
       const mutation = action === 'add' ? h.products.getState().addProducts([incoming])
-        : action === 'import' ? h.products.getState().importProducts([{ name: 'SECOND', price: 'P', description: 'D' }], [incoming])
+        : action === 'import' ? h.products.getState().importProducts([{ name: 'SECOND', price: '100', description: 'D' }], [incoming])
         : action === 'replace' ? h.products.getState().replaceImage(original.id, incoming)
         : action === 'delete' ? h.products.getState().deleteProduct(original.id)
         : h.manageCatalog('everything');
@@ -41,7 +41,7 @@ for (const action of ['add', 'import', 'replace', 'delete', 'reset'] as const) {
 test('real Excel over-limit import retains correction rows and appends once after correction', async ({ page }) => {
   await openApp(page);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Nombre', 'Descripción', 'Precio'], ['EXCEL', 'x'.repeat(501), 'Libre']]));
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['Nombre', 'Descripción', 'Precio'], ['EXCEL', 'x'.repeat(501), '100']]));
   const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   await page.locator('input[accept=".xlsx,.xls"]').setInputFiles({ name: 'rows.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer });
   await page.getByRole('button', { name: 'Importar 1 artículo', exact: true }).click();

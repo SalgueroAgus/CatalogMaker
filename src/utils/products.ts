@@ -1,3 +1,4 @@
+import { normalizePrice, PRICE_ERROR } from './price';
 import type { Product } from '../types';
 
 export const DESCRIPTION_LIMIT = 500;
@@ -10,6 +11,7 @@ export function normalizeProductSearch(value: string): string {
 
 export function validateProductField(field: EditableProductField, value: string): string | null {
   if (!EDITABLE_PRODUCT_FIELDS.includes(field) || typeof value !== 'string') return 'Campo de producto inválido.';
+  if (field === 'price' && normalizePrice(value) === null) return PRICE_ERROR;
   if (field === 'description' && value.length > DESCRIPTION_LIMIT) return `La descripción admite hasta ${DESCRIPTION_LIMIT} caracteres. Corregila para guardar.`;
   return null;
 }

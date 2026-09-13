@@ -148,7 +148,7 @@ for (const scenario of [
     const expected = [
       ...scenario.alphas.map((alpha) => background.map((channel) => Math.round(255 * alpha + channel * (1 - alpha)))),
       [255, 255, 255],
-      pageColor,
+      [250, 250, 250],
       background,
     ];
     const viewer = await context.newPage();

@@ -1,3 +1,5 @@
+import { useArticleScrollSync } from '../../hooks/useArticleScrollSync';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useEffect, useRef, useState } from 'react';
 import { LayoutGrid, LayoutList, Search, X } from 'lucide-react';
 import { AddArticles } from '../molecules/AddArticles';
@@ -28,6 +30,8 @@ export function ArticulosTab({ active, visibleIds, onShowProduct }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
   const [reordering, setReordering] = useState(false);
+  const desktop = useMediaQuery('(min-width: 768px)');
+  useArticleScrollSync(active && desktop && !busy && !reordering);
   const searchRef = useRef<HTMLInputElement>(null);
   const pointerInteraction = useRef(false);
   const count = products.length;
