@@ -12,6 +12,15 @@ export const PLACEHOLDER_IMG =
     '</svg>'
   );
 
+export function isImagePosition(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
+}
+
+export function imagePositionStyle(value = 50) {
+  const position = isImagePosition(value) ? value : 50;
+  return { top: `${position}%`, transform: `translate(-50%, -${position}%)` };
+}
+
 export async function blobUrlToBase64(blobUrl: string): Promise<string> {
   try {
     const resp = await fetch(blobUrl);

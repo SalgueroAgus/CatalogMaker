@@ -1,3 +1,6 @@
+import { Button } from '../atoms/Button';
+import { EditorTheme } from '../atoms/EditorTheme';
+import { Spinner } from '@radix-ui/themes';
 import { BookOpen } from 'lucide-react';
 import essaLogo from '../../assets/essa_logo.jpeg';
 
@@ -8,7 +11,7 @@ interface Props {
 
 export function LoginPage({ onLogin, loading = false }: Props) {
   return (
-    <div className="lp-root">
+    <EditorTheme className="lp-root">
       <div className="lp-card">
         <div className="lp-logo-row">
           <img src={essaLogo} alt="ESSA Home" className="lp-logo" draggable={false} />
@@ -19,19 +22,17 @@ export function LoginPage({ onLogin, loading = false }: Props) {
         </div>
         <div className="lp-body">
           {loading ? (
-            <div className="lp-dots">
-              <span /><span /><span />
-            </div>
+            <div role="status" aria-label="Cargando"><Spinner /></div>
           ) : (
             <>
               <p className="lp-copy">Acceso exclusivo para el equipo de ESSA Home.</p>
-              <button className="lp-action-btn" onClick={onLogin}>
+              <Button variant="export" className="lp-action-btn" onClick={onLogin}>
                 Iniciar sesión
-              </button>
+              </Button>
             </>
           )}
         </div>
       </div>
-    </div>
+    </EditorTheme>
   );
 }

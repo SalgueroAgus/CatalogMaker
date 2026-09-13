@@ -1,8 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { ChevronRight, GripVertical, RefreshCw, X } from 'lucide-react';
+import { usePriceField } from '../../hooks/usePriceField';
+import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
+import { TextArea } from '@radix-ui/themes';
+import { ConfirmAction } from './ConfirmAction';
+import { useRef } from 'react';
+import { ChevronDown, Eye, RefreshCw, Trash2 } from 'lucide-react';
+import { usePersistenceStore } from '../../store/usePersistenceStore';
 import { useProductStore } from '../../store/useProductStore';
+import { useTextareaAutoHeight } from '../../hooks/useTextareaAutoHeight';
+import { DESCRIPTION_LIMIT, validateProductField } from '../../utils/products';
 import { PLACEHOLDER_IMG } from '../../utils/image';
-import { scrollToProduct } from '../../utils/scroll';
 import { GradientPickerPopover } from '../atoms/GradientPickerPopover';
 import type { Product } from '../../types';
 
@@ -11,149 +18,85 @@ interface Props {
   index: number;
   total: number;
   isVisible: boolean;
-  isDragging: boolean;
-  dragOverPosition: 'top' | 'bottom' | null;
-  onDragStart: (e: React.DragEvent, id: string) => void;
-  onDragOver: (e: React.DragEvent, id: string, el: HTMLElement) => void;
-  onDrop: (e: React.DragEvent, id: string, el: HTMLElement) => void;
-  onDragEnd: () => void;
+  active: boolean;
+  detailsOpen: boolean;
+  onToggleDetails: () => void;
+  onShowProduct: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
-const MAX_DESC = 500;
-
-export function ProductListItem({
-  product, index, total: _total, isVisible,
-  isDragging, dragOverPosition,
-  onDragStart, onDragOver, onDrop, onDragEnd,
-}: Props) {
-  const [descOpen, setDescOpen] = useState(false);
+export function ProductListItem({ product, index, total, isVisible, active, detailsOpen, onToggleDetails, onShowProduct, onEdit }: Props) {
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
+  const photoInput = useRef<HTMLInputElement>(null);
+  const moveProduct = useProductStore((s) => s.moveProduct);
   const updateField = useProductStore((s) => s.updateField);
-  const descRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (!descRef.current || !descOpen) return;
-    descRef.current.style.height = 'auto';
-    descRef.current.style.height = `${descRef.current.scrollHeight}px`;
-  }, [product.description, descOpen]);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const replaceImage = useProductStore((s) => s.replaceImage);
+  const { error: priceError, ...priceField } = usePriceField(product.price, (value) => updateField(product.id, 'price', value));
+  const descriptionError = validateProductField('description', product.description);
+  const descRef = useTextareaAutoHeight(product.description);
+  const nameRef = useTextareaAutoHeight(product.name);
 
-  const dragCls = [
-    'rs-card',
-    isVisible ? 'rs-card-visible' : '',
-    isDragging ? 'dragging' : '',
-    dragOverPosition === 'top' ? 'drag-over-top' : '',
-    dragOverPosition === 'bottom' ? 'drag-over-bottom' : '',
-  ].filter(Boolean).join(' ');
+  function move(direction: 'up' | 'down', button: HTMLButtonElement) {
+    void moveProduct(product.id, direction);
+    requestAnimationFrame(() => {
+      const target = button.disabled ? button.parentElement?.querySelector<HTMLButtonElement>(`[data-move="${direction === 'up' ? 'down' : 'up'}"]`) : button;
+      target?.focus();
+    });
+  }
 
   return (
-    <div
-      className={dragCls}
-      draggable
-      data-id={product.id}
-      style={{ animationDelay: `${index * 0.025}s` }}
-      onDragStart={(e) => onDragStart(e, product.id)}
-      onDragOver={(e) => onDragOver(e, product.id, e.currentTarget as HTMLElement)}
-      onDrop={(e) => onDrop(e, product.id, e.currentTarget as HTMLElement)}
-      onDragEnd={onDragEnd}
-      onDragLeave={(e) => {
-        (e.currentTarget as HTMLElement).classList.remove('drag-over-top', 'drag-over-bottom');
-      }}
-    >
-      <div className="rs-card-head">
-        <div className="rs-card-left">
-          <span className="rs-drag-handle" title="Arrastrar para reordenar">
-            <GripVertical size={14} />
-          </span>
-          <span
-            className="rs-index"
-            onClick={() => scrollToProduct(product.id)}
-            title="Ir al producto"
-          >
-            #{String(index + 1).padStart(2, '0')}
-          </span>
-        </div>
-        <button
-          className="rs-act-del"
-          onClick={() => {
-            if (confirm('¿Eliminar este producto del catálogo?')) deleteProduct(product.id);
-          }}
-          title="Eliminar"
-        >
-          <X size={14} />
-        </button>
-      </div>
-
-      <div className="rs-card-body">
-        <div
-          className="rs-thumb-wrap"
-          style={{ background: product.bgColor || 'rgba(255,255,255,1)' }}
-        >
-          <img
-            src={product.image}
-            className="rs-thumb"
-            alt=""
-            onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
-          />
-          <label className="rs-thumb-overlay">
-            <RefreshCw size={14} />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) replaceImage(product.id, file);
-              }}
-            />
-          </label>
-        </div>
-
-        <div className="rs-fields">
-          <input
-            type="text"
-            className="rs-input rs-input-name"
-            value={product.name}
-            onChange={(e) => updateField(product.id, 'name', e.target.value)}
-            placeholder="Nombre"
-          />
-          <input
-            type="text"
-            className="rs-input rs-input-price"
-            value={product.price}
-            onChange={(e) => updateField(product.id, 'price', e.target.value)}
-            placeholder="$0.00"
-          />
-          <div className="rs-bg-row">
-            <span className="rs-bg-label">Fondo</span>
-            <GradientPickerPopover
-              value={product.bgColor || 'rgba(255,255,255,1)'}
-              onChange={(v) => updateField(product.id, 'bgColor', v)}
-              idSuffix={product.id}
-            />
+    <article className={`rs-card rs-product-card${isVisible ? ' rs-card-visible' : ''}`} data-id={product.id} aria-label={`Artículo ${index + 1}`} onFocusCapture={() => onEdit(product.id)} onClickCapture={() => onEdit(product.id)}>
+      <div className="rs-product-summary">
+        <div className="rs-product-photo">
+          <div className="rs-thumb-wrap" style={{ background: product.bgColor || 'var(--product-bg)' }}>
+            <img src={product.image} className="rs-thumb" alt="" loading="lazy" draggable={false} onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMG; }} />
           </div>
+          <span className="rs-product-number">#{String(index + 1).padStart(2, '0')}</span>
+        </div>
+        <div className="rs-fields">
+          <label className="rs-field-label" htmlFor={`name-${product.id}`}>Nombre</label>
+          <TextArea id={`name-${product.id}`} ref={nameRef} rows={1} className="rs-input rs-input-name" value={product.name} disabled={busy} onChange={(e) => void updateField(product.id, 'name', e.target.value)} placeholder="Nombre" />
+          <label className="rs-field-label" htmlFor={`price-${product.id}`}>Precio</label>
+          <Input id={`price-${product.id}`} type="text" className="rs-input rs-input-price" {...priceField} disabled={busy} placeholder="$ 0" />
+          {priceError && <span className="field-error" role="alert">{priceError}</span>}
         </div>
       </div>
-
-      <button
-        className="rs-desc-toggle"
-        onClick={() => setDescOpen((o) => !o)}
-        aria-expanded={descOpen}
-      >
-        <ChevronRight className={`rs-desc-arrow ${descOpen ? 'open' : ''}`} size={12} aria-hidden="true" /> Descripción
-      </button>
-      <div className="rs-desc-body" style={{ maxHeight: descOpen ? '600px' : '0' }}>
-        <textarea
-          ref={descRef}
-          className="rs-desc-textarea"
-          rows={2}
-          value={product.description}
-          onChange={(e) => updateField(product.id, 'description', e.target.value.slice(0, MAX_DESC))}
-          placeholder="Descripción..."
-        />
-        <span className={`rs-desc-counter ${product.description.length >= MAX_DESC ? 'rs-desc-counter-limit' : product.description.length >= 400 ? 'rs-desc-counter-warn' : ''}`}>
-          {product.description.length} / {MAX_DESC}
-        </span>
+      <div className="rs-summary-actions">
+        <Button className="rs-action" onClick={onToggleDetails} aria-expanded={detailsOpen} aria-controls={`details-${product.id}`}>
+          <ChevronDown size={16} className={detailsOpen ? 'rs-details-open' : ''} aria-hidden="true" /> Detalles
+        </Button>
+        <Button className="rs-action" onClick={() => onShowProduct(product.id)} aria-label={`Ver catálogo, artículo ${index + 1}`}>
+          <Eye size={16} aria-hidden="true" /> Ver catálogo
+        </Button>
       </div>
-    </div>
+      <div className="rs-product-details" id={`details-${product.id}`} hidden={!detailsOpen}>
+        <label className="rs-field-label" htmlFor={`description-${product.id}`}>Descripción</label>
+        <TextArea id={`description-${product.id}`} aria-invalid={!!descriptionError} aria-describedby={descriptionError ? `description-error-${product.id}` : undefined} maxLength={DESCRIPTION_LIMIT} ref={descRef} className="rs-desc-textarea" rows={2} value={product.description} disabled={busy} onChange={(e) => void updateField(product.id, 'description', e.target.value)} placeholder="Descripción..." />
+        {descriptionError && <p className="field-error" id={`description-error-${product.id}`} role="alert">{descriptionError}</p>}
+        <span className={`rs-desc-counter${product.description.length >= DESCRIPTION_LIMIT ? ' rs-desc-counter-limit' : product.description.length >= 400 ? ' rs-desc-counter-warn' : ''}`}>
+          {product.description.length} / {DESCRIPTION_LIMIT}
+        </span>
+        <div className="rs-product-actions">
+          <Button className="rs-action" disabled={busy} onClick={() => photoInput.current?.click()}><RefreshCw size={16} aria-hidden="true" /> Cambiar foto</Button>
+          <input ref={photoInput} type="file" accept="image/*" hidden disabled={busy} onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void replaceImage(product.id, file);
+            e.target.value = '';
+          }} />
+          <span className="rs-bg-row">
+            <span className="rs-field-label">Fondo</span>
+            <GradientPickerPopover disabled={busy || !detailsOpen || !active} value={product.bgColor || 'rgba(255,255,255,1)'} onChange={(value) => void updateField(product.id, 'bgColor', value)} idSuffix={product.id} />
+          </span>
+        </div>
+        <div className="rs-product-actions">
+          <Button className="rs-action" disabled={busy || index === 0} data-move="up" onClick={(e) => move('up', e.currentTarget)}>Subir</Button>
+          <Button className="rs-action" disabled={busy || index === total - 1} data-move="down" onClick={(e) => move('down', e.currentTarget)}>Bajar</Button>
+          <ConfirmAction title="Eliminar producto" description={`Se eliminará «${product.name || 'Sin nombre'}» y su foto del catálogo.`} onConfirm={() => deleteProduct(product.id)}>
+            <Button variant="danger" className="rs-act-del" disabled={busy} aria-label={`Eliminar producto ${index + 1}`}><Trash2 size={16} aria-hidden="true" /> Eliminar</Button>
+          </ConfirmAction>
+        </div>
+      </div>
+    </article>
   );
 }

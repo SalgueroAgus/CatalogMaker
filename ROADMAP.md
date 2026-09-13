@@ -1,150 +1,221 @@
 # CatalogMaker — Roadmap
 
-**Needed work, in recommended delivery order.** Reviewed against the working-tree source on **2026-09-12**. All work below is planned, not implemented by this documentation update.
+**Updated against the working-tree source on September 13, 2026**, including C1/A1/D3 catalog management and backups. Implemented means present in this checkout; it does not imply deployed or validated on every device.
 
-Optional enhancements and deferred experiments live in [IDEAS.md](IDEAS.md). This file covers the agreed family workflow, existing feature requests, correctness fixes, and the supporting work needed to deliver them safely.
+> **Where things stand:** the saving and editor foundations are implemented. Independent catalogs and portable backups are now implemented. The main remaining work is smoother daily use, broader recovery, and the requested appearance controls. Actual-device and parent checks remain open.
+
+- [Delivery order](#delivery-order) — what to tackle next.
+- [Completed implementation](#completed-implementation) — finished work, grouped by area.
+- [Ongoing checks](#ongoing-checks-and-maintenance) — verification and maintenance.
+- [Optional and deferred ideas](#optional-and-deferred-ideas) — possibilities outside the delivery priorities.
+- [Evidence and review boundary](#evidence-and-review-boundary) — what the recorded results establish.
+
+Required work, completed implementation, and optional ideas now live in this document. Existing task IDs are retained; partial items below describe the remaining work, with completed portions collected separately.
 
 ## Product direction
 
-A friendly catalog tool for a family business. The primary users are two parents in their mid-50s who find technology difficult. They mostly update one existing catalog and occasionally experiment with another. **Phone and PC are equally important.**
+A friendly catalog tool for a family business, primarily used by two parents in their mid-50s who find technology difficult. **Phone and PC are equally important.**
 
-Optimize for completing familiar tasks, knowing work is saved, recovering mistakes, and producing a trustworthy catalog. Keep React, Zustand, IndexedDB, global CSS, and the browser-only app. Performance work should solve a problem seen with the family's actual catalog or devices.
+**Daily workflow:** open the main catalog → find a product → edit price, text, or photo → preview → download/share.
 
-Agreed workflow: open the main catalog → find a product → edit its price, text, or photo → preview → download/share. Experiment through a named copy or a new blank catalog, without opening a separate browser or altering the main catalog. Transfer catalogs between devices using backup files for now.
+- **Confirmed:** one clearly marked **Principal**, plus named independent catalogs under **Mis catálogos**, with **Hacer una copia** and **Crear catálogo vacío**.
+- **Confirmed:** transfer complete catalogs between devices using backup files. Automatic sync is deferred; the current login does not sync catalog data.
+- **Implemented:** open the last-used catalog with its name/save status visible and a header selector for Mis catálogos; Principal is listed first. Validate this entry flow with the family.
+- **To decide:** whether the family uses web publishing and who manages it. PDF sharing is a complete core workflow; retaining one-click publishing requires the S1/S2 decisions.
 
-### Agreed scope and remaining decisions
-
-| Decision | Agreed scope / recommendation | Remaining detail / effect on scope |
-|---|---|---|
-| Catalog organization — confirmed | One clearly marked **Principal**, plus named independent catalogs under **Mis catálogos**. Support both **Hacer una copia** and **Crear catálogo vacío**. | Detailed entry-screen behavior is a design proposal: open the last-used catalog with its name/status visible and an obvious route back to Principal. Equal-status catalogs are not the selected direction. |
-| Moving between phone, PC, and browsers — confirmed | Portable backup-file transfer is sufficient for now; explain that local catalogs belong to this browser. | Automatic sync is deferred. Revisit only if the family workflow changes; the current login does not sync catalog data. |
-| Web publishing | Establish whether the family actively uses the web link and who manages it. PDF sharing remains a complete core workflow. | Retaining one-click publishing needs a safe credential model and clear rules for which catalog can replace the public version. See S1–S2. |
-
-Main catalog plus copies/blank catalogs and backup-file transfer are confirmed by the owner. Detailed UI proposals and publishing scope remain to be refined. These planning documents do not authorize feature implementation, new dependencies, or external deployment.
+Keep React, Zustand, IndexedDB, global CSS, and the browser-only app. Prioritize understandable saving, mistake recovery, and trustworthy output. Performance work should address problems observed with the family's actual catalog or devices.
 
 ## Delivery order
 
-Work through priorities 1–4 below. Each table retains the UX/UI, data, architecture, and other categories so the order and type of work are both clear. IDs remain stable across both planning files; gaps mean an item moved to Ideas.
+1. **Validate the implemented foundations** on the family's devices; fix any observed saving or essential-control failures.
+2. **Finish daily editing and sharing:** navigation, help, safer imports, and useful design choices.
+3. **Protect and separate catalogs:** safe migration to Principal, independent copies/blank catalogs, backups, and recovery.
+4. **Finish appearance refinements:** independent information-box color, photo/text placement, and overflow safeguards.
 
-| Order | Outcome | Exit condition |
-|---|---|---|
-| 1 | Trust the existing editor | Confirmed saves survive reload; errors are visible; essential controls work on phone and PC; existing page inconsistencies are fixed. |
-| 2 | Protect and separate catalogs | Existing data becomes Principal safely; copies and blank catalogs are independent; backup files transfer a complete catalog to another browser. |
-| 3 | Make daily updates and sharing easy | Parents can find, edit, preview, and share the correct catalog without help; import and output behave consistently. |
-| 4 | Finish requested appearance controls | Description-box color and placement work across layouts and match exported output; overflow is caught before sharing. |
-
-Priorities express order, not dates. Resolve S1 immediately if a publishing token has been shipped. Publishing decisions do not block unrelated local fixes. Apply the ongoing verification requirements to every priority.
+These are priorities, not dates. Device checks can proceed alongside independent remaining work. Publishing decisions do not block local improvements. This roadmap is a plan, not authorization to implement features, install dependencies, or publish.
 
 ## Priority 1 — Saving reliability and essential usability
 
-Complete persistence/error handling before showing a saved state. Deliver touch/keyboard controls and mobile sizing fixes as small independent changes.
+**Implementation complete for the current single-catalog scope; family/device acceptance remains pending.** D1, D2, A2, U2, U3, U5, L1, and the current-session portion of A3 have moved to [Completed implementation](#completed-implementation). Cross-catalog and recovery ownership remain in priority 3.
 
-| ID | Category | Work and completion criteria |
-|---|---|---|
-| D1 | Saving and recovery | **Honest save/load states.** Await writes and show “Guardando…”, “Guardado en este navegador”, or an actionable failure with retry. Gate editing until hydration completes; distinguish an empty catalog from failed loading. A save indicator must cover metadata, photos, and settings and never report success for failed writes. Keep unsaved edits available for retry/export where possible. Test immediate refresh, slow loading, and storage failure. |
-| D2 | Saving and recovery | **Separate destructive operations.** Move “Vaciar catálogo” and “Restablecer todo” away from routine export actions. Provide a settings-only reset that actually preserves products; isolate full deletion under clearly named management controls. Existing confirmations should name the action/catalog and its effect. Await completion so a reset followed by adding products cannot race pending cleanup. Do not silently erase photos when merely switching the background control between color and image; make removal explicit. |
-| A3 | Architecture and code quality | **Explicit image and write ownership.** Await and handle database operations; keep storage calls in the database module. Revoke obsolete object URLs on delete/reset/switch and dispose unused hydration results. Delete blobs only when no catalog or recovery snapshot owns them. Treat metadata/image operations as one recoverable user action rather than unrelated fire-and-forget writes. |
-| A2 | Architecture and code quality | **Safe product identity and mutations.** Replace timestamp-derived IDs in every add/import path with collision-resistant IDs; guard missing IDs in move/reorder/replace actions. Currently `moveProduct` and `reorderProduct` can operate on index `-1`. Define valid fields/limits centrally so import, list editing, and preview editing agree. |
-| U2 | UX and accessibility | **Readable, explicit controls.** Use persistent field labels, visible “Cambiar foto” and understandable action names. Aim for 16px editor inputs and roughly 44px primary touch targets as product design targets; adjust with the parents on their devices. Preserve compact A4 typography separately from editor sizing. Associate labels with controls, replace clickable spans with buttons/links, expose selected states, and verify keyboard focus, contrast, and browser zoom. Do not rely on color or hover alone. |
-| U3 | UX and accessibility | **Reorder without dragging.** First expose “Subir”/“Bajar” controls using the existing `moveProduct` action, with boundary states and keyboard access. Keep desktop drag available; optional touch drag and longer-distance movement controls live in [IDEAS.md](IDEAS.md). |
-| U5 | UX and accessibility | **Mobile viewport and focused editing.** Check keyboard-open, rotation, bottom safe area, and tablet drawer behavior. The current `100vh` declarations override preceding `100dvh` declarations, and the later app-height rule drops the safe-area subtraction. Correct the fallback order and verify actions remain reachable. Offer readable product editing outside the scaled A4 page; preview zoom must not be the only way to edit small text. |
-| L1 | Appearance and layout | **Consistent page numbers and backgrounds.** Page-list labels use `i + 2`, assuming one index page; use the actual index-page count so 31+ products agree with preview/export. Apply the configured background image and opacity to index pages as well as product pages (existing request 2). Verify 0/1/30/31/60/61 products and partial last pages. |
-| S1 | Publishing safety | **Remove privileged publishing credentials from the browser build.** `usePublish` reads `VITE_NETLIFY_PAT`; Vite bundles `VITE_*` values into client code. Identity login does not secure that token. If a token has been shipped, remove it from builds and revoke/rotate it through the deployment owner. Recommended browser-only option: remove direct deployment and use PDF or an intentional HTML-download/manual-publish workflow. If one-click publishing is essential, agree on an authenticated external publishing service as a separate architecture change. Hiding the button alone is insufficient. |
+- [ ] Check save/retry/reload, photos, and the three management actions on confirmed devices using disposable data.
+- [ ] Check real phone keyboards, rotation, safe areas, tablet navigation, and opening the downloaded/shared PDF. Emulated viewports do not establish these behaviors.
+- [ ] Have each parent find a product, change five prices, replace a photo, reorder/undo, return from Preview, and recognize the saved state. Include the current compact editor and page thumbnails.
+- [ ] Observe legibility and performance with representative phone photos and the family's actual catalog, including the planned 200-photo scenario.
 
-A3 starts with current save/delete/reset behavior and continues through catalog migration and recovery in priority 2. The publishing credential concern follows the browser implementation and [Vite's environment-variable documentation](https://vite.dev/guide/env-and-mode); no credential values or live deployments were inspected.
+Use the [device checklist](docs/priority1-device-checks.md) and [current editor checks](docs/articles-verification.md#revisión-y-comprobaciones-pendientes). The owner reported exploratory daily use without incidents on an earlier version; the documented per-person/device protocol and assessment of the newer editor are still pending.
 
-The editor sizing in U2 is a usability target, not a compliance claim. Check actual controls, spacing, focus, and labels using the [W3C target-size guidance](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html).
+## Priority 2 — Everyday editing, import, dependable output, and design choices
 
-## Priority 2 — Main catalog, copies, blank catalogs, and portable backups
+Most direct product-editing interactions already exist. Finish the surrounding workflow incrementally; deliver catalog-specific naming, copy help, and publication records with priority 3.
 
-Design A1 and D3 together. Deliver backup/restore and recovery before enabling destructive catalog-management actions. Keep product images, settings, and page layouts isolated between catalogs.
+### Navigation and help
 
-| ID | Category | Work and completion criteria |
-|---|---|---|
-| A1 | Architecture and code quality | **Versioned catalog storage and migration.** Introduce stable catalog identity, names/timestamps, active/main references, and catalog-scoped products/settings/background/images through `src/db/index.ts`. Keep existing Zustand stores. Migrate the existing global keys into Principal once, preserving the original records until the new catalog is fully written and verified. Handle interrupted migration and switching during pending writes. A failed copy/restore must not become the active catalog or damage the original. Prefer independent image copies initially; shared-blob deduplication is unnecessary complexity here. |
-| D3 | Saving and recovery | **Portable full backup and restore.** One versioned catalog file containing metadata, product images, background, settings, and layouts; no transient blob URLs. Clearly distinguish it from PDF and Excel. Validate the whole file before applying changes; preview catalog name/count and restore as a new catalog by default. Invalid/unsupported files and failed writes leave existing catalogs intact. Verify a full round trip in another browser with no network dependency for the catalog data. |
-| D4 | Saving and recovery | **Recovery before broad undo.** Offer undo for a deleted product and a recoverable snapshot before clear, restore-overwrite, or large import. Keep retained snapshots bounded and visible; retain image blobs needed for recovery. Local copies/snapshots share the browser's storage and are not external backups. Add a quiet backup reminder based on meaningful changes and show the last backup date. |
-| C1 | Catalog management | **Mis catálogos: Principal + copies.** Create blank, duplicate, rename, open, and delete a catalog. Show name, Principal badge, product count, and last successful save. Keep the list small and plain; no folders, tags, or arbitrary hard limit yet. New copies get a useful editable name. A duplicated catalog includes photos, ordering, branding, background, and layouts. Switching and reloading must preserve each catalog independently. Depends on A1 and D1. |
-| C2 | Catalog management | **Make experiments safe.** Show the active catalog name in editing and export. A copy is independent, with no automatic merging back. Recommend an explicit “Usar como principal” action that changes the designation while retaining the previous main catalog. Protect deletion of Principal by requiring a replacement or recovery path; name the affected catalog in confirmation. Publishing from copies requires the S2 decision. |
+- [ ] **U1 · Bring routine tasks together.** Complete the add/search/edit grouping under Productos and make Preview and Download/Share easy to reach. Put detailed fonts/gradients in optional advanced controls while keeping existing customization. Product search, compact editing, expandable details, and an actionable product empty state already exist. Compare a focused editor with the family before a larger navigation redesign.
+- [ ] **U4 · Finish page navigation.** Make entries in the Páginas settings list jump to their preview page. Search, “Ver catálogo,” retained editing context, and panel-specific back-to-top controls are implemented. The original synchronized-scrolling request is only partly covered by explicit navigation and visible-product highlighting; confirm the intended behavior with the family before treating it as resolved.
+- [ ] **U6 · Finish feedback and optional help.** Standardize “Producto”/“Artículo,” provide clear import/export completion, and explain where files go and that login is not cloud backup. Offer brief guidance for price/photo updates and sharing; add copy/backup guidance when those features exist.
+- [ ] **A6 · Finish controlled navigation.** Consolidate React tab/drawer state and body-class visibility, with predictable focus restoration and cleanup. Startup now mounts the editor after hydration, resolving the old background-tab initialization issue. Keep background selection consistent when catalog switching arrives; retain the implemented popover naming, Escape, close/focus, and viewport handling.
 
-Verify migration interruption, copy/restore/delete isolation, and edits to the same catalog in two tabs. For simultaneous tabs, detect stale edits and let the user reload or retain a copy; avoid silently overwriting newer work. Automatic cross-device syncing remains deferred by agreement.
+### Photos and Excel
 
-## Priority 3 — Everyday editing, import, and dependable output
+- [ ] **I1 · Validate photos before replacement.** Decode selected images before adopting them, explain rejected files, and keep the old image on failure. Current intake checks image MIME types but does not prove a file can be decoded. Exercise actual phone formats/orientation and preserve print quality; resizing/compression remains an [optional optimization](#conditional-technical-ideas).
+- [ ] **I2 · Finish import preview and recovery.** Add explicit missing-header/skipped-row diagnostics, sample names/prices, and unmatched/ambiguous image details. Existing import already confirms the row count, counts image matches, and enforces shared description limits with correction fields. Make appending explicit and provide recovery from an accepted import without waiting for D4's broader snapshot system. Cover decimal commas, currency text, empty cells, and duplicate names without silently changing the price format.
 
-With storage and catalog identity in place, simplify the existing panels and make routine tasks predictable. S2 applies only if web publishing is retained; its safety requirements are required for that path.
+### Downloading and publishing
 
-| ID | Category | Work and completion criteria |
-|---|---|---|
-| U1 | UX and accessibility | **Organize around common tasks.** Put add/search/edit together under Productos, make Preview and Download/Share easy to reach, and move detailed fonts/gradients into optional advanced design controls. Keep existing customization available. Recommend improving the current panels/tabs incrementally; compare a single focused editor with the family before a larger navigation redesign. Empty states offer an action, not just an instruction to upload photos. |
-| U4 | UX and accessibility | **Find and navigate predictably.** Search products by name, clear search easily, and show a friendly no-results state. “Ver en catálogo” selects Preview on mobile before scrolling; page-list clicks jump to the correct page. Keep the active item visible when helpful without stealing focus while typing. Preserve position when returning to editing. Add a labeled “Volver al inicio” control that does not cover content. |
-| U6 | UX and accessibility | **Friendly feedback and help.** Consistent Spanish terminology (“Producto” rather than alternating with “Artículo”), brief inline errors, and clear import/export completion. Explain where downloaded files go and that login is not cloud backup. Provide a short optional guide for updating a price, replacing a photo, making a copy, and sharing. Prefer observing the parents over adding a mandatory tutorial. |
-| A6 | Architecture and code quality | **Controlled navigation and popovers.** Make tab/drawer state drive visibility and cross-panel navigation consistently, with focus restoration and cleanup. Background tabs currently derive their initial selection before async hydration; keep selection consistent with loaded/switched catalogs. Address Escape, focus, naming, and viewport behavior in the color popover. A possible library replacement is tracked in [IDEAS.md](IDEAS.md); accessible behavior is required regardless of implementation. |
-| I1 | Photos and Excel | **Safer photo intake.** Check that selected images can be decoded before replacing the existing photo; explain rejected files and preserve the old image on failure. Test actual phone photos, including orientation and formats the family uses. Optional image-size optimization lives in [IDEAS.md](IDEAS.md); preserve print quality. |
-| I2 | Photos and Excel | **Clear Excel preview and validation.** Report missing headers, skipped rows, and unmatched/ambiguous images; show sample names/prices before appending. Make “add N products” explicit and retain a recovery path. Test decimal-comma prices, currency text, empty cells, and duplicate names without silently imposing a new price format. Use the same text limits and validation in import and manual editing. |
-| E1 | PDF and sharing | **A dependable Download/Share flow.** Identify the active catalog in the filename and completion feedback. Offer clear download/share actions with fallback when file sharing is unavailable; cancellation is not failure. Check output from every mobile tab, current edited values, fonts/background readiness, and repeated export. Protect capture from concurrent edits/catalog switches so one file cannot mix states. |
-| E2 | PDF and sharing | **Preview/output fidelity.** Verify text opacity, gradients, photos, long fields, links, and page dimensions against exported output. The capture transform forces opacity to 1 for all elements and then restores only background-image opacity, while preview descriptions use 0.6; narrow that behavior so intentional styling survives. Keep temporary base64 outside state and clean capture resources after success/failure. |
-| S2 | Publishing safety | **Make the public version explicit.** All current publishes target one configured site. Show the destination and catalog name, protect the main public version from experimental copies, and record successful publication per catalog. The deploy helper currently returns a URL after polling times out; distinguish “still publishing” from confirmed success and handle retry/errors honestly. Do not expose technical environment-variable errors to parents. |
+- [ ] **E1 · Finish the Download/Share experience.** Provide clear download/share choices and completion feedback, including file location guidance. Store-name filenames, supported mobile sharing, unsupported-share download fallback, cancellation handling, and capture protection already exist. Active-catalog filenames and protection against switching during export are now implemented with C1/A1; finish actual-device sharing checks.
+- [ ] **S2 · Make the public version explicit — conditional on retaining publishing.** Confirm the destination and catalog before publishing, distinguish polling timeout from confirmed success, and give understandable retry/errors. With catalog management, protect the public version from experimental copies and record successful publication per catalog. All current publishes target one configured site; timeout still returns a URL without confirming readiness.
+
+
+### Design choices
+
+- [ ] **L5 · Offer a few safe presets and useful visibility controls.** Add readable presets, an editable “Exclusivo” footer tag, and price/description/index visibility. Hiding the index must update all page offsets and links. Avoid an initial toggle for every visual element.
+- [ ] **L6 · Add per-product image framing.** Offer “Mostrar completa” / “Llenar espacio” plus positioning, indicate cropping when filling, and persist the choice into output. Product-page images and the current compact editor thumbnails already use `contain`; this is a new framing choice, not an established cropping defect.
+
+The specific E2 opacity/capture fixes are [implemented](#pages-appearance-and-output). Continue checking preview/output fidelity whenever layouts, typography, or capture change.
+
+## Priority 3 — Main catalog, copies, blank catalogs, and portable backups
+
+**A1, C1 and D3 implementation delivered in this checkout.** Independent catalogs, migration, portable backups and recoverable catalog deletion are implemented. D4 general recovery and the remaining C2/S2 decisions stay open; cross-engine and family/device acceptance remain pending.
+
+### A1 · Versioned catalog storage and migration
+
+- [x] Introduce stable catalog IDs, names/timestamps, active/main references, and catalog-scoped products, settings, backgrounds, images, and layouts through the existing database module and Zustand stores.
+- [x] Migrate the global keys to Principal once; preserve original records until the new catalog is fully written and verified. Handle interrupted migration and switching during pending writes. A failed copy/restore must leave the original and active selection intact.
+- [x] Extend **A3 image ownership** across independent catalogs and recoverable catalog deletion. Copies have independent blob records; Eliminados retains them until explicit permanent deletion. Ownership for D4 snapshots remains part of D4.
+
+### D3 · Portable full backup and restore
+
+- [x] Export one versioned catalog file containing metadata, photos, background, settings, and layouts, without transient blob URLs. Clearly distinguish it from PDF and Excel.
+- [x] Validate the entire file before applying it, preview its name/count, and restore exclusively as a new secondary catalog. Invalid files and failed writes must preserve existing catalogs.
+- [ ] Finish cross-engine/device round-trip acceptance. Automated round trips use separate Chrome browser profiles with external requests blocked and compare metadata plus original image bytes; WebKit remains unavailable locally.
+
+### D4 · Recovery before broad undo
+
+- [ ] Undo a deleted product and keep a recoverable snapshot before clear, restore-overwrite, or large import. Bound retained snapshots, make them visible, and retain their images.
+- [ ] Add a quiet backup reminder based on meaningful changes and show the last backup date. Explain that local copies/snapshots share browser storage and are not external backups.
+
+The current reorder modal can undo its latest move during that session. It does not restore deleted products, survive closing the modal, or provide general editing history. Broader undo/redo remains [optional as D5](#catalog-and-editing-conveniences).
+
+### C1 · Mis catálogos: Principal, copies, and blank catalogs
+
+- [x] Create blank, duplicate, rename, open, and delete independent catalogs. Show name, Principal badge, product count, and last successful save; give copies useful editable names.
+- [x] Include photos, order, branding, background, and layouts in a copy. Switching/reloading must preserve each catalog independently. Keep the list simple, without folders/tags or an arbitrary hard limit.
+
+Built on A1 and the implemented D1 persistence foundation. The last-used catalog opens at startup; Mis catálogos is available from the header. Blank catalogs use app defaults, and deleted secondary catalogs remain recoverable in Eliminados without automatic expiration. Principal can be renamed but cannot be deleted or reassigned in this delivery.
+
+### C2 · Make experiments safe
+
+- [x] Show the active catalog name during editing and export; copies remain independent with no automatic merge back.
+- [ ] Refine the proposed “Usar como principal” action so changing the designation retains the old main catalog. Deleting Principal needs a replacement or recovery path and a confirmation naming the affected catalog.
+- [ ] Resolve publication from copies through S2 before enabling that workflow. Publishing currently remains available only from Principal, enforced in both UI and action.
+
+**Automated scenarios (see [catalog verification](docs/catalogs-verification.md)):** interrupted migration; copy/restore/delete isolation; pending writes during switching; and simultaneous edits in two tabs. Detect stale edits and offer reload or retaining a copy instead of silently overwriting newer work. Automatic cross-device sync remains deferred.
 
 ## Priority 4 — Requested appearance refinements
 
-Retain the earlier visual requests. Confirm the image/description placement with representative photos before implementing L3; check all supported shapes and exported output.
+Description auto-height and per-page quantities are implemented; these separate visual requests remain open.
 
-| ID | Category | Work and completion criteria |
-|---|---|---|
-| L2 | Appearance and layout | **Independent description-box background.** Add a clearly named color setting for the information box, separate from page background, description text, and image background. Preserve old appearance as the migration default. Persist and export it consistently (existing requests 3 and 7). |
-| L3 | Appearance and layout | **Description placement beneath the photo.** The information box currently follows a flexible image area, so visible space can remain between a contained image and the box. Preserve the request to align it to the rendered image bottom (request 4); compare a representative portrait and landscape example before implementation. Keep text legible without shrinking the photo excessively or overflowing the page. Test all supported shapes and partial pages. |
-| L4 | Appearance and layout | **Overflow and layout-change safeguards.** Long names/prices and 500-character descriptions need checks in dense grids and large font settings; character limits alone do not prove content fits. Warn about clipped content before export and offer a practical correction. Explain that changing products-per-page clears layout overrides; allow recovery. Verify reordering/deleting products has understandable effects on page-based layouts. |
+- [ ] **L2 · Independent information-box background.** Add a clearly named color setting separate from page background, description text, and photo-area background. Preserve the current appearance as the migration default and match exported output. Covers original requests 3 and 7.
+- [ ] **L3 · Anchor the information box beneath the rendered photo.** A contained photo can still leave space inside its flexible image area. Compare representative portrait/landscape examples with the family before choosing placement; keep text legible and avoid excessive photo shrinking or overflow. Test every supported shape and partial page. Covers original request 4.
+- [ ] **L4 · Warn about overflow and explain layout changes.** Detect clipped names/prices/descriptions before export and offer practical corrections; 500-character limits and auto-height alone do not prove a dense page fits. Explain and allow recovery from shape resets: changing the general quantity clears shape overrides but retains per-page quantities; changing a page's quantity clears that page's shape override. Check the effects of reorder/delete on layouts tied to page position.
 
-## Supporting architecture, verification, and maintenance — every priority
+## Completed implementation
 
-These requirements accompany the affected work above; they are not a fifth feature phase. Refactor only where needed to keep behavior consistent, and test changes in proportion to their risk.
+Checked entries record implemented scope, including completed portions of broader tasks. Remaining acceptance checks stay in priority 1 and the evidence records; unfinished extensions stay in their priorities above.
 
-| ID | Category | Work and completion criteria |
-|---|---|---|
-| A5 | Architecture and code quality | **Share logic that already diverges.** Centralize page offsets/shape resolution, product validation, and the duplicated PDF/HTML capture setup. Extract UI sections from the large sidebar only as they change. Keep pure domain helpers in `src/utils/`, UI in the existing component layers, and colors/fonts mapped through settings variables. Avoid broad cosmetic cleanup. |
-| Q1 | Verification and maintenance | **A small regression safety net.** Keep `npm run verify`. Add focused automated coverage when implementing risky storage migration/restore, image ownership, and pagination changes; choose tooling separately before any dependency installation. No broad coverage target. A successful build does not validate browser interactions or PDF rendering. |
-| Q2 | Verification and maintenance | **Test real family tasks on both devices.** Ask each parent to change a price, replace a photo, move a product, make an experiment, return to Principal, recover a mistake, and share the correct catalog. Record where help is needed; prioritize repeated confusion. Use their actual devices and realistic catalog size, plus keyboard-only/zoom checks on PC. No analytics platform needed. |
-| Q3 | Verification and maintenance | **Accurate docs and focused dependency upkeep.** Keep README/architecture aligned with shipped capabilities; explain browser-local storage and backup steps in Spanish. Review dependency/security advisories before targeted updates, especially import/export and publishing libraries. Update for a demonstrated fix or maintenance need; no blanket latest-version migration. No dependency vulnerability audit was performed for this roadmap. |
+### Saving and data integrity
 
-For relevant releases, check refresh/save failures; 0/1/30/31/60/61 products; 1–5-per-page layouts and partial pages; actual phone photos; keyboard-open mobile navigation; and repeated PDF/HTML output after editing. Build checks do not replace these browser scenarios.
+- [x] **D1 · Honest load/save states.** Startup waits for a coherent load; failed loading stays visible with retry. “Guardando…”, “Guardado en este navegador”, and actionable save failures cover metadata, order, photos, settings, backgrounds, and layouts. Serialized writes track the latest revision; failed drafts remain available for retry or PDF export while the session stays open.
+- [x] **D2 · Separate management actions.** Administración separates Vaciar catálogo, Restablecer ajustes, and Restablecer todo from export. Confirmations name the catalog/action/effect; operations are serialized. Settings-only reset preserves products, order, and photos. Color/Image tabs preserve the background until explicit removal.
+- [x] **A3 · Current-session image/write ownership.** One IndexedDB transaction saves metadata, settings, and changed blobs/deletions. Active drafts, durable state, queued writes, and exports retain needed image URLs; obsolete resources and failed hydration allocations are released. Cross-catalog/recovery ownership remains A1/D4 work.
+- [x] **A2 · Safe IDs and mutations.** Blank/photo/Excel intake uses UUIDs; missing or invalid move/reorder/replace targets are guarded. Shared field validation enforces the 500-character description limit in manual editing and import while preserving readable legacy data.
 
-## Implementation references
+Sources: [session coordinator](src/store/catalogSession.ts), [database](src/db/index.ts), [save status](src/components/molecules/SaveStatus.tsx), [management controls](src/components/molecules/CatalogManagement.tsx), [product store](src/store/useProductStore.ts), [validation](src/utils/products.ts).
 
-| Area | Source reviewed |
-|---|---|
-| State, saving, and image ownership | [App](src/App.tsx), [settings subscription](src/main.tsx), [database](src/db/index.ts), [product store](src/store/useProductStore.ts), [settings store](src/store/useSettingsStore.ts) |
-| Editing and accessibility | [Sidebar](src/components/organisms/LeftSidebar.tsx), [product list](src/components/molecules/ProductListItem.tsx), [FormField](src/components/molecules/FormField.tsx), [mobile CSS](src/styles/mobile.css), [popover](src/components/atoms/GradientPickerPopover.tsx) |
-| Pagination and appearance | [IndexPage](src/components/organisms/IndexPage.tsx), [ProductPage](src/components/organisms/ProductPage.tsx), [page controls](src/components/organisms/PaginasTab.tsx), [product CSS](src/styles/product.css), [pagination helpers](src/utils/chunks.ts) |
-| Import and output | [Excel parser](src/utils/excel.ts), [import panel](src/components/molecules/ExcelImportPanel.tsx), [PDF hook](src/hooks/usePDF.ts), [PDF capture](src/utils/pdf.ts), [HTML capture](src/utils/htmlExport.ts), [publishing hook](src/hooks/usePublish.ts), [Netlify requests](src/utils/netlify.ts) |
+### Product editing and navigation
 
-## Current capabilities — retain and build on
+- [x] **U2/U5 · Readable editor and responsive foundations.** Labeled 16px sidebar fields, primary controls sized for touch, visible photo actions, focus/selected states, and an editor outside the scaled A4 page. Mobile viewport fallback order and safe-area height are corrected; the tablet drawer has close/Escape handling. These are implemented usability targets, not whole-app accessibility certification.
+- [x] **U1/U4 · Compact editing and search.** Complete 96px thumbnails sit beside editable name/price fields; Details holds secondary actions. Name search ignores case/accents, supports clear/no-results states, and retains a renamed item while editing. Search, expanded details, and scroll position survive tab/Preview/reorder transitions.
+- [x] **U3 · Visual reorder with alternatives to dragging.** A modal photo grid and page thumbnails support pointer/touch dragging, Subir/Bajar, absolute-position moves, and undo of the latest move while its resulting order remains current in that session. Focus handling, cancellation, edge scrolling, and the existing save queue are integrated.
+- [x] **U4 · Preview navigation and back-to-top.** “Ver catálogo” selects Preview before scrolling on mobile. Visible products highlight in the sidebar. Labeled back-to-top controls target Preview, Productos, and Páginas independently. Covers original request 6; full synchronized scrolling remains open.
+- [x] **A6 · Popover and startup fixes.** Color dialogs have names, close/Escape behavior, focus return, bounded viewport sizing, and close during export/management. Editor mounting after hydration fixes the previous initial background-tab race.
+- [x] **Excel import · Original request 1.** First-sheet `.xlsx`/`.xls` import appends Nombre/Descripción/Precio rows, with a header template, count confirmation, optional filename image matching, and correctable over-limit descriptions. Full preview/diagnostics/recovery remain I2.
 
-“Implemented” means a code path exists; it does not mean every device or failure case has been validated.
+Sources: [compact editor](src/components/organisms/ArticulosTab.tsx), [product fields](src/components/molecules/ProductListItem.tsx), [reorder modal](src/components/organisms/ReorderProducts.tsx), [navigation](src/App.tsx), [popover](src/components/atoms/GradientPickerPopover.tsx), [Excel panel](src/components/molecules/ExcelImportPanel.tsx).
 
-| Capability | Actual behavior and remaining boundary | Source |
-|---|---|---|
-| Local catalog editing | Photo upload, blank products, inline/list editing, image replacement, delete confirmation, and desktop drag reorder. One global catalog; no catalog manager, search, or undo. | [Product store](src/store/useProductStore.ts), [product list](src/components/molecules/ProductListItem.tsx) |
-| Excel row import | First worksheet of `.xlsx`/`.xls`; `Nombre`, `Descripción`, `Precio`; confirmation/errors, header template, optional filename-based image matching. Appends rows; does not update existing products or restore a session. | [Import panel](src/components/molecules/ExcelImportPanel.tsx), [Excel utilities](src/utils/excel.ts) |
-| Persistent settings and images | Products, blobs, and settings use IndexedDB. Settings auto-save is wired up. Saving has no completion/error indicator; startup failures go to the console. | [Startup](src/App.tsx), [settings subscription](src/main.tsx), [database](src/db/index.ts) |
-| Branding and layouts | Colors, gradients, fonts, sizes, page background, 1–5 products per page, per-page shapes, and a paginated index. | [Settings](src/store/useSettingsStore.ts), [page controls](src/components/organisms/PaginasTab.tsx) |
-| PDF and optional web output | A4 image-based PDF with index links, progress, and mobile share support. Export uses temporary base64 maps without changing product image state. HTML publishing exists; its download handler has no visible button. | [PDF hook](src/hooks/usePDF.ts), [publishing hook](src/hooks/usePublish.ts), [capture engine](src/utils/pdf.ts) |
-| Responsive navigation and UI primitives | Desktop sidebars, tablet drawer, mobile Preview/Settings/Products tabs. Sidebar accordions/tabs already use Radix; color popover remains custom. | [App](src/App.tsx), [mobile styles](src/styles/mobile.css), [popover](src/components/atoms/GradientPickerPopover.tsx) |
+### Pages, appearance, and output
 
-## Previous requests and planning changes
+- [x] **L1 · Consistent page numbers and index backgrounds.** Sidebar, index, preview, and exports use the actual index-page count and shared pagination. Index pages render the configured background image/opacity. Covers original request 2 and the 31+ product offset bug.
+- [x] **Per-page quantities and shapes.** Choose 1–5 products globally or per page; later products redistribute in order. General removes a page's quantity override. Quantities persist across reload, reset with settings, and drive index/export numbering. Shared shape resolution handles partial pages.
+- [x] **Description auto-height and photo-area backgrounds.** Descriptions resize with text, typography, width, and font readiness. The page background can show through a transparent photo-area color/gradient; the information box still uses page color. Replacing the page background preserves product photos. L2/L3 remain separate requests.
+- [x] **E2 · Shared, faithful capture.** PDF/HTML preparation preserves current field values, intentional text/background opacity, images, and links. It waits for fonts and image decoding, keeps temporary base64 outside stores, and cleans capture wrappers after success/failure. Overflow safeguards remain L4.
+- [x] **E1 · Existing PDF/share foundation.** A4 PDF, linked index, progress, store-name filenames, supported mobile sharing, download fallback, and quiet cancellation. An export lease blocks concurrent mutations and retains images during capture, including failed-save drafts. Catalog identity and completion UX remain open.
+- [x] **Existing web output.** Standalone HTML capture and Netlify publishing exist; the HTML download handler has no visible sidebar button. Publication destination/readiness and credentials remain S2/S1 work.
 
-| Previous item | Current home / decision |
-|---|---|
-| Excel import (request 1) | Implemented; I2 covers remaining validation. Row export/update is optional in Ideas (I3); full backup/restore is required here (D3). |
-| Index background (request 2) | L1, priority 1. |
-| Description-box color (requests 3 and 7) | L2, priority 4. |
-| Description anchored to photo bottom (request 4) | L3, priority 4. |
-| Synchronized scrolling (request 5) | U4, priority 3. Recommend explicit navigation and selective active-item visibility; confirm with the family before replacing the original request. |
-| Go-to-top (request 6) | U4, priority 3. |
-| Settings persistence and PDF image-state fixes | Already implemented; retain that status. Reliability/output items above address separate remaining issues. |
-| Required library swaps and blanket performance work | Implementation choices and measured improvements are in Ideas; usable reorder and accessible popovers remain required here. |
-| Product duplication/hiding, broader undo, design presets, image framing, spreadsheet export, write batching | Moved to Ideas with original IDs C3, D5, L5, L6, I3, and A4. |
-| “Current sprint” | Replaced with priority order; no sprint dates were agreed. |
+Sources: [pagination](src/utils/chunks.ts), [page controls](src/components/organisms/PaginasTab.tsx), [index](src/components/organisms/IndexPage.tsx), [description sizing](src/hooks/useTextareaAutoHeight.ts), [product styles](src/styles/product.css), [shared capture](src/utils/capture.ts), [PDF hook](src/hooks/usePDF.ts), [publishing hook](src/hooks/usePublish.ts).
 
-## Review boundary
+### Shared logic and verification tooling
 
-This plan is based on the source review described above. The documentation update changes ROADMAP.md and adds IDEAS.md; no application behavior is changed. Browser automation was unavailable: visual appearance, touch behavior, storage failure scenarios, and exported files were not exercised. Validate proposed features when delivering their priority.
+- [x] **A5 · Shared logic already extracted.** Pagination/offsets/shapes, product validation, PDF/HTML capture, and session persistence have shared implementations. Management, save status, back-to-top, and reorder UI have dedicated components. Further extraction should follow actual feature changes.
+- [x] **Q1 · Regression safety net.** Playwright tests cover storage failures/retry, image ownership, mutation guards, pagination, controls, reorder, and actual PDF/HTML artifacts. `npm run verify` builds and checks Git whitespace; GitHub Actions runs it as Catalog build. Browser tests are local/manual, and full PDF inspection requires macOS tools.
+
+Sources: [tests](tests/), [scripts](package.json), [CI setup](docs/ci-github-setup.md). Remote branch-rule configuration was not checked in this review.
+
+## Ongoing checks and maintenance
+
+- **A5/Q1/E2 · Preserve shared behavior as features change.** Extend the existing helpers and focused tests for risky storage/migration/recovery, image ownership, pagination, and output work. Run `npm run verify`; a build does not validate browser interactions or PDF rendering. Avoid broad cosmetic refactors or coverage targets.
+- **Q2 · Observe real family tasks.** Record each parent's independent task results, device/version, and help needed. Include copies, return to Principal, recovery, and correct-catalog sharing once implemented. Prioritize repeated confusion; no mandatory tutorial or analytics platform is needed.
+- **Q3 · Keep docs and dependencies focused.** Keep README/architecture aligned with actual capabilities, and explain browser-local storage and future backup steps in Spanish. Review advisories before targeted dependency updates, particularly import/export and publishing; no blanket upgrades or new dependencies are implied.
+
+For affected releases, exercise save/refresh failures; 0/1/30/31/60/61 products; 1–5-per-page layouts, mixed capacities and partial pages; actual phone photos; keyboard/zoom; and repeated PDF/HTML export after editing.
+
+## Optional and deferred ideas
+
+**Not scheduled.** Revisit these when the family expresses a need or actual use shows a worthwhile benefit. To promote an idea, agree on its smallest useful scope, move its full entry into the appropriate priority, and keep its ID. Maintain one active entry per task.
+
+Catalog copies/blank catalogs, portable backups, basic recovery, accessible editing, and the requested visual fixes remain required work above. Touch/pointer drag and direct-position moves are already in [Completed implementation](#product-editing-and-navigation).
+
+### Catalog and editing conveniences
+
+- **C3 · Duplicate a product and hide it temporarily.** Consider this for similar items or seasonal/unavailable stock; whole-catalog copying is already required under C1. Give hidden products a clear label/filter and keep them editable and in backups, while excluding them consistently from preview, index, page counts, PDF, and web output. Copies must own their images safely. Deliver product duplication first if hiding would delay the core workflow.
+- **D5 · Broader undo/redo.** Extend D4's basic recovery with meaningful groups of text edits and reorder/layout changes. Build on reliable storage/image ownership, keep history bounded and catalog-specific, and avoid unlimited per-keystroke history or event sourcing.
+- **I3 · Excel export and updating existing products.** Consider this if the family maintains prices in spreadsheets. Export rows separately from D3's full backup, use stable product IDs, and preview update versus append; never replace products by name alone. Bulk price changes and advanced mapping remain deferred until that workflow is confirmed.
+
+### Appearance and interaction options
+
+L5 presets/visibility and L6 image framing remain in priority 2. The following extend that scope only when useful:
+
+- **Section divider pages.** If the catalog needs groups such as kitchen and decoration, add explicit page types/titles and update index/export numbering. This requires catalog structure changes as well as styling.
+- **More visibility controls.** Extend L5 when specific unused fields repeatedly get in the way; keep advanced controls optional instead of exposing a toggle for every element.
+- **Radix Popover replacement.** Consider a primitive if maintaining the custom picker's focus, Escape, and viewport behavior becomes harder. Compare against A6 and obtain dependency authorization if selected. Accessible behavior remains required whichever implementation is used; accordions/tabs already use Radix.
+- **Installable/offline app.** Consider this for a home-screen shortcut or unreliable connectivity. Define offline launch, login, fonts, and updates; browser-local storage alone does not provide a fully offline app.
+
+### Conditional technical ideas
+
+Revisit S1 when publishing work resumes. Prioritize performance changes only with evidence from realistic use.
+
+- **S1 · Remove privileged publishing credentials from the browser build.** `usePublish` reads `VITE_NETLIFY_PAT`; client-bundled credentials are not protected by Identity login. If a token has shipped, remove it from builds and have the deployment owner revoke/rotate it. The recommended browser-only option is PDF or intentional HTML download/manual publishing with direct deployment removed. If one-click publishing is essential, agree on an authenticated external publishing service as a separate architecture change. Hiding the button alone is insufficient. See the [publishing hook](src/hooks/usePublish.ts) and [Vite environment-variable documentation](https://vite.dev/guide/env-and-mode); no credential values or live deployments were inspected.
+- **A4 · Coalesce frequent writes safely.** Current text edits write the metadata list and settings edits save immediately. If batching is needed, retain synchronous UI updates and order writes by catalog. Flush/await before switching, backup, export, or reset; test lifecycle interruptions and announce saved only after commit. A fixed debounce alone is insufficient.
+- **Photo resizing/compression.** Consider only when actual phone photos cause storage/export problems; agree on acceptable print quality first.
+- **Lazy-loading large libraries.** Consider when startup is noticeably slow on the family's device/connection. A bundle-size warning alone does not justify a broad refactor.
+- **Workers, virtualization, image deduplication, or a new export engine.** Require a reproducible problem with realistic catalogs that simpler fixes cannot resolve.
+
+### Deferred scope and conditional cleanup
+
+- **Automatic cross-device sync.** Deferred by agreement: backup-file transfer is sufficient. Revisit for frequent shared editing, with explicit storage, authentication, and conflict behavior before expanding the browser-only architecture.
+- **Real-time collaboration, roles, approvals, and audit trails.** Outside the current family scope; revisit only for a new need.
+- **Catalog folders/tags and complex organization.** Revisit if Principal plus a few named experiments becomes hard to manage.
+- **Hidden HTML-download path.** Resolve with S1: expose/support it if selected as the publishing alternative, or remove obsolete UI plumbing while preserving shared capture code. This is not an independent feature commitment.
+- **Framework rewrite or blanket dependency upgrades.** No demonstrated need. Targeted maintenance remains Q3.
+
+## Evidence and review boundary
+
+This cleanup compares the current source, callers, styles, tests, and existing verification records. It updates planning documentation only and preserves the prior editor work.
+
+- [Priority 1 verification](docs/priority1-verification.md) records automated storage, usability, pagination, and export results for its source checkpoints; formal device/parent acceptance remains open.
+- [Family-feedback verification](docs/family-feedback-verification.md) records back-to-top, description sizing, per-page quantity, and background work plus reported exploratory family use. It does not establish acceptance of every subsequent change.
+- [Article/reorder verification](docs/articles-verification.md) records 110 distinct Chromium cases across selective runs for the current editor work. It explicitly leaves other-browser, real-phone, and parent checks open; it is not a full-suite result.
+- [Architecture](docs/ARCHITECTURE.md) maps implementation details. The [optional and deferred ideas](#optional-and-deferred-ideas) above preserve the separate scope of product duplication/hiding, broader history, spreadsheet export/update, and measured performance work.
+
+Historical test results belong to the source versions described in those records. This documentation review does not claim a fresh browser-suite run, device validation, dependency vulnerability audit, or live publishing check.

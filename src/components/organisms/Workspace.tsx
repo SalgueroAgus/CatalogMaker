@@ -1,36 +1,43 @@
+import { useCatalogStore } from '../../store/useCatalogStore';
 import { useCallback, useEffect, useRef } from 'react';
-import { FolderOpen, LayoutList, X } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
+import { EditorTheme } from '../atoms/EditorTheme';
+import { usePageScale } from '../../hooks/usePageScale';
+import { BackToTop } from '../molecules/BackToTop';
 import { Badge } from '../atoms/Badge';
 import { IndexPage } from './IndexPage';
 import { ProductPage } from './ProductPage';
 import { useProductStore } from '../../store/useProductStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
-import { chunkArray, INDEX_ITEMS_PER_PAGE } from '../../utils/chunks';
+import { chunkArray, INDEX_ITEMS_PER_PAGE, paginateProducts } from '../../utils/chunks';
 import { scrollToLastPage } from '../../utils/scroll';
 
 interface Props {
   pagesRef: React.MutableRefObject<(HTMLDivElement | null)[]>;
   onVisibleChange: (ids: Set<string>) => void;
-  sidebarRightOpen: boolean;
-  onToggleRightSidebar: () => void;
 }
 
 export function Workspace({
   pagesRef, onVisibleChange,
-  sidebarRightOpen, onToggleRightSidebar,
 }: Props) {
   const allProducts = useProductStore((s) => s.products);
   const addProducts = useProductStore((s) => s.addProducts);
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);
+  const pageItemCounts = useSettingsStore((s) => s.pageItemCounts);
 
   const workspaceRef = useRef<HTMLElement>(null);
+  usePageScale(workspaceRef);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const prevLengthRef = useRef(allProducts.length);
   const visibleRef = useRef(new Set<string>());
 
   const indexChunks = chunkArray(allProducts, INDEX_ITEMS_PER_PAGE);
-  const productChunks = chunkArray(allProducts, itemsPerPage);
+  const productChunks = paginateProducts(allProducts, itemsPerPage, pageItemCounts);
   const totalPages = allProducts.length === 0 ? 0 : indexChunks.length + productChunks.length;
+
+  useEffect(() => {
+    pagesRef.current.length = totalPages;
+  }, [pagesRef, totalPages]);
 
   useEffect(() => {
     if (allProducts.length > prevLengthRef.current) {
@@ -63,7 +70,7 @@ export function Workspace({
     workspaceRef.current
       .querySelectorAll<HTMLElement>('.product-cell[data-product-id]')
       .forEach((cell) => observerRef.current!.observe(cell));
-  }, [allProducts, onVisibleChange]);
+  }, [allProducts, itemsPerPage, pageItemCounts, onVisibleChange]);
 
   useEffect(() => {
     setupObserver();
@@ -86,12 +93,14 @@ export function Workspace({
   }
 
   function openFilePicker() {
+    const epoch = useCatalogStore.getState().epoch;
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
     input.accept = 'image/*';
-    input.onchange = (e) =>
-      addProducts(Array.from((e.target as HTMLInputElement).files ?? []));
+    input.onchange = (e) => {
+      if (useCatalogStore.getState().epoch === epoch) void addProducts(Array.from((e.target as HTMLInputElement).files ?? []));
+    };
     input.click();
   }
 
@@ -102,27 +111,21 @@ export function Workspace({
   }
 
   return (
-    <main className="workspace" ref={workspaceRef as React.RefObject<HTMLElement>}>
-      <div className="info-bar">
+    <main className="workspace" ref={workspaceRef} tabIndex={-1} aria-label="Vista previa del catálogo">
+      <EditorTheme className="info-bar">
         <div>
           <h2>Vista Previa (A4)</h2>
-          <p>{itemsPerPage} foto{itemsPerPage !== 1 ? 's' : ''} por página</p>
+          <p>{productChunks.some((page) => page.capacity !== itemsPerPage) ? 'Cantidad de fotos personalizada por página' : `${itemsPerPage} foto${itemsPerPage !== 1 ? 's' : ''} por página`}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <button
-            className="sidebar-right-toggle"
-            onClick={onToggleRightSidebar}
-          >
-            {sidebarRightOpen ? <><X size={14} /> Cerrar</> : <><LayoutList size={14} /> Productos</>}
-          </button>
           <Badge>
             {totalPages} Página{totalPages !== 1 ? 's' : ''}
           </Badge>
         </div>
-      </div>
+      </EditorTheme>
 
       {allProducts.length === 0 && (
-        <div
+        <button
           className="drop-zone"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -130,9 +133,9 @@ export function Workspace({
           onClick={openFilePicker}
         >
           <FolderOpen className="dz-icon" size={40} />
-          <p className="dz-title">Arrastrá y soltá tus fotos aquí</p>
-          <p className="dz-sub">Se agrupan automáticamente en páginas.</p>
-        </div>
+          <span className="dz-title">Cargar fotos o arrastrarlas aquí</span>
+          <span className="dz-sub">Se agrupan automáticamente en páginas.</span>
+        </button>
       )}
 
       {allProducts.length > 0 && (
@@ -147,16 +150,18 @@ export function Workspace({
               totalIndexPages={indexChunks.length}
             />
           ))}
-          {productChunks.map((chunk, i) => (
+          {productChunks.map(({ products: chunk }, i) => (
             <ProductPage
               key={chunk[0].id}
               ref={setPageRef(indexChunks.length + i)}
               products={chunk}
               pageIndex={i}
+              pageNum={indexChunks.length + i + 1}
             />
           ))}
         </div>
       )}
+      <BackToTop target={workspaceRef} label="Volver arriba en Vista Previa" />
     </main>
   );
 }

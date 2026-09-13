@@ -5,9 +5,9 @@ interface Props {
 
 export function FormField({ label, children }: Props) {
   return (
-    <div>
-      <label className="sb-label">{label}</label>
+    <label className="sb-form-field">
+      <span className="sb-label">{label}</span>
       {children}
-    </div>
+    </label>
   );
 }

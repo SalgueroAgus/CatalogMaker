@@ -1,3 +1,5 @@
+export type UITheme = 'light' | 'dark';
+
 export interface Product {
   id: string;
   name: string;
@@ -5,10 +7,12 @@ export interface Product {
   description: string;
   image: string;
   bgColor: string;
+  imagePositionY?: number;
 }
 
 export interface Colors {
   bg: string;
+  productInfoBg: string;
   // Página
   company: string;
   pageNum: string;

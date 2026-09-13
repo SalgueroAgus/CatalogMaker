@@ -1,28 +1,24 @@
-import { useEffect } from 'react';
+import { useEffect, type RefObject } from 'react';
 
-const A4_PX = 793.7; // 210mm at 96 dpi
+const A4_PX = 210 * 96 / 25.4;
 
-export function usePageScale() {
+export function usePageScale(workspaceRef: RefObject<HTMLElement>) {
   useEffect(() => {
-    function update() {
-      const w = window.innerWidth;
-      const isMobile = w < 768;
-      const isTablet = w >= 768 && w < 1200;
-
-      if (!isMobile && !isTablet) {
-        document.documentElement.style.removeProperty('--page-scale');
-        return;
-      }
-
-      const leftSidebarWidth = isMobile ? 0 : 260;
-      const workspacePadding = isMobile ? 24 : 40;
-      const availableWidth = w - leftSidebarWidth - workspacePadding;
-      const scale = Math.min(1, availableWidth / A4_PX);
+    const workspace = workspaceRef.current;
+    if (!workspace) return;
+    const update = () => {
+      if (!workspace.clientWidth) return;
+      const style = getComputedStyle(workspace);
+      const available = workspace.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const scale = Math.min(1, Math.max(0.01, available / A4_PX));
       document.documentElement.style.setProperty('--page-scale', scale.toFixed(4));
-    }
-
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(workspace);
     update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--page-scale');
+    };
+  }, [workspaceRef]);
 }

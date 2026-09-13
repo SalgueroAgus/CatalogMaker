@@ -1,68 +1,67 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useProductStore } from '../store/useProductStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { blobUrlToBase64 } from '../utils/image';
-import { buildPDF, type ExportContext } from '../utils/pdf';
+import { prepareExportContext } from '../utils/capture';
+import { acquireExport } from '../store/catalogSession';
+import { useCatalogStore } from '../store/useCatalogStore';
+import { catalogFilename } from '../utils/catalog';
+import { buildPDF } from '../utils/pdf';
 
 export function usePDF(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[]>) {
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const products = useProductStore((s) => s.products);
   const colors = useSettingsStore((s) => s.colors);
-  const storeName = useSettingsStore((s) => s.storeName);
+  const catalogName = useCatalogStore((s) => s.catalogs.find((item) => item.id === s.activeId)?.name ?? 'Catálogo');
+  const epoch = useCatalogStore((s) => s.epoch);
+  useEffect(() => { setError(null); }, [epoch]);
+  const bgImage = useSettingsStore((s) => s.bgImage);
   const bgImageOpacity = useSettingsStore((s) => s.bgImageOpacity);
 
   const exportToPDF = async () => {
     if (products.length === 0) {
-      alert('El catálogo está vacío.');
+      setError('El catálogo está vacío.');
       return;
     }
 
+    setError(null);
+    const release = acquireExport();
+    if (!release) return;
     setIsExporting(true);
-    setProgress('Preparando…');
+    setProgress(`Preparando ${catalogName}…`);
     document.body.classList.add('pdf-exporting');
 
     try {
-      const imageMap = new Map<string, string>();
-      await Promise.all(
-        products.map(async (p) => {
-          if (!p.image) return;
-          imageMap.set(p.id, p.image.startsWith('data:') ? p.image : await blobUrlToBase64(p.image));
-        })
-      );
-
-      const ctx: ExportContext = {
-        imageMap,
-        bgImageOpacity,
-        bgColor: colors.bg || '#fafafa',
-      };
+      const ctx = await prepareExportContext(products, bgImage, bgImageOpacity, colors.bg || '#fafafa', useSettingsStore.getState());
 
       const pages = pagesRef.current.filter((p): p is HTMLDivElement => p !== null);
       const pdf = await buildPDF(pages, ctx, (current, total) => {
-        setProgress(`Pág. ${current} / ${total}…`);
+        setProgress(`${catalogName}: pág. ${current} / ${total}…`);
       });
 
-      const filename = (storeName || 'catalogo').toLowerCase().replace(/\s+/g, '-') + '.pdf';
+      const filename = catalogFilename(catalogName) + '.pdf';
       const blob = pdf.output('blob');
       const file = new File([blob], filename, { type: 'application/pdf' });
 
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isMobile && navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: storeName || 'Catálogo' });
+        await navigator.share({ files: [file], title: catalogName });
       } else {
         pdf.save(filename);
       }
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return;
       console.error('PDF export error:', err);
-      alert('Error al generar el PDF. Intente de nuevo.');
+      setError('Error al generar el PDF. Intente de nuevo.');
     } finally {
+      release();
       document.body.classList.remove('pdf-exporting');
       setIsExporting(false);
       setProgress('');
     }
   };
 
-  return { exportToPDF, isExporting, progress };
+  return { exportToPDF, isExporting, progress, error, clearError: () => setError(null) };
 }

@@ -1,3 +1,7 @@
+import { Button } from '../atoms/Button';
+import { Input } from '../atoms/Input';
+import { Select } from '../atoms/Select';
+import { usePersistenceStore } from '../../store/usePersistenceStore';
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { Fonts, FontSizes } from '../../types';
@@ -32,6 +36,7 @@ export function TypographyRole({
   sizeOnly = false,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
 
   const font = useSettingsStore((s) => (fontKey ? s.fonts[fontKey] : ''));
   const size = useSettingsStore((s) => s.fontSizes[sizeKey]);
@@ -73,33 +78,20 @@ export function TypographyRole({
       {open && (
         <div className="typo-role-body">
           {!sizeOnly && (
-            <div className="select-wrap">
-              <select
-                className="sb-select"
-                value={font}
-                onChange={(e) => handleFontChange(e.target.value)}
-              >
-                <optgroup label="Sistema">
-                  {SYSTEM_FONTS.map((f) => (
-                    <option key={f.name} value={f.stack}>{f.name}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="Google Fonts">
-                  {GOOGLE_FONTS.map((f) => (
-                    <option key={f.name} value={f.stack}>{f.name}</option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
+            <Select label={`Tipografía: ${label}`} value={font} onValueChange={handleFontChange} disabled={busy} options={[
+              ...SYSTEM_FONTS.map((f) => ({ value: f.stack, label: f.name, group: 'Sistema' })),
+              ...GOOGLE_FONTS.map((f) => ({ value: f.stack, label: f.name, group: 'Google Fonts' })),
+            ]} />
           )}
 
           <div className="typo-size-row">
             <span className="typo-size-label">Tamaño</span>
             <div className="typo-stepper">
-              <button className="typo-step-btn" onClick={() => step(-0.5)} aria-label="Reducir">−</button>
-              <input
+              <Button className="typo-step-btn" onClick={() => step(-0.5)} aria-label="Reducir">−</Button>
+              <Input
                 type="number"
                 className="typo-size-input"
+                aria-label={`Tamaño: ${label}`}
                 value={size}
                 min={sizeMin}
                 max={sizeMax}
@@ -107,7 +99,7 @@ export function TypographyRole({
                 onChange={handleSizeInput}
               />
               <span className="typo-size-unit">px</span>
-              <button className="typo-step-btn" onClick={() => step(0.5)} aria-label="Aumentar">+</button>
+              <Button className="typo-step-btn" onClick={() => step(0.5)} aria-label="Aumentar">+</Button>
             </div>
           </div>
         </div>
