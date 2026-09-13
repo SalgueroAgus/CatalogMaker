@@ -27,7 +27,6 @@
 @media (max-height: 600px) {
   .pages-content { overflow-y: auto; }
   .paginas-panel, .paginas-list { flex: none; overflow: visible; }
-  .header-save { display: none; }
 }
 body.pdf-exporting .workspace { display: flex !important; }
 @media print {

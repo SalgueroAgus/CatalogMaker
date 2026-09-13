@@ -30,7 +30,7 @@ export function EditorHeader(props: Props) {
   const disabled = busy || count === 0;
   return <EditorTheme className="header-region">
     <header className="editor-header">
-      <Button className="panel-toggle" aria-label={props.panelOpen ? 'Ocultar herramientas' : 'Mostrar herramientas'} aria-expanded={props.panelOpen} aria-controls="editor-tools" onClick={props.onTogglePanel}>
+      <Button className="panel-toggle" disabled={busy} aria-label={props.panelOpen ? 'Ocultar herramientas' : 'Mostrar herramientas'} aria-expanded={props.panelOpen} aria-controls="editor-tools" onClick={props.onTogglePanel}>
         {props.panelOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
       </Button>
       <h1 className="editor-brand"><BookOpen size={24} /><span>CatalogMaker</span></h1>

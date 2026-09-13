@@ -144,6 +144,8 @@ and canvas capture between PDF and HTML. It copies current field values into clo
 editor actions, preserves intentional opacity and replaces product/background URLs with temporary
 base64. It cleans capture wrappers in `finally`. Extend transforms for new page elements. The export utilities have no React/store imports;
 they perform DOM work when called and remove temporary capture wrappers in `finally`.
+The editor shell has `data-html2canvas-ignore`; capture clones are appended outside it.
+This keeps the editor and original preview pages out of html2canvas's document copy.
 
 Export-hook errors are exposed as state and displayed in a shared Radix alert dialog.
 Both export hooks add `pdf-exporting` to the body and remove it in `finally`.

@@ -1,7 +1,7 @@
 @media print {
   @page { size: A4 portrait; margin: 0; }
   body { background: white; height: auto; overflow: visible; }
-  .sidebar-left, .sidebar-right, .info-bar, .drop-zone { display: none !important; }
+  .info-bar, .drop-zone { display: none !important; }
   .app-layout { display: block; height: auto; overflow: visible; }
   .workspace { padding: 0; background: white; overflow: visible; display: block; }
   .pages-container { display: block; }
@@ -25,11 +25,5 @@
   }
 }
 
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.spinner {
-  display: inline-block; width: 14px; height: 14px;
-  border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff;
-  border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle;
-}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 .page-a4 { animation: fadeIn 0.3s ease both; }

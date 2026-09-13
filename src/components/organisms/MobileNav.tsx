@@ -1,6 +1,7 @@
 import { Eye, FileText, LayoutList, Palette, type LucideIcon } from 'lucide-react';
 import { EditorTheme } from '../atoms/EditorTheme';
 import type { EditorSection } from './ToolPanel';
+import { usePersistenceStore } from '../../store/usePersistenceStore';
 
 export type MobileView = 'preview' | EditorSection;
 
@@ -17,9 +18,10 @@ const TABS: { id: MobileView; Icon: LucideIcon; label: string }[] = [
 ];
 
 export function MobileNav({ activeTab, onTabChange }: Props) {
+  const busy = usePersistenceStore((s) => s.managing || s.exporting);
   return <EditorTheme className="mobile-nav-region">
     <nav className="mobile-nav" aria-label="Navegación principal">
-      {TABS.map(({ id, Icon, label }) => <button key={id} className="mnav-tab" onClick={() => onTabChange(id)} aria-current={activeTab === id ? 'page' : undefined}>
+      {TABS.map(({ id, Icon, label }) => <button key={id} className="mnav-tab" disabled={busy} onClick={() => onTabChange(id)} aria-current={activeTab === id ? 'page' : undefined}>
         <Icon size={20} aria-hidden="true" /><span>{label}</span>
       </button>)}
     </nav>
