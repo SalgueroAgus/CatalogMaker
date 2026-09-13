@@ -74,7 +74,7 @@ function scan(store: IDBObjectStore, prefix: string, done: (values: Map<string, 
 
 function registry(value: unknown): CatalogRegistry {
   if (!isRecord(value) || value.version !== 1 || typeof value.mainId !== 'string' || !value.mainId
-    || typeof value.lastActiveId !== 'string' || !value.lastActiveId || !['pending', 'ready'].includes(String(value.migration))) {
+    || typeof value.lastActiveId !== 'string' || !value.lastActiveId || (value.migration !== 'pending' && value.migration !== 'ready')) {
     throw new Error('La lista de catálogos no se puede interpretar. No se modificaron los datos.');
   }
   return value as unknown as CatalogRegistry;

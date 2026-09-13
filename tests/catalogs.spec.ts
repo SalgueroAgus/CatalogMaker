@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures';
-import { openApp, readyAfterReload, saved } from './helpers';
+import { readFile } from 'node:fs/promises';
+import { openApp, readyAfterReload, saved, downloadPDF } from './helpers';
 
 async function seedLegacy(page: import('@playwright/test').Page) {
   await openApp(page);
@@ -282,6 +283,23 @@ test('repeated UI switching keeps exactly one sidebar and resets the editor with
     await expect(page.locator('.page-a4')).toHaveCount(name === 'Principal' ? 6 : 0);
   }
   expect(errors).toEqual([]);
+});
+
+test('PDF after switching uses the active catalog name and only its pages', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(async () => {
+    const h = window.catalogTest;
+    await h.fixture(13);
+    await h.createCatalog('Temporada');
+    await h.fixture(2);
+  });
+  await expect(page.locator('.page-a4')).toHaveCount(2);
+  const pending = page.waitForEvent('download');
+  await downloadPDF(page);
+  const download = await pending;
+  expect(download.suggestedFilename()).toContain('temporada');
+  const pdf = await readFile((await download.path())!);
+  expect(pdf.toString('latin1').match(/\/Type \/Page\b/g)).toHaveLength(2);
 });
 
 test('transaction revision check rejects simultaneous edits even without change notifications', async ({ page, context }) => {

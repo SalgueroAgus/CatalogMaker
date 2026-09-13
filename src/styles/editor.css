@@ -205,6 +205,9 @@
 .catalog-form h3 { margin: 0; overflow-wrap: anywhere; }
 .catalog-trash > summary { cursor: pointer; min-height: 44px; align-content: center; }
 .catalog-trash > p { margin: 8px 0 16px; }
+@media (min-width: 768px) {
+  .header-preferences { min-width: 280px; }
+}
 @media (min-width: 1024px) and (max-width: 1439px) {
   .editor-header { flex-wrap: wrap; }
 }

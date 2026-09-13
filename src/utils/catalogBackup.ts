@@ -66,7 +66,8 @@ export async function parseCatalogBackup(file: Blob): Promise<ParsedCatalogBacku
     || typeof meta.createdAt !== 'string' || !Number.isFinite(Date.parse(meta.createdAt))
     || typeof meta.lastSavedAt !== 'string' || !Number.isFinite(Date.parse(meta.lastSavedAt))
     || typeof value.exportedAt !== 'string' || !Number.isFinite(Date.parse(value.exportedAt))
-    || meta.deletedAt !== null || !Array.isArray(value.products) || !Array.isArray(value.images)) throw new Error('El respaldo tiene datos incompletos.');
+    || meta.deletedAt !== null || !Object.prototype.hasOwnProperty.call(value, 'settings')
+    || !Array.isArray(value.products) || !Array.isArray(value.images)) throw new Error('El respaldo tiene datos incompletos.');
   const products = readProducts(value.products);
   if (products.length !== meta.productCount) throw new Error('La cantidad de productos del respaldo no coincide.');
   const settings = readSettings(value.settings === null ? undefined : value.settings);

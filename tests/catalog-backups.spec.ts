@@ -46,7 +46,28 @@ test('full backup restores in a separate browser profile with identical data and
   } finally { await target.close(); await rm(profile, { recursive: true, force: true }); }
 });
 
-for (const corruption of ['json', 'version', 'duplicate', 'orphan', 'image', 'settings', 'count', 'layout'] as const) {
+test('backup preserves large original images with legacy empty MIME types', async ({ page }) => {
+  await openApp(page);
+  const result = await page.evaluate(async () => {
+    const h = window.catalogTest;
+    await h.fixture(1);
+    const photo = await h.photo();
+    const original = new File([photo, new Uint8Array(3 * 1024 * 1024)], 'legacy.png');
+    const captured = h.captureCatalogBackup()!;
+    try {
+      const data = { ...captured.record.data, images: new Map([[captured.record.data.products[0].id, original]]) };
+      const backup = await h.buildCatalogBackup({ ...captured.record, data });
+      const parsed = await h.parseCatalogBackup(backup);
+      const restored = parsed.data.images.get(parsed.data.products[0].id)!;
+      const before = new Uint8Array(await original.arrayBuffer());
+      const after = new Uint8Array(await restored.arrayBuffer());
+      return { same: before.length === after.length && before.every((byte, index) => byte === after[index]), type: restored.type };
+    } finally { captured.release(); }
+  });
+  expect(result).toEqual({ same: true, type: '' });
+});
+
+for (const corruption of ['json', 'version', 'duplicate', 'orphan', 'image', 'settings', 'missing-settings', 'count', 'layout'] as const) {
   test(`rejects ${corruption} corruption without changing catalogs or leaking image URLs`, async ({ page }) => {
     await openApp(page);
     const backup = await prepareBackup(page);
@@ -58,6 +79,7 @@ for (const corruption of ['json', 'version', 'duplicate', 'orphan', 'image', 'se
       if (corruption === 'orphan') invalid.images[0].id = 'missing-product';
       if (corruption === 'image') invalid.background.base64 = 'YWJj';
       if (corruption === 'settings') invalid.settings.itemsPerPage = 99;
+      if (corruption === 'missing-settings') delete invalid.settings;
       if (corruption === 'count') invalid.catalog.productCount = 999;
       if (corruption === 'layout') invalid.settings.pageLayouts = { 0: 'invalid' };
       const before = window.faults.writes;
