@@ -157,8 +157,8 @@ test('legacy prices and text-box color migrate without hydration writes', async 
     const request = indexedDB.open('keyval-store');
     const db = await new Promise<IDBDatabase>((resolve) => { request.onsuccess = () => resolve(request.result); });
     const tx = db.transaction('keyval', 'readwrite');
-    tx.objectStore('keyval').put(settings, 'cm:settings');
-    tx.objectStore('keyval').put(products, 'cm:products');
+    tx.objectStore('keyval').put(settings, `cm:catalog:${window.catalogTest.catalogs.getState().activeId}:settings`);
+    tx.objectStore('keyval').put(products, `cm:catalog:${window.catalogTest.catalogs.getState().activeId}:products`);
     await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });
     db.close();
   });

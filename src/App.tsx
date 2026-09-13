@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppLayout } from './components/templates/AppLayout';
 import { EditorHeader } from './components/organisms/EditorHeader';
 import { ToolPanel, type EditorSection } from './components/organisms/ToolPanel';
@@ -12,14 +12,16 @@ import { usePDF } from './hooks/usePDF';
 import { usePublish } from './hooks/usePublish';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useIdentity } from './hooks/useIdentity';
-import { hydrateCatalog } from './store/catalogSession';
+import { useCatalogStore } from './store/useCatalogStore';
+import { hydrateCatalog, watchCatalogs } from './store/catalogSession';
 import { usePersistenceStore } from './store/usePersistenceStore';
 import { SaveStatus } from './components/molecules/SaveStatus';
 import { scrollToProduct } from './utils/scroll';
 
 export default function App() {
   const { user, loading, openLogin, logout } = useIdentity();
-  const pagesRef = useRef<(HTMLDivElement | null)[]>([]);
+  const epoch = useCatalogStore((s) => s.epoch);
+  const pagesRef = useMemo(() => ({ current: [] as (HTMLDivElement | null)[] }), [epoch]);
   const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
   const [mobileView, setMobileView] = useState<MobileView>('preview');
   const [section, setSection] = useState<EditorSection>('articles');
@@ -33,6 +35,9 @@ export default function App() {
   useEffect(() => {
     void hydrateCatalog();
   }, []);
+
+  useEffect(() => watchCatalogs(), []);
+  useEffect(() => { setVisibleIds(new Set()); setMobileView('preview'); setSection('articles'); setPanelOpen(true); }, [epoch]);
 
   function switchView(view: MobileView) {
     setMobileView(view);
@@ -70,8 +75,8 @@ export default function App() {
       panelOpen={panelOpen}
       mobileView={mobileView}
       header={<EditorHeader panelOpen={panelOpen} onTogglePanel={() => setPanelOpen((value) => !value)} onExport={exportToPDF} onPublish={publish} isExporting={isExporting} exportProgress={progress} isPublishing={isPublishing} publishProgress={publishProgress} lastPublishUrl={lastPublishUrl} userEmail={user?.email ?? ''} onLogout={logout} />}
-      tools={<ToolPanel section={section} onSectionChange={switchView} active={isMobile ? mobileView !== 'preview' : panelOpen} visibleIds={visibleIds} onShowProduct={showProduct} />}
-      center={<Workspace pagesRef={pagesRef} onVisibleChange={handleVisibleChange} />}
+      tools={<ToolPanel key={`tools-${epoch}`} section={section} onSectionChange={switchView} active={isMobile ? mobileView !== 'preview' : panelOpen} visibleIds={visibleIds} onShowProduct={showProduct} />}
+      center={<Workspace key={`workspace-${epoch}`} pagesRef={pagesRef} onVisibleChange={handleVisibleChange} />}
       nav={<MobileNav activeTab={mobileView} onTabChange={switchView} />}
     />
     <EditorTheme className="notice-region">

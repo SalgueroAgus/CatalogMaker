@@ -13,7 +13,7 @@ interface Props {
 export function ConfirmAction({ title, description, children, onConfirm }: Props) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   return <AlertDialog.Root open={open} onOpenChange={(value) => { if (!pending) setOpen(value); }}>
     <AlertDialog.Trigger>{children}</AlertDialog.Trigger>
     <AlertDialog.Content className="editor-ui ui-dialog" maxWidth="440px">

@@ -43,7 +43,7 @@ test('legacy settings keep Exclusivo and malformed footer tags fail without over
       const request = indexedDB.open('keyval-store');
       const db = await new Promise<IDBDatabase>((resolve) => { request.onsuccess = () => resolve(request.result); });
       const tx = db.transaction('keyval', 'readwrite');
-      tx.objectStore('keyval').put(malformed ? { ...settings, footerTag: 42 } : settings, 'cm:settings');
+      tx.objectStore('keyval').put(malformed ? { ...settings, footerTag: 42 } : settings, `cm:catalog:${window.catalogTest.catalogs.getState().activeId}:settings`);
       await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error); });
       db.close();
     }, malformed);

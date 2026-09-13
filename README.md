@@ -10,15 +10,15 @@ Abrí el link del proyecto en el navegador y listo. No necesitás instalar nada.
 
 ## Guardado en este navegador
 
-El catálogo se guarda localmente en el navegador y dispositivo que estás usando. Iniciar sesión
+Cada catálogo se guarda localmente en el navegador y dispositivo que estás usando. Iniciar sesión
 no sincroniza los productos con otros equipos. Esperá **Guardado en este navegador** antes de
 recargar o cerrar. Si aparece un error, mantené la pestaña abierta y usá **Reintentar guardado**;
 también podés descargar el PDF con los cambios de la sesión. Los cambios sin confirmar pueden
 perderse al cerrar por fuerza. Si la carga falla, usá **Reintentar carga**: la app no vacía tus datos.
 
-Editá con los campos etiquetados de **Productos** y usá **Cambiar foto**, **Subir** y **Bajar**.
-La flecha **Volver arriba** lleva al comienzo de Productos o Vista Previa.
-En **Productos → Páginas** podés elegir una cantidad general y, en cada página,
+Editá con los campos etiquetados de **Artículos** y usá **Cambiar foto**, **Subir** y **Bajar**.
+La flecha **Volver arriba** lleva al comienzo de Artículos o Vista Previa.
+En **Páginas** podés elegir una cantidad general y, en cada página,
 seleccionar de 1 a 5 fotos o volver a **General**. Los productos siguientes se
 redistribuyen conservando su orden; las cantidades propias se guardan en este navegador.
 La altura de la descripción se ajusta al texto y a la tipografía.
@@ -26,7 +26,7 @@ La altura de la descripción se ajusta al texto y a la tipografía.
 Las descripciones nuevas admiten hasta 500 caracteres. Una importación que excede ese límite
 se detiene para que corrijas la fila; no recorta el texto importado.
 
-En **Ajustes → Administración del catálogo** hay tres acciones con confirmación:
+En **Menú del catálogo → Administración del catálogo** hay tres acciones con confirmación:
 
 - **Vaciar catálogo** elimina los productos y sus fotos; conserva los ajustes y el fondo.
 - **Restablecer ajustes** conserva los productos, su orden y fotos; restaura diseño y fondo.
@@ -35,9 +35,29 @@ En **Ajustes → Administración del catálogo** hay tres acciones con confirmac
 En **Página → Fondo**, cambiar entre Color e Imagen solo muestra otros controles. La foto se
 elimina mediante **Quitar imagen**.
 
-El PDF sirve para compartir y consultar el catálogo, pero no permite restaurar una sesión
-editable. El backup completo y la transferencia editable entre dispositivos siguen pendientes;
-no borres los datos del navegador esperando recuperarlos desde el PDF o una plantilla Excel.
+## Mis catálogos y respaldos
+
+La app abre el último catálogo usado. Su nombre aparece en la cabecera: pulsalo para abrir
+**Mis catálogos**. Allí podés abrir, renombrar, hacer una copia completa o crear un catálogo vacío
+con el diseño inicial de la app. El nombre del catálogo no cambia la marca impresa en sus páginas.
+**Principal** se identifica con una insignia y no se puede eliminar ni reemplazar. La publicación
+web está disponible solamente desde Principal; cualquier catálogo con productos permite descargar PDF.
+
+Al eliminar otro catálogo pasa a **Eliminados**, donde conserva productos, fotos y diseño hasta
+que lo recuperes o confirmes su borrado definitivo. Las copias y Eliminados comparten el
+almacenamiento de este navegador: no son un respaldo externo. Vaciar productos o restablecer
+ajustes todavía no tiene recuperación automática.
+
+Usá **Descargar respaldo del actual** para obtener un archivo `.catalogmaker.json` con productos,
+fotos originales y diseño editable. Buscalo en Descargas o en la ubicación que elegiste. Para
+llevarlo a otro dispositivo, transferí ese archivo y elegí **Restaurar respaldo** en la app del
+destino: revisá nombre/cantidad y confirmá. Siempre se crea un catálogo nuevo, sin sobrescribir
+los existentes. El respaldo también permite rescatar el borrador de una sesión cuyo guardado falló.
+El PDF sirve para compartir, y la plantilla Excel para agregar productos; ninguno reemplaza este respaldo.
+
+Si otra pestaña modificó el mismo catálogo, la app detiene las escrituras y permite **Cargar versión
+guardada** o **Conservar mis cambios como copia**. Cambiar de catálogo espera a que termine el
+guardado; si hay un precio inválido o un error, corregilo o reintentá antes de cambiar.
 
 La verificación automatizada de Prioridad 1 está registrada. Faltan las pruebas con dispositivos
 reales y ambos padres; consultá el [registro de pruebas](docs/priority1-verification.md).

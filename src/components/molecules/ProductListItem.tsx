@@ -26,7 +26,7 @@ interface Props {
 }
 
 export function ProductListItem({ product, index, total, isVisible, active, detailsOpen, onToggleDetails, onShowProduct, onEdit }: Props) {
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   const photoInput = useRef<HTMLInputElement>(null);
   const moveProduct = useProductStore((s) => s.moveProduct);
   const updateField = useProductStore((s) => s.updateField);

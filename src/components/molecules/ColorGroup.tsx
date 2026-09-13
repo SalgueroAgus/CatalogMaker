@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function ColorGroup({ label, colorKey, solidOnly }: Props) {
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   const value = useSettingsStore((s) => s.colors[colorKey]);
   const updateColor = useSettingsStore((s) => s.updateColor);
 

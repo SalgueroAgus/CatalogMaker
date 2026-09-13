@@ -12,7 +12,7 @@ import { getIndexPageCount, paginateProducts, resolveGridShape } from '../../uti
 const COUNTS = [1, 2, 3, 4, 5];
 
 export function PaginasTab() {
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   const listRef = useRef<HTMLDivElement>(null);
   const products = useProductStore((s) => s.products);
   const itemsPerPage = useSettingsStore((s) => s.itemsPerPage);

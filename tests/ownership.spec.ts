@@ -66,6 +66,7 @@ test('invalid stored data is preserved; partial failed hydration allocates no UR
     const db = await new Promise<IDBDatabase>((resolve) => { open.onsuccess = () => resolve(open.result); });
     const tx = db.transaction('keyval', 'readwrite');
     const store = tx.objectStore('keyval');
+    store.clear();
     store.put([{ id: 'valid-legacy-id', name: 'LEGACY', price: '$9', description: 'l'.repeat(600), bgColor: '#fff' }], 'cm:products');
     store.put('invalid blob', 'cm:img:valid-legacy-id');
     await new Promise<void>((resolve) => { tx.oncomplete = () => resolve(); });

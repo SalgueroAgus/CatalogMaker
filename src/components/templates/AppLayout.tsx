@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function AppLayout({ header, tools, center, nav, mobileView, panelOpen }: Props) {
-  const busy = usePersistenceStore((s) => s.managing || s.exporting);
+  const busy = usePersistenceStore((s) => s.managing || s.exporting || s.saving === 'conflict');
   return <div className="editor-shell" data-view={mobileView} data-panel-open={panelOpen} data-html2canvas-ignore>
     {header}
     <fieldset className="app-layout" disabled={busy} aria-label="Editor de catálogo" aria-busy={busy}>

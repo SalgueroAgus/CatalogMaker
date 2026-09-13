@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useProductStore } from '../store/useProductStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { prepareExportContext } from '../utils/capture';
 import { acquireExport } from '../store/catalogSession';
 import { capturePages, buildCatalogHTML, extractPageLinks } from '../utils/htmlExport';
+import { useCatalogStore } from '../store/useCatalogStore';
+import { usePersistenceStore } from '../store/usePersistenceStore';
+import { catalogFilename } from '../utils/catalog';
 import { deployToNetlify } from '../utils/netlify';
 
 export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | null)[]>) {
@@ -11,7 +14,12 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [lastUrl, setLastUrl] = useState<string | null>(null);
+  const [publication, setPublication] = useState<{ catalogId: string; url: string } | null>(null);
+  const activeId = useCatalogStore((s) => s.activeId);
+  const epoch = useCatalogStore((s) => s.epoch);
+  const catalogName = useCatalogStore((s) => s.catalogs.find((item) => item.id === s.activeId)?.name ?? 'Catálogo');
+  const lastUrl = publication?.catalogId === activeId ? publication.url : null;
+  useEffect(() => { setError(null); }, [epoch]);
 
   const products = useProductStore((s) => s.products);
   const colors = useSettingsStore((s) => s.colors);
@@ -30,6 +38,11 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
   }
 
   const publish = async () => {
+    const catalog = useCatalogStore.getState();
+    if (catalog.activeId !== catalog.mainId || usePersistenceStore.getState().saving === 'conflict') {
+      setError('Solo se puede publicar Principal, después de resolver cualquier conflicto de guardado.');
+      return;
+    }
     const pat = import.meta.env.VITE_NETLIFY_PAT;
     const siteId = import.meta.env.VITE_NETLIFY_SITE_ID;
 
@@ -52,7 +65,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
     try {
       const html = await buildHtml(setProgress);
       const url = await deployToNetlify(pat, siteId, html, setProgress);
-      setLastUrl(url);
+      setPublication({ catalogId: catalog.activeId, url });
     } catch (err: unknown) {
       console.error('Publish error:', err);
       setError(`Error al publicar: ${(err as Error).message || 'intenta de nuevo'}`);
@@ -83,7 +96,7 @@ export function usePublish(pagesRef: React.MutableRefObject<(HTMLDivElement | nu
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = (storeName || 'catalogo').toLowerCase().replace(/\s+/g, '-') + '.html';
+      a.download = catalogFilename(catalogName) + '.html';
       a.click();
       URL.revokeObjectURL(blobUrl);
     } catch (err: unknown) {

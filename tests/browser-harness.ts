@@ -2,7 +2,10 @@ import { useProductStore } from '../src/store/useProductStore';
 import { useSettingsStore, DEFAULT_STATE } from '../src/store/useSettingsStore';
 import { usePersistenceStore } from '../src/store/usePersistenceStore';
 import { hydrateCatalog, retrySave, manageCatalog, acquireExport } from '../src/store/catalogSession';
-import { dbLoadCatalog } from '../src/db';
+import { dbLoadCatalog, dbReadLibrary, dbLoadCatalogRecord } from '../src/db';
+import { useCatalogStore } from '../src/store/useCatalogStore';
+import { openCatalog, createCatalog, changeCatalog, restoreBackup, retainConflictCopy, reloadCurrentCatalog, captureCatalogBackup, refreshCatalogs } from '../src/store/catalogSession';
+import { buildCatalogBackup, parseCatalogBackup } from '../src/utils/catalogBackup';
 import { buildPDF } from '../src/utils/pdf';
 import { prepareExportContext } from '../src/utils/capture';
 import { capturePages, extractPageLinks, buildCatalogHTML } from '../src/utils/htmlExport';
@@ -15,7 +18,10 @@ export const harness = {
   retrySave,
   manageCatalog,
   acquireExport,
-  dbLoadCatalog,
+  catalogs: useCatalogStore,
+  openCatalog, createCatalog, changeCatalog, restoreBackup, retainConflictCopy, reloadCurrentCatalog, captureCatalogBackup, refreshCatalogs,
+  buildCatalogBackup, parseCatalogBackup, dbReadLibrary, dbLoadCatalogRecord,
+  dbLoadCatalog: (id = useCatalogStore.getState().activeId) => dbLoadCatalog(id),
   DEFAULT_STATE,
   async photo(name = 'foto.png', color = '#d22135') {
     const canvas = document.createElement('canvas');
